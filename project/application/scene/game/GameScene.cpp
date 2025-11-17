@@ -1,4 +1,4 @@
-﻿#include "GameScene.h"
+#include "GameScene.h"
 
 #include"../system/utility/random/RandomEngine.h"
 
@@ -17,7 +17,10 @@ void GameScene::Initialize(Camera* camera) {
 }
 
 void GameScene::Unload() {
-	delete particle_;
+	if (particle_ != nullptr) {
+		delete particle_;
+		particle_ = nullptr;
+	}
 }
 
 void GameScene::Update(float deltaTime) {
