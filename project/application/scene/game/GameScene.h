@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "../interface/IScene.h" // ISceneをインクルード
 
 #include"../bonjin/BonjinEngine.h"
@@ -29,7 +29,7 @@ namespace BonjinEngine
 
 	private:
 		// --- ゲーム固有の変数 ---
-		Particle* particle_ = nullptr;
+		//Particle* particle_ = nullptr;
 
 	private:
 		// --- ゲーム固有の関数 ---

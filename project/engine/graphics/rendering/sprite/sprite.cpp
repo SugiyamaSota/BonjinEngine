@@ -102,7 +102,6 @@ void Sprite::Initialize(Vector3 position, Color color, Vector3 anchor, Vector2 s
 }
 
 void Sprite::Update(Vector3 spritePosition, Color color) {
-    transform_ = InitializeWorldTransform();
     transform_.translate = spritePosition;
 
     // ワールド行列の計算
@@ -118,6 +117,9 @@ void Sprite::Update(Vector3 spritePosition, Color color) {
 }
 
 void Sprite::Draw() {
+    // PSOの設定
+    //DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(DirectXCommon::GetInstance()->GetPSO()->GetRootSignature(PrimitiveType::kModel));
+    //DirectXCommon::GetInstance()->GetCommandList()->SetPipelineState(DirectXCommon::GetInstance()->GetPSO()->GetPipelineState(PrimitiveType::kModel, BlendMode::kNormal));
     // インデックスバッファビューの設定
     DirectXCommon::GetInstance()->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
     // 頂点バッファビューの設定

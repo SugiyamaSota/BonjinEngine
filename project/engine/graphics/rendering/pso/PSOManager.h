@@ -5,6 +5,7 @@
 #include <vector>
 #include <dxcapi.h>
 #include<array>
+#include <unordered_map>
 
 #include "shaderCompiler/ShaderCompiler.h"
 #include "rootSignatureBuilder/RootSignatureBuilder.h"
@@ -23,6 +24,17 @@ enum class ShaderStage {
 	kCount,
 };
 
+enum class FillMode {
+	kSolid,
+	kWireFrame,
+};
+
+enum class CullMode {
+	kNone,
+	kFront,
+	kBack,
+};
+
 class PSOManager {
 public:
 	PSOManager();
@@ -38,10 +50,13 @@ public:
 		return rootSignatures_[static_cast<size_t>(type)].Get();
 	}
 
-	// PipelineState
-	ID3D12PipelineState* GetPipelineState(PrimitiveType type, BlendMode mode) const {
-		return graphicsPipelineStates_[static_cast<size_t>(type)][static_cast<size_t>(mode)].Get();
-	}
+	// PipelineStateの取得
+	ID3D12PipelineState* GetPipelineState(
+		ID3D12Device* device,
+		PrimitiveType type,
+		BlendMode mode,
+		D3D12_FILL_MODE fillMode,
+		D3D12_CULL_MODE cullMode);
 
 private:
 	/// --- 変数 ---
@@ -51,14 +66,15 @@ private:
 		static_cast<size_t>(PrimitiveType::kCount)
 	> rootSignatures_;
 
-	// pipelineStateを形状とブレンドごとに管理
-	std::array<
-		std::array<
-		Microsoft::WRL::ComPtr<ID3D12PipelineState>,
-		static_cast<size_t>(BlendMode::kCount)
-		>,
-		static_cast<size_t>(PrimitiveType::kCount)
-	> graphicsPipelineStates_;
+	// pipelineStateをキャッシュするためのマップ
+	std::unordered_map<
+		size_t,
+		Microsoft::WRL::ComPtr<ID3D12PipelineState>
+	> psoCache_;
+
+	// pso生成時に必要なフォーマットを保持
+	DXGI_FORMAT rtvFormat_ = DXGI_FORMAT_UNKNOWN;
+	DXGI_FORMAT dsvFormat_ = DXGI_FORMAT_UNKNOWN;
 
 	// シェーダーコンパイラー
 	ShaderCompiler shaderCompiler_;
@@ -86,7 +102,7 @@ private:
 
 	// 形状ごとのインプットレイアウトディスク
 	std::array<
-		D3D12_INPUT_LAYOUT_DESC, 
+		D3D12_INPUT_LAYOUT_DESC,
 		static_cast<size_t>(PrimitiveType::kCount)>
 		inputLayoutDescs_;
 
@@ -113,5 +129,21 @@ private:
 	void CompileAllShaders();
 	void CreateInputLayout();
 	void CreateDepthStencil();
-	void CreatePSO(ID3D12Device* device, DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat);
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> CreatePSOInternal(
+		ID3D12Device* device,
+		PrimitiveType type,
+		BlendMode mode,
+		D3D12_FILL_MODE fillMode,
+		D3D12_CULL_MODE cullMode);
+
+	size_t CalculateHash(
+		PrimitiveType type,
+		BlendMode mode,
+		D3D12_FILL_MODE fillMode,
+		D3D12_CULL_MODE cullMode)const
+	{
+		// シンプルなハッシュ生成（より複雑なハッシュ関数を使うと衝突を避けられますが、ここではシンプルに）
+		return (size_t)type | ((size_t)mode << 8) | ((size_t)fillMode << 16) | ((size_t)cullMode << 24);
+	}
+
 };
