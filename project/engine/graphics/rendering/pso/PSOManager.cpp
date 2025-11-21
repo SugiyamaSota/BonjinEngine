@@ -110,7 +110,6 @@ void PSOManager::CreateRootSignature(ID3D12Device* device)
     RootSignatureBuilder particleRootSigBuilder;
     particleRootSigBuilder.SetFlags(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
-    // ⭐ 1. インスタンス行列 SRV (t0 for VS) 用の Descriptor Range を定義
     D3D12_DESCRIPTOR_RANGE particleInstanceDescriptorRange[1] = {};
     particleInstanceDescriptorRange[0].BaseShaderRegister = 0; // t0
     particleInstanceDescriptorRange[0].NumDescriptors = 1;
@@ -120,7 +119,6 @@ void PSOManager::CreateRootSignature(ID3D12Device* device)
 
     D3D12_ROOT_PARAMETER particleRootParameters[4] = {};
 
-    // Root Parameter 0: Material CBV (b0)
     particleRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     particleRootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // ★ PIXEL -> ALL に変更
     particleRootParameters[0].Descriptor.ShaderRegister = 0;
@@ -212,7 +210,7 @@ void PSOManager::CreateInputLayout()
     inputLayoutDescs_[(size_t)PrimitiveType::kGrid].pInputElementDescs = gridInputElementDescs_.data();
     inputLayoutDescs_[(size_t)PrimitiveType::kGrid].NumElements = kGridInputElements;
 
-    // モデル
+    // パーティクル
     particleInputElementDescs_[0].SemanticName = "POSITION";
     particleInputElementDescs_[0].SemanticIndex = 0;
     particleInputElementDescs_[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -221,9 +219,9 @@ void PSOManager::CreateInputLayout()
     particleInputElementDescs_[1].SemanticIndex = 0;
     particleInputElementDescs_[1].Format = DXGI_FORMAT_R32G32_FLOAT;
     particleInputElementDescs_[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-    particleInputElementDescs_[2].SemanticName = "NORMAL";
+    particleInputElementDescs_[2].SemanticName = "COLOR";
     particleInputElementDescs_[2].SemanticIndex = 0;
-    particleInputElementDescs_[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+    particleInputElementDescs_[2].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
     particleInputElementDescs_[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 
     // ⭐ メンバ配列のアドレスとサイズを設定する
