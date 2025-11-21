@@ -36,6 +36,9 @@ void GameScene::Draw() {
 }
 
 void GameScene::DrawSceneImGui() {
+
+	particle_->DrawImGui();
+
 }
 
 SceneType GameScene::GetNextScene() const {
