@@ -23,17 +23,17 @@ enum class ShaderStage {
 	kPixel,
 	kCount,
 };
-
-enum class FillMode {
-	kSolid,
-	kWireFrame,
-};
-
-enum class CullMode {
-	kNone,
-	kFront,
-	kBack,
-};
+//
+//enum class FillMode {
+//	kSolid,
+//	kWireFrame,
+//};
+//
+//enum class CullMode {
+//	kNone,
+//	kFront,
+//	kBack,
+//};
 
 class PSOManager {
 public:

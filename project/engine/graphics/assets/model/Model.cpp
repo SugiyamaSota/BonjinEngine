@@ -51,9 +51,9 @@ void Model::Update(WorldTransform worldTransform, Camera* camera) {
 
 void Model::Draw() {
 	// 描画に必要な設定を定義 (モデルの標準設定)
-	const D3D12_FILL_MODE defaultFillMode = D3D12_FILL_MODE_SOLID;
-	const D3D12_CULL_MODE defaultCullMode = D3D12_CULL_MODE_BACK;
-	const BlendMode currentBlendMode = BlendMode::kNormal; // 既存のブレンドモード
+	const D3D12_FILL_MODE currentFillMode = fillMode_;
+	const D3D12_CULL_MODE currentCullMode = cullMode_;
+	const BlendMode currentBlendMode = blendMode_;
 
 	// PSOを遅延生成/取得するためにデバイスが必要
 	ID3D12Device* device = common->GetDevice(); // 💡 commonがDeviceを提供すると仮定
@@ -64,8 +64,8 @@ void Model::Draw() {
 			device,
 			PrimitiveType::kModel,
 			currentBlendMode,
-			defaultFillMode,
-			defaultCullMode
+			currentFillMode,
+			currentCullMode
 		);
 
 	// PSOの設定

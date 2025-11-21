@@ -41,8 +41,14 @@ public:
 	/// <param name="color">設定したい色と透明度</param>
 	void SetColor(Vector4 color) { materialData_->color = color; }
 
+
+	void SetFillMode(D3D12_FILL_MODE fillMode) { fillMode_ = fillMode; }
+	void SetCullMode(D3D12_CULL_MODE cullMode) { cullMode_ = cullMode; }
+	void SetBlendMode(BlendMode blendMode) { blendMode_ = blendMode; }
+
 	/// --- 取得関数 ---
 	float GetAlpha() { return materialData_->color.w; }
+
 
 private:
 	/// --- 変数 ---
@@ -77,4 +83,9 @@ private:
 
 	// dxcommonのインスタンス
 	DirectXCommon* common = nullptr;
+
+	// 各モードの変数
+	D3D12_FILL_MODE fillMode_ = D3D12_FILL_MODE_SOLID; // デフォルト設定
+	D3D12_CULL_MODE cullMode_ = D3D12_CULL_MODE_BACK;   // デフォルト設定
+	BlendMode blendMode_ = BlendMode::kNone;     // デフォルト設定
 };
