@@ -176,6 +176,7 @@
     <ClCompile Include="externals\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="externals\imgui\imgui_tables.cpp" />
     <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="InspectorManager.cpp" />
     <ClCompile Include="main.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
@@ -232,6 +233,7 @@
     <ClInclude Include="engine\graphics\assets\model\ModelBuilder.h" />
     <ClInclude Include="engine\graphics\assets\model\Particle.h" />
     <ClInclude Include="engine\system\utility\random\RandomEngine.h" />
+    <ClInclude Include="InspectorManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

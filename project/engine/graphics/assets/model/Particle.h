@@ -55,6 +55,10 @@ public:
 	/// <param name="maxLifetime">最大生存時間（秒）</param>
 	void Emit(Vector3 position, Vector3 range, float duration, float minLifetime, float maxLifetime);
 
+	void Begin();
+
+	void End();
+
 	/// --- 設定関数 ---
 	/// <summary>
 	/// ライティングの有無
@@ -70,6 +74,8 @@ public:
 
 	/// --- 取得関数 ---
 	float GetAlpha() { return materialData_->color.w; }
+
+	void DrawImGui();
 
 private:
 	/// --- 変数 ---
@@ -91,6 +97,12 @@ private:
 	float maxLifetime_ = 0.0f;    // 個々の最大生存時間
 	Vector3 emitPosition_;        // エミット中心座標
 	Vector3 emitRange_;           // エミット範囲
+
+	// ImGui用変数
+	float minLifetimeDebug_ = 0.0f;    // 個々の最小生存時間
+	float maxLifetimeDebug_ = 0.0f;    // 個々の最大生存時間
+	Vector3 emitPositionDebug_;        // エミット中心座標
+	Vector3 emitRangeDebug_;           // エミット範囲
 
 	// 個々のパーティクルを初期化/再生成するヘルパー関数
 	void InitializeParticle(uint32_t index);
@@ -128,5 +140,7 @@ private:
 
 	// dxcommonのインスタンス
 	DirectXCommon* common = nullptr;
+
+	bool isSystemActive_ = false;
 };
 
