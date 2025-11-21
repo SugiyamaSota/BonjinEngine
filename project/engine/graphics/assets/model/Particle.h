@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include"ModelBuilder.h"
 
 #include<string>
@@ -14,7 +14,8 @@ struct ParticleData {
 	WorldTransform transform;
 	float lifeTime;
 	float currentTime;
-	// 必要に応じて velocity や color などを追加
+	Vector3 velocity;
+	Vector4 color;
 };
 
 class Particle
@@ -109,8 +110,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_ = nullptr;
 
 	// WVPリソース
-	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource_ = nullptr;
-	TransformationMatrix* wvpData_ =  nullptr ;
+	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_ = nullptr;
+	ParticleForGPU* instancingData_ =  nullptr ;
 
 	// トランスフォーム
 	ParticleData particles_[kNumInstance_];

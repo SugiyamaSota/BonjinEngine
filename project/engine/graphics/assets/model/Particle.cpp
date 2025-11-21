@@ -42,13 +42,13 @@ void Particle::LoadModel(const std::string& fileName) {
 	materialData_->uvTransform = MakeIdentity4x4();
 
 	// WVP用のリソース
-	wvpResource_ = CreateBufferResource(common->GetDevice(), sizeof(TransformationMatrix) * kNumInstance_);
-	wvpResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
+	instancingResource_ = CreateBufferResource(common->GetDevice(), sizeof(ParticleForGPU) * kNumInstance_);
+	instancingResource_->Map(0, nullptr, reinterpret_cast<void**>(&instancingData_));
 
 	for (uint32_t index = 0; index < kNumInstance_; ++index) 
 	{
-		wvpData_[index].WVP = MakeIdentity4x4();
-		wvpData_[index].World = MakeIdentity4x4();
+		instancingData_[index].WVP = MakeIdentity4x4();
+		instancingData_[index].World = MakeIdentity4x4();
 	}
 
 	// テクスチャ
@@ -63,10 +63,10 @@ void Particle::LoadModel(const std::string& fileName) {
 	srvDesc.Buffer.FirstElement = 0;
 	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 	srvDesc.Buffer.NumElements = kNumInstance_;
-	srvDesc.Buffer.StructureByteStride = sizeof(TransformationMatrix);
+	srvDesc.Buffer.StructureByteStride = sizeof(ParticleForGPU);
 	srvhandleCPU_ = GetCPUDescriptorHandle(DirectXCommon::GetInstance()->GetSRVDescriptorHeap(), DirectXCommon::GetInstance()->GetSRVSize(), 3);
 	srvhandleGPU_ = GetGPUDescriptorHandle(DirectXCommon::GetInstance()->GetSRVDescriptorHeap(), DirectXCommon::GetInstance()->GetSRVSize(), 3);
-	common->GetDevice()->CreateShaderResourceView(wvpResource_.Get(), &srvDesc, srvhandleCPU_);
+	common->GetDevice()->CreateShaderResourceView(instancingResource_.Get(), &srvDesc, srvhandleCPU_);
 }
 
 void Particle::Update(Camera* camera) {
@@ -104,8 +104,6 @@ void Particle::Update(Camera* camera) {
 			}
 		}
 
-		// **3. 描画データ (WVP) の更新**
-
 		// パーティクルが有効（lifeTime > 0）の場合
 		if (particles_[index].lifeTime > 0.0f)
 		{
@@ -117,19 +115,33 @@ void Particle::Update(Camera* camera) {
 			billboardMatrix.m[3][1] = 0.f;
 			billboardMatrix.m[3][2] = 0.f;
 
+			particles_[index].transform.translate = Add(particles_[index].transform.translate, particles_[index].velocity);
+
+			// 経過時間 (0.0f:開始 -> 1.0f:終了)
+            float elapsedRatio = particles_[index].currentTime / particles_[index].lifeTime;
+            
+            // 透明度 (Alpha) の計算: 1.0f (不透明) -> 0.0f (透明)
+            float alpha = 1.0f - elapsedRatio;
+
+            // 最終的な色を計算し、アルファ値を適用
+			particles_[index].color.w = alpha;
+            // 寿命が尽きるタイミングで透明度が 0.0f になるように適用
+
 			// ワールド行列の計算
 			Matrix4x4 worldMatrix = MakeAffineMatrix(particles_[index].transform.scale, billboardMatrix, particles_[index].transform.translate);
 
 			// WVP行列の計算と設定
 			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, camera->GetViewProjectionMatrix());
-			wvpData_[index].WVP = worldViewProjectionMatrix;
-			wvpData_[index].World = worldMatrix;
+			instancingData_[index].WVP = worldViewProjectionMatrix;
+			instancingData_[index].World = worldMatrix;
+			instancingData_[index].color = particles_[index].color;
 
 		} else {
 			// システム終了後、死亡したパーティクルは見えなくする
 			// WVP行列をスケール0の行列にすることで、描画パイプラインから隠す
-			wvpData_[index].WVP = MakeScaleMatrix({ 0.0f, 0.0f, 0.0f });
-			wvpData_[index].World = MakeIdentity4x4();
+			instancingData_[index].WVP = MakeScaleMatrix({ 0.0f, 0.0f, 0.0f });
+			instancingData_[index].World = MakeIdentity4x4();
+			instancingData_[index].color = particles_[index].color;
 		}
 	}
 }
@@ -176,6 +188,8 @@ void Particle::InitializeParticle(uint32_t index) {
 	std::uniform_real_distribution<float> distX(-emitRange_.x, emitRange_.x);
 	std::uniform_real_distribution<float> distY(-emitRange_.y, emitRange_.y);
 	std::uniform_real_distribution<float> distZ(-emitRange_.z, emitRange_.z);
+	std::uniform_real_distribution<float> distVel(-0.1f, 0.1f);
+	std::uniform_real_distribution<float> distColor(0.f, 1.f);
 	std::uniform_real_distribution<float> distLifetime(minLifetime_, maxLifetime_);
 
 	// 既存のデータをリセット
@@ -185,6 +199,23 @@ void Particle::InitializeParticle(uint32_t index) {
 	particles_[index].lifeTime = distLifetime(randomEngine_); // ランダムな寿命を設定
 	particles_[index].currentTime = 0.0f; // 経過時間をリセット
 
+	// 速度を乱数で設定
+	Vector3 randomVelocity = {
+	distVel(randomEngine_),
+	distVel(randomEngine_),
+	distVel(randomEngine_)
+	};
+
+	particles_[index].velocity = randomVelocity;
+
+	// 色
+	particles_[index].color = {
+		distColor(randomEngine_),
+		distColor(randomEngine_),
+		distColor(randomEngine_),
+		1.f
+	};
+
 	// ランダムなオフセットを生成して中心座標に加算
 	Vector3 randomOffset = {
 		distX(randomEngine_),
@@ -193,5 +224,5 @@ void Particle::InitializeParticle(uint32_t index) {
 	};
 
 	// 最終的な位置を設定
-	particles_[index].transform.translate = Add(emitPosition_, randomOffset);
+	//particles_[index].transform.translate = Add(emitPosition_, randomOffset);
 }
