@@ -146,9 +146,22 @@ void Particle::Update(Camera* camera) {
 }
 
 void Particle::Draw() {
-	//// PSOの設定
-	//common->GetCommandList()->SetGraphicsRootSignature(common->GetPSO()->GetRootSignature(PrimitiveType::kParticle));
-	//common->GetCommandList()->SetPipelineState(common->GetPSO()->GetPipelineState(PrimitiveType::kParticle, BlendMode::kNormal));
+	// PSOを遅延生成/取得するためにデバイスが必要
+	ID3D12Device* device = common->GetDevice();
+
+	// PSOManagerの新しいGetPipelineState関数を呼び出し
+	ID3D12PipelineState* pso =
+		common->GetPSO()->GetPipelineState(
+			device,
+			PrimitiveType::kParticle,
+			BlendMode::kNormal,
+			D3D12_FILL_MODE_SOLID,
+			D3D12_CULL_MODE_BACK
+		);
+
+	// PSOの設定
+	common->GetCommandList()->SetGraphicsRootSignature(common->GetPSO()->GetRootSignature(PrimitiveType::kParticle));
+	common->GetCommandList()->SetPipelineState(pso);
 
 	//　モデルの描画
 	// VBV
