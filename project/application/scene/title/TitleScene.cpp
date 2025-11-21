@@ -10,8 +10,11 @@ void TitleScene::Initialize(Camera* camera) {
 
     WorldTransform wt = InitializeWorldTransform();
     model_ = new Model;
-    model_->LoadModel("teapot");
+    model_->LoadModel("plane");
     model_->Update(wt, camera);
+
+  /*  sprite_ = new Sprite;
+    sprite_->Initialize(Vector3{ 0.f,0.f,0.f }, Color::White, Vector3{ 0.5f,0.5f,0.f }, Vector2{ 256,256 }, "uvChecker.png");*/
 }
 
 void TitleScene::Unload() {
@@ -19,11 +22,17 @@ void TitleScene::Unload() {
         delete model_;
         model_ = nullptr;
     }
+
+   /* if (sprite_ != nullptr) {
+        delete sprite_;
+        sprite_ = nullptr;
+    }*/
 }
 
 void TitleScene::Update(float deltaTime) {
     WorldTransform wt = InitializeWorldTransform();
     model_->Update(wt, camera_);
+   // sprite_->Update(Vector3{ 640.f,360.f,0.f }, Color::Blue);
 
     if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
         nextSceneType_ = SceneType::kGame;
@@ -32,6 +41,8 @@ void TitleScene::Update(float deltaTime) {
 
 void TitleScene::Draw() {
     model_->Draw();
+
+    //sprite_->Draw();
 }
 
 void TitleScene::DrawSceneImGui() {

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include"../interface/IScene.h"
 
 #include"../bonjin/BonjinEngine.h"
@@ -33,6 +33,9 @@ namespace BonjinEngine
 
         // 
         Model* model_ = nullptr;
+
+        //
+        //Sprite* sprite_ = nullptr;
 
     private:
         // --- ゲーム固有の関数 ---

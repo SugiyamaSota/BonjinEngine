@@ -49,8 +49,8 @@ namespace BonjinEngine {
         ID3D12GraphicsCommandList* commandList = DirectXCommon::GetInstance()->GetCommandList();
         const auto& pso = DirectXCommon::GetInstance()->GetPSO();
 
-        commandList->SetGraphicsRootSignature(DirectXCommon::GetInstance()->GetPSO()->GetRootSignature(PrimitiveType::kGrid));
-        commandList->SetPipelineState(DirectXCommon::GetInstance()->GetPSO()->GetPipelineState(PrimitiveType::kGrid, BlendMode::kNone));
+        //commandList->SetGraphicsRootSignature(DirectXCommon::GetInstance()->GetPSO()->GetRootSignature(PrimitiveType::kGrid));
+        //commandList->SetPipelineState(DirectXCommon::GetInstance()->GetPSO()->GetPipelineState(PrimitiveType::kGrid, BlendMode::kNone));
         commandList->IASetVertexBuffers(0, 1, &gridVbView_);
         commandList->SetGraphicsRootConstantBufferView(0, gridTransformationMatrixResource_->GetGPUVirtualAddress()); // b0 レジスタに設定
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST); // ラインリストとして描画

@@ -147,9 +147,9 @@ void Particle::Update(Camera* camera) {
 }
 
 void Particle::Draw() {
-	// PSOの設定
-	common->GetCommandList()->SetGraphicsRootSignature(common->GetPSO()->GetRootSignature(PrimitiveType::kParticle));
-	common->GetCommandList()->SetPipelineState(common->GetPSO()->GetPipelineState(PrimitiveType::kParticle, BlendMode::kNormal));
+	//// PSOの設定
+	//common->GetCommandList()->SetGraphicsRootSignature(common->GetPSO()->GetRootSignature(PrimitiveType::kParticle));
+	//common->GetCommandList()->SetPipelineState(common->GetPSO()->GetPipelineState(PrimitiveType::kParticle, BlendMode::kNormal));
 
 	//　モデルの描画
 	// VBV

@@ -20,7 +20,8 @@ static const wchar_t* kShaderProfiles[static_cast<size_t>(ShaderStage::kCount)] 
 };
 
 PSOManager::PSOManager() {
-    shaderCompiler_.InitializeDxc(); // コンストラクタでDXCを初期化
+    // dxcの初期化
+    shaderCompiler_.InitializeDxc();
 }
 
 PSOManager::~PSOManager() {}
@@ -44,8 +45,9 @@ void PSOManager::Initialize(ID3D12Device* device,DXGI_FORMAT rtvFormat,DXGI_FORM
     /// --- DepthStencilState ---
     CreateDepthStencil();
 
-    /// --- PSO作成 ---
-    CreatePSO(device,rtvFormat,dsvFormat);
+    /// --- Format ---
+    rtvFormat_ = rtvFormat;
+    dsvFormat_ = dsvFormat;
 }
 
 void PSOManager::CreateRootSignature(ID3D12Device* device)
@@ -192,9 +194,9 @@ void PSOManager::CreateInputLayout()
     modelInputElementDescs_[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
     modelInputElementDescs_[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 
-    // ⭐ メンバ配列のアドレスとサイズを設定する
     inputLayoutDescs_[(size_t)PrimitiveType::kModel].pInputElementDescs = modelInputElementDescs_.data();
     inputLayoutDescs_[(size_t)PrimitiveType::kModel].NumElements = kModelInputElements;
+
 
     // グリッド
     gridInputElementDescs_[0].SemanticName = "POSITION";
@@ -206,7 +208,6 @@ void PSOManager::CreateInputLayout()
     gridInputElementDescs_[1].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
     gridInputElementDescs_[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 
-    // ⭐ メンバ配列のアドレスとサイズを設定する
     inputLayoutDescs_[(size_t)PrimitiveType::kGrid].pInputElementDescs = gridInputElementDescs_.data();
     inputLayoutDescs_[(size_t)PrimitiveType::kGrid].NumElements = kGridInputElements;
 
@@ -224,10 +225,10 @@ void PSOManager::CreateInputLayout()
     particleInputElementDescs_[2].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
     particleInputElementDescs_[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 
-    // ⭐ メンバ配列のアドレスとサイズを設定する
     inputLayoutDescs_[(size_t)PrimitiveType::kParticle].pInputElementDescs = particleInputElementDescs_.data();
     inputLayoutDescs_[(size_t)PrimitiveType::kParticle].NumElements = kParticleInputElements;
 }
+
 void PSOManager::CreateDepthStencil() 
 {
     // モデル
@@ -246,55 +247,101 @@ void PSOManager::CreateDepthStencil()
     depthStencilDescs_[(size_t)PrimitiveType::kParticle].DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 }
 
-void PSOManager::CreatePSO(ID3D12Device* device, DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat)
+ID3D12PipelineState* PSOManager::GetPipelineState(
+    ID3D12Device* device,
+    PrimitiveType type,
+    BlendMode mode,
+    D3D12_FILL_MODE fillMode,
+    D3D12_CULL_MODE cullMode)
 {
-    // モデル
-    for (int i = 0; i < static_cast<int>(BlendMode::kCount); ++i) {
-        BlendMode mode = static_cast<BlendMode>(i);
-        GraphicsPipelineStateBuilder psoBuilder;
-        graphicsPipelineStates_[(size_t)PrimitiveType::kModel][i] = psoBuilder
-            .SetRootSignature(rootSignatures_[(size_t)PrimitiveType::kModel].Get())
-            .SetInputLayout(inputLayoutDescs_[(size_t)PrimitiveType::kModel])
-            .SetVertexShader(shaderBlobs_[(size_t)PrimitiveType::kModel][(size_t)ShaderStage::kVertex].Get())
-            .SetPixelShader(shaderBlobs_[(size_t)PrimitiveType::kModel][(size_t)ShaderStage::kPixel].Get())
-            .SetBlendMode(mode)
-            .SetRasterizerState(rasterizerDesc_)
-            .SetDepthStencilState(depthStencilDescs_[(size_t)PrimitiveType::kModel])
-            .AddRenderTargetFormat(rtvFormat)
-            .SetDepthStencilViewFormat(dsvFormat)
-            .SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE)
-            .Build(device);
+
+    // キーの生成
+    size_t key = CalculateHash(type, mode, fillMode, cullMode);
+
+    // キャッシュを検索
+    if (psoCache_.count(key)) {
+        return psoCache_.at(key).Get();
     }
 
-    GraphicsPipelineStateBuilder linePsoBuilder;
-    graphicsPipelineStates_[(size_t)PrimitiveType::kGrid][(size_t)BlendMode::kNone] = linePsoBuilder
-        .SetRootSignature(rootSignatures_[(size_t)PrimitiveType::kGrid].Get())
-        .SetInputLayout(inputLayoutDescs_[(size_t)PrimitiveType::kGrid])
-        .SetVertexShader(shaderBlobs_[(size_t)PrimitiveType::kGrid][(size_t)ShaderStage::kVertex].Get())
-        .SetPixelShader(shaderBlobs_[(size_t)PrimitiveType::kGrid][(size_t)ShaderStage::kPixel].Get())
-        .SetBlendMode(BlendMode::kNone)
-        .SetRasterizerState(rasterizerDesc_)
-        .SetDepthStencilState(depthStencilDescs_[(size_t)PrimitiveType::kGrid])
-        .AddRenderTargetFormat(rtvFormat)
-        .SetDepthStencilViewFormat(dsvFormat)
-        .SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE)
-        .Build(device);
+    // ヒットしなかったら作成
+    Microsoft::WRL::ComPtr<ID3D12PipelineState>newPso =
+        CreatePSOInternal(device, type, mode, fillMode, cullMode);
 
-    // パーティクル
-    for (int i = 0; i < static_cast<int>(BlendMode::kCount); ++i) {
-        BlendMode mode = static_cast<BlendMode>(i);
-        GraphicsPipelineStateBuilder psoBuilder;
-        graphicsPipelineStates_[(size_t)PrimitiveType::kParticle][i] = psoBuilder
-            .SetRootSignature(rootSignatures_[(size_t)PrimitiveType::kParticle].Get())
-            .SetInputLayout(inputLayoutDescs_[(size_t)PrimitiveType::kParticle])
-            .SetVertexShader(shaderBlobs_[(size_t)PrimitiveType::kParticle][(size_t)ShaderStage::kVertex].Get())
-            .SetPixelShader(shaderBlobs_[(size_t)PrimitiveType::kParticle][(size_t)ShaderStage::kPixel].Get())
-            .SetBlendMode(mode)
-            .SetRasterizerState(rasterizerDesc_)
-            .SetDepthStencilState(depthStencilDescs_[(size_t)PrimitiveType::kParticle])
-            .AddRenderTargetFormat(rtvFormat)
-            .SetDepthStencilViewFormat(dsvFormat)
-            .SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE)
-            .Build(device);
+    // キャッシュに保存
+    psoCache_[key] = newPso;
+
+    // 作成したpsoを返す
+    return newPso.Get();
+
+}
+Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOManager::CreatePSOInternal(
+    ID3D12Device* device,
+    PrimitiveType type,
+    BlendMode mode,
+    D3D12_FILL_MODE fillMode,
+    D3D12_CULL_MODE cullMode)
+{
+    GraphicsPipelineStateBuilder psoBuilder;
+
+    // --- 1. 共通の設定 (Builderを使用) ---
+    psoBuilder
+        // ルートシグネチャ、インプットレイアウト、シェーダーを設定
+        .SetRootSignature(rootSignatures_[static_cast<size_t>(type)].Get())
+        .SetInputLayout(inputLayoutDescs_[static_cast<size_t>(type)])
+        .SetVertexShader(shaderBlobs_[static_cast<size_t>(type)][static_cast<size_t>(ShaderStage::kVertex)].Get())
+        .SetPixelShader(shaderBlobs_[static_cast<size_t>(type)][static_cast<size_t>(ShaderStage::kPixel)].Get())
+
+        // レンダーターゲットフォーマット、深度ステンシルビューフォーマットを設定
+        .SetDepthStencilViewFormat(dsvFormat_)
+        .AddRenderTargetFormat(rtvFormat_)
+
+        // ブレンドモードの設定（引数で受け取ったモードを使用）
+        .SetBlendMode(mode);
+
+    // 警告防止のため、SampleMaskをデフォルトに明示的に設定
+    psoBuilder.SetSampleMask(D3D12_DEFAULT_SAMPLE_MASK);
+
+
+    // --- 2. ラスタライザーと深度/ステンシルステートのベース設定 ---
+
+    // ラスタライザーはベース設定(rasterizerDesc_)に引数で渡された FillMode/CullMode を適用
+    D3D12_RASTERIZER_DESC currentRasterizerDesc = rasterizerDesc_;
+    currentRasterizerDesc.FillMode = fillMode;
+    currentRasterizerDesc.CullMode = cullMode;
+    psoBuilder.SetRasterizerState(currentRasterizerDesc);
+
+    // 深度/ステンシルステートはプリミティブタイプごとの設定を使用
+    D3D12_DEPTH_STENCIL_DESC currentDepthStencilDesc = depthStencilDescs_[static_cast<size_t>(type)];
+    psoBuilder.SetDepthStencilState(currentDepthStencilDesc);
+
+
+    // --- 3. プリミティブタイプごとの特殊な設定とオーバーライド ---
+    switch (type) {
+    case PrimitiveType::kModel:
+        // モデルは三角形リスト
+        psoBuilder.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+        break;
+
+    case PrimitiveType::kParticle:
+        // パーティクルは三角形リスト
+        psoBuilder.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+
+        // パーティクル専用のCullModeオーバーライド (両面描画)
+        currentRasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
+        psoBuilder.SetRasterizerState(currentRasterizerDesc);
+        break;
+
+    case PrimitiveType::kGrid:
+        // グリッドは線リスト
+        psoBuilder.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE);
+        // グリッド用の深度/ステンシル設定（深度書き込みなしなど）は、すでに currentDepthStencilDesc で設定済み
+        break;
+
+    case PrimitiveType::kCount:
+        assert(false && "Invalid PrimitiveType used for PSO creation.");
+        return nullptr;
     }
+
+
+    return psoBuilder.Build(device);
 }

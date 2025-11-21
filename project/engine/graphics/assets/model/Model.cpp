@@ -50,9 +50,27 @@ void Model::Update(WorldTransform worldTransform, Camera* camera) {
 }
 
 void Model::Draw() {
+	// 描画に必要な設定を定義 (モデルの標準設定)
+	const D3D12_FILL_MODE currentFillMode = fillMode_;
+	const D3D12_CULL_MODE currentCullMode = cullMode_;
+	const BlendMode currentBlendMode = blendMode_;
+
+	// PSOを遅延生成/取得するためにデバイスが必要
+	ID3D12Device* device = common->GetDevice(); // 💡 commonがDeviceを提供すると仮定
+
+	// PSOManagerの新しいGetPipelineState関数を呼び出し
+	ID3D12PipelineState* pso =
+		common->GetPSO()->GetPipelineState(
+			device,
+			PrimitiveType::kModel,
+			currentBlendMode,
+			currentFillMode,
+			currentCullMode
+		);
+
 	// PSOの設定
 	common->GetCommandList()->SetGraphicsRootSignature(common->GetPSO()->GetRootSignature(PrimitiveType::kModel));
-	common->GetCommandList()->SetPipelineState(common->GetPSO()->GetPipelineState(PrimitiveType::kModel, BlendMode::kNormal));
+	common->GetCommandList()->SetPipelineState(pso);
 
 	//　モデルの描画
 	// VBV
