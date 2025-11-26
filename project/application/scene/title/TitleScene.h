@@ -35,6 +35,9 @@ namespace BonjinEngine
         WorldTransform worldTransform_{};
         Sprite* sprite_{ nullptr };
 
+        //
+        //Sprite* sprite_ = nullptr;
+
     private:
         // --- ゲーム固有の関数 ---
 

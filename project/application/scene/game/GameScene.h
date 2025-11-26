@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "../interface/IScene.h" // ISceneをインクルード
 
 #include"../bonjin/BonjinEngine.h"
