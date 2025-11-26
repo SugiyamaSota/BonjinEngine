@@ -12,21 +12,26 @@ public:
     /// </summary>
     /// <param name="worldTransform">ワールド変換</param>
     /// <param name="textureFilePath">テクスチャファイルのパス</param>
-    void Initialize(Vector3 position, Color color, Vector3 anchor, Vector2 size, const std::string& textureFilePath);
+    void Initialize(WorldTransform transform, Color color, Vector3 anchor, Vector2 size, const std::string& textureFilePath);
 
     /// <summary>
     /// スプライトの更新
     /// </summary>
     /// <param name="worldTransform">ワールド変換</param>
     /// <param name="color">色</param>
-    void Update(Vector3 spritePosition, Color color);
+    void Update(WorldTransform transform, Color color);
 
     /// <summary>
     /// スプライトの描画
     /// </summary>
     void Draw();
 
+    void DrawImGui();
+
     void  SetColor(Vector4 color) { materialData_->color = color; }
+
+    void SetFlipX(bool flag) { isFlipX_ = flag; }
+    void SetFlipY(bool flag) { isFlipY_ = flag; }
 
 private:
     // 頂点リソース
@@ -56,4 +61,9 @@ private:
     Matrix4x4 projectionMatrix_;
     // ビュープロジェクション行列
     Matrix4x4 viewProjectionMatrix_;
+
+    bool isFlipX_ = false;
+    bool isFlipY_ = false;
+
+    void UpdateUVTransform();
 };
