@@ -102,7 +102,6 @@ void Sprite::Initialize(WorldTransform transform, Color color, Vector3 anchor, V
 }
 
 void Sprite::Update(WorldTransform transform, Color color) {
-
 	transform_ = InitializeWorldTransform();
 	transform_=transform;
 
@@ -122,9 +121,22 @@ void Sprite::Update(WorldTransform transform, Color color) {
 void Sprite::Draw() {
 	DirectXCommon* common = DirectXCommon::GetInstance();
 
+	// PSOを遅延生成/取得するためにデバイスが必要
+	ID3D12Device* device = common->GetDevice();
+
+	// PSOManagerの新しいGetPipelineState関数を呼び出し
+	ID3D12PipelineState* pso =
+		common->GetPSO()->GetPipelineState(
+			device,
+			PrimitiveType::kModel,
+			BlendMode::kNormal,
+			D3D12_FILL_MODE_SOLID,
+			D3D12_CULL_MODE_BACK
+		);
+
 	// PSOの設定
 	common->GetCommandList()->SetGraphicsRootSignature(common->GetPSO()->GetRootSignature(PrimitiveType::kModel));
-	common->GetCommandList()->SetPipelineState(common->GetPSO()->GetPipelineState(PrimitiveType::kModel, BlendMode::kNormal));
+	common->GetCommandList()->SetPipelineState(pso);
 
 	// インデックスバッファビューの設定
 	common->GetCommandList()->IASetIndexBuffer(&indexBufferView_);

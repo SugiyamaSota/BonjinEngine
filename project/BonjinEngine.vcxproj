@@ -184,7 +184,7 @@
     <ClCompile Include="engine\system\utility\math\Convert.cpp" />
     <ClCompile Include="engine\system\utility\math\Matrix.cpp" />
     <ClCompile Include="engine\system\utility\math\vector.cpp" />
-    <ClCompile Include="engine\graphics\rendering\sprite\sprite.cpp" />
+    <ClCompile Include="engine\graphics\rendering\sprite\Sprite.cpp" />
     <ClCompile Include="engine\system\platform\windows\WinApp.cpp" />
     <ClCompile Include="engine\system\utility\time\Time.cpp" />
     <ClCompile Include="application\scene\title\TitleScene.cpp" />
@@ -226,7 +226,7 @@
     <ClInclude Include="engine\system\utility\math\Matrix.h" />
     <ClInclude Include="engine\system\utility\math\Struct.h" />
     <ClInclude Include="engine\system\utility\math\vector.h" />
-    <ClInclude Include="engine\graphics\rendering\sprite\sprite.h" />
+    <ClInclude Include="engine\graphics\rendering\sprite\Sprite.h" />
     <ClInclude Include="engine\system\platform\windows\WinApp.h" />
     <ClInclude Include="engine\system\utility\time\Time.h" />
     <ClInclude Include="application\scene\title\TitleScene.h" />
