@@ -56,7 +56,7 @@ void Model::Draw() {
 	const BlendMode currentBlendMode = blendMode_;
 
 	// PSOを遅延生成/取得するためにデバイスが必要
-	ID3D12Device* device = common->GetDevice(); // 💡 commonがDeviceを提供すると仮定
+	ID3D12Device* device = common->GetDevice();
 
 	// PSOManagerの新しいGetPipelineState関数を呼び出し
 	ID3D12PipelineState* pso =

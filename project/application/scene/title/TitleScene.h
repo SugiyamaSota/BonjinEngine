@@ -32,7 +32,8 @@ namespace BonjinEngine
         // --- ゲーム固有の変数 ---
 
         // 
-        Model* model_ = nullptr;
+        WorldTransform worldTransform_{};
+        Sprite* sprite_{ nullptr };
 
         //
         //Sprite* sprite_ = nullptr;
