@@ -71,6 +71,8 @@ public:
     /// </summary>
     void ReleaseIntermediateResources();
 
+    Vector2 GetTextureSize(int textureIndex) const;
+
 private:
     /// --- 変数 ---
     // インスタンス

@@ -167,3 +167,17 @@ Microsoft::WRL::ComPtr<ID3D12Resource> TextureManager::UploadTextureDataInternal
 
 	return intermediateResource;
 }
+
+Vector2 TextureManager::GetTextureSize(int textureIndex) const {
+	// インデックスが有効な範囲内にあることを確認
+	assert(static_cast<uint32_t>(textureIndex) < metadatas_.size());
+
+	// メタデータを取得
+	const DirectX::TexMetadata& metadata = metadatas_[textureIndex];
+
+	// 幅と高さを Vector2 に変換して返す
+	return Vector2{
+		static_cast<float>(metadata.width),
+		static_cast<float>(metadata.height)
+	};
+}

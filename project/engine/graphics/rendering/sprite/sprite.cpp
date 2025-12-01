@@ -1,11 +1,12 @@
 #include "Sprite.h"
 #include <cassert>
 
-Sprite::Sprite() {
+Sprite::Sprite(const std::string& tag) {
 	transform_ = InitializeWorldTransform();
 	viewMatrix_ = MakeIdentity4x4();
 	projectionMatrix_ = MakeOrthographicMatrix(0.0f, 0.0f, static_cast<float>(1280), static_cast<float>(720), 0.0f, 100.0f);
 	viewProjectionMatrix_ = Multiply(viewMatrix_, projectionMatrix_);
+	tag_ = tag;
 }
 
 Sprite::~Sprite() {
@@ -26,7 +27,13 @@ Sprite::~Sprite() {
 }
 
 
-void Sprite::Initialize(WorldTransform transform, Color color, Vector3 anchor, Vector2 size, const std::string& textureFilePath) {
+void Sprite::Initialize(WorldTransform transform,
+	Color color,
+	Vector3 anchor,
+	Vector2 size,
+	const std::string& textureFilePath,
+	Vector2 texRect,
+	Vector2 texSize) {
 	transform_ = InitializeWorldTransform();
 
 	// スプライトの幅と高さを定義
@@ -99,11 +106,17 @@ void Sprite::Initialize(WorldTransform transform, Color color, Vector3 anchor, V
 
 	// テクスチャのロード
 	textureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/" + textureFilePath);
+
+	textureSize_ = TextureManager::GetInstance()->GetTextureSize(textureHandle_);
+	texRect_ = texRect;
+	texSize_ = texSize;
+
+	UpdateUV();
 }
 
 void Sprite::Update(WorldTransform transform, Color color) {
 	transform_ = InitializeWorldTransform();
-	transform_=transform;
+	transform_ = transform;
 
 	// ワールド行列の計算
 	wvpData_->World = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
@@ -116,6 +129,8 @@ void Sprite::Update(WorldTransform transform, Color color) {
 	materialData_->color = ToVector4(color); // enum Color を Vector4 に変換して設定
 
 	UpdateUVTransform();
+
+	UpdateUV();
 }
 
 void Sprite::Draw() {
@@ -164,10 +179,6 @@ void Sprite::UpdateUVTransform() {
 		1.0f
 	};
 
-	// スプライトのアンカーがテクスチャの原点 (0, 0) に対応するように移動
-	// 描画されるテクスチャの全体を0.0f〜1.0fのUV範囲でスケール/移動するため、
-	// 変換の基準点をテクスチャの中心 (0.5, 0.5) に合わせる必要があります。
-
 	// 1. 変換の中心 (0.5, 0.5) へ平行移動
 	Matrix4x4 translateToCenter = MakeTranslateMatrix({ 0.5f, 0.5f, 0.0f });
 	// 2. スケーリング (反転)
@@ -194,9 +205,52 @@ void Sprite::UpdateUVTransform() {
 
 void Sprite::DrawImGui() {
 
-	ImGui::Separator();
-	ImGui::Text("sprite");
-	ImGui::Checkbox("flipX", &isFlipX_);
-	ImGui::Checkbox("flipY", &isFlipY_);
+	ImGui::PushID((void*)this);
 
+	ImGui::Separator();
+
+	ImGui::Text("For %s", tag_.c_str());
+
+	ImGui::DragFloat3("scale", &transform_.scale.x);
+	ImGui::DragFloat3("rotate", &transform_.rotate.x);
+	ImGui::DragFloat3("translate", &transform_.translate.x);
+	ImGui::Checkbox("Flip X", &isFlipX_);
+	ImGui::Checkbox("Flip Y", &isFlipY_);
+
+	ImGui::PopID(); // IDを元に戻す
+
+}
+
+void Sprite::UpdateUV() {
+	// テクスチャ全体の幅と高さを取得
+	float textureWidth = textureSize_.x;
+	float textureHeight = textureSize_.y;
+
+	// テクスチャがロードされていない、またはサイズが0の場合は処理しない
+	if (textureWidth <= 0.0f || textureHeight <= 0.0f) {
+		return;
+	}
+
+	// 切り取り範囲の開始点 (テクスチャ座標 0.0f〜1.0f)
+	float startU = texRect_.x / textureWidth;
+	float startV = texRect_.y / textureHeight;
+
+	// 切り取り範囲の終点 (テクスチャ座標 0.0f〜1.0f)
+	// texRect_.x + texSize_.x が 切り取り領域の右端のピクセル座標
+	float endU = (texRect_.x + texSize_.x) / textureWidth;
+	float endV = (texRect_.y + texSize_.y) / textureHeight;
+
+	// UV座標の更新
+	// 左下 (0)
+	vertexData_[0].texcoord = { startU, endV };
+	// 左上 (1)
+	vertexData_[1].texcoord = { startU, startV };
+	// 右下 (2)
+	vertexData_[2].texcoord = { endU, endV };
+	// 右上 (3)
+	vertexData_[3].texcoord = { endU, startV };
+
+	// 頂点バッファをGPUに再マップする必要はありません。
+	// Map時に得られたポインタ (vertexData_) を介してデータを変更すれば、
+	// 次の描画コマンドでGPUは最新のデータを使用します。
 }

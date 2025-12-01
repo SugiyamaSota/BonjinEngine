@@ -9,8 +9,9 @@ void TitleScene::Initialize(Camera* camera) {
 	this->camera_ = camera;
 
 	worldTransform_ = InitializeWorldTransform();
-	sprite_ = new Sprite;
-	sprite_->Initialize(worldTransform_, Color::White, { 0.5f,0.5f }, { 640.f,360.f }, "uvChecker.png");
+	worldTransform_.translate = { 640.f,360.f,0.f };
+	sprite_ = new Sprite();
+	sprite_->Initialize(worldTransform_, Color::White, { 0.5f,0.5f }, { 512.f,512.f }, "uvChecker.png", { 0.f,0.f }, { 256.f,256.f });
 }
 
 void TitleScene::Unload() {
@@ -24,8 +25,6 @@ void TitleScene::Update(float deltaTime) {
 
 	//worldTransform_.rotate.z += 0.1f;
 	sprite_->Update(worldTransform_, Color::White);
-
-
 
 	if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
 		nextSceneType_ = SceneType::kGame;
