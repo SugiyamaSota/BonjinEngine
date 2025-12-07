@@ -379,6 +379,9 @@ void Player::WallCollisionReaction(const CollisionMapInfo& info) {
 }
 
 void Player::Update() {
+	HandleLockOnRemovalInput();
+
+
 	// 1.移動処理
 	Move();
 
@@ -578,4 +581,18 @@ void Player::RemoveLockedOnEnemies(std::list<Enemy*>& enemies) {
 		enemy->SetIsDead(true); // 敵の死亡フラグを立てる
 	}
 	enemies.clear(); // ロックオンリストをクリア
+}
+
+void Player::HandleLockOnRemovalInput() {
+	// リストへのポインタが設定されているか確認
+	if (lockedOnEnemies_ == nullptr) {
+		return;
+	}
+
+	// Lキーまたは対応するパッドボタンが押されたら、ロックオン中の敵をすべて削除する
+	// GameSceneで使われていた入力判定をそのまま使用
+	if (Input::GetInstance()->IsPadTrigger(3) || Input::GetInstance()->IsTrigger(DIK_L)) {
+		// GameScene が持っていたリストへのポインタを介して、削除ロジックを呼び出す
+		RemoveLockedOnEnemies(*lockedOnEnemies_);
+	}
 }

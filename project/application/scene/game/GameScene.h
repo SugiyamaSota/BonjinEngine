@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "../base/SceneBase.h"
 
 #include"../../player/Player.h"
@@ -21,7 +21,7 @@ namespace BonjinEngine {
     class GameScene : public SceneBase {
     public:
         // 💡 仮想デストラクタは必須
-        virtual ~GameScene() = default;
+        virtual ~GameScene();
 
         /// <summary>
         /// シーン初期化

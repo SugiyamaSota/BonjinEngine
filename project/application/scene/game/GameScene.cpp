@@ -1,4 +1,4 @@
-﻿#include "GameScene.h"
+#include "GameScene.h"
 
 #include"../../others/Collision.h"
 #include"../../others/Data.h"
@@ -24,6 +24,7 @@ void GameScene::Initialize(Camera * camera) {
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(2, 1);
 	player_->Initialize(model_.get(), camera_, playerPosition);
 	player_->SetMapChipField(mapChipField_.get());
+	player_->SetLockedOnEnemiesList(&lockedOnEnemies_);
 
 	// カメラのターゲット座標をプレイヤーの初期座標に設定
 	cameraTarget_ = playerPosition;
@@ -136,26 +137,26 @@ void GameScene::Initialize(Camera * camera) {
 	goalModel_->Update(goalWorldTransform_, camera_);
 }
 
-//GameScene::~GameScene() {
-//	// ブロック
-//	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
-//		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
-//			delete blockModel_[i][j];
-//		}
-//	}
-//
-//	delete goalModel_;
-//	delete HUD;
-//	delete gameClearSprite_;
-//	delete blackScreenSprite_;
-//
-//	for (Enemy* enemyPtr : lockedOnEnemies_) {
-//		delete enemyPtr; // Enemyオブジェクトを解放
-//	}
-//
-//	// 2. リスト自体をクリア
-//	lockedOnEnemies_.clear();
-//}
+GameScene::~GameScene() {
+	// ブロック
+	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
+		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
+			delete blockModel_[i][j];
+		}
+	}
+
+	delete goalModel_;
+	delete HUD;
+	delete gameClearSprite_;
+	delete blackScreenSprite_;
+
+	for (Enemy* enemyPtr : lockedOnEnemies_) {
+		delete enemyPtr; // Enemyオブジェクトを解放
+	}
+
+	// 2. リスト自体をクリア
+	lockedOnEnemies_.clear();
+}
 
 void GameScene::Update(float deltaTime) {
 	switch (phase_) {
@@ -218,11 +219,6 @@ void GameScene::Update(float deltaTime) {
 		camera_->Update(Camera::CameraType::kNormal);
 
 
-		// Lキーが押されたら、ロックオン中の敵をすべて削除する
-		if (Input::GetInstance()->IsPadTrigger(3) || Input::GetInstance()->IsTrigger(DIK_L)) {
-			// Playerクラスのメソッドを呼び出し、ロックオンリストを渡す
-			player_->RemoveLockedOnEnemies(lockedOnEnemies_);
-		}
 
 		// 敵を死亡状態のものを削除
 		enemies_.remove_if([&](const std::unique_ptr<Enemy>& enemy) {
@@ -313,7 +309,6 @@ void GameScene::Draw() {
 	// 自キャラの描画
 	player_->Draw();
 
-
 	// ブロックの描画
 	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
 		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
@@ -334,9 +329,7 @@ void GameScene::Draw() {
 		debris->Draw();
 	}
 
-
 	goalModel_->Draw();
-
 
 	if (showTutrial == false) {
 		HUD->Draw();

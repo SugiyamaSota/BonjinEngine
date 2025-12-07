@@ -173,6 +173,13 @@ public:
 		return *anchor_;
 	}
 
+	void SetLockedOnEnemiesList(std::list<Enemy*>* enemiesList) {
+		lockedOnEnemies_ = enemiesList;
+	}
+
+	// ロックオン中の敵をすべて削除する処理（入力判定を含む)
+	void HandleLockOnRemovalInput();
+
 	// ロックオン中の敵をすべて削除する
 	void RemoveLockedOnEnemies(std::list<Enemy*>& enemies);
 

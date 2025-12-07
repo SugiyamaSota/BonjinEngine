@@ -32,7 +32,17 @@ void TitleScene::Initialize(Camera* camera) {
 	skydome_->Initialize(skydomeModel_.get(), camera_);
 }
 
-
+TitleScene::~TitleScene() {
+	if (titleModel_) {
+		delete titleModel_;
+	}
+	if (titleUIModel_) {
+		delete titleUIModel_;
+	}
+	if (blackScreenSprite_) {
+		delete blackScreenSprite_;
+	}
+}
 
 
 void TitleScene::Update(float deltaTime) {

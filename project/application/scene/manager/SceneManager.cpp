@@ -3,10 +3,8 @@
 
 using namespace BonjinEngine;
 
-// 💡 1. シングルトンインスタンスの実体
 SceneManager* SceneManager::instance = nullptr;
 
-// 💡 2. シングルトン: インスタンスの取得
 SceneManager* SceneManager::GetInstance() {
 	if (instance == nullptr) {
 		instance = new SceneManager();

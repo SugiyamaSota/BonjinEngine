@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "../base/SceneBase.h"
 
 #include"../../field/Skydome.h"
@@ -15,7 +15,7 @@ namespace BonjinEngine {
     class TitleScene : public SceneBase {
     public:
         // 💡 仮想デストラクタは必須
-        virtual ~TitleScene() = default;
+        virtual ~TitleScene();
 
         /// <summary>
         /// シーン初期化
