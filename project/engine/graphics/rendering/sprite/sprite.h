@@ -2,68 +2,88 @@
 #include"../bonjin/BonjinEngine.h"
 #include"../color/Color.h"
 
-class Sprite {
-public:
-    Sprite();
-    ~Sprite(); // リソースを解放するためのデストラクタ
+namespace Bonjin {
 
-    /// <summary>
-    /// スプライトの初期化
-    /// </summary>
-    /// <param name="worldTransform">ワールド変換</param>
-    /// <param name="textureFilePath">テクスチャファイルのパス</param>
-    void Initialize(WorldTransform transform, Color color, Vector3 anchor, Vector2 size, const std::string& textureFilePath);
+	class Sprite {
+	public:
+		Sprite();
+		~Sprite(); // リソースを解放するためのデストラクタ
 
-    /// <summary>
-    /// スプライトの更新
-    /// </summary>
-    /// <param name="worldTransform">ワールド変換</param>
-    /// <param name="color">色</param>
-    void Update(WorldTransform transform, Color color);
+		/// <summary>
+		/// スプライトの初期化
+		/// </summary>
+		/// <param name="worldTransform">ワールド変換</param>
+		/// <param name="textureFilePath">テクスチャファイルのパス</param>
+		void Initialize(const std::string& textureFilePath);
 
-    /// <summary>
-    /// スプライトの描画
-    /// </summary>
-    void Draw();
+		/// <summary>
+		/// スプライトの更新
+		/// </summary>
+		/// <param name="worldTransform">ワールド変換</param>
+		/// <param name="color">色</param>
+		void Update();
 
-    void DrawImGui();
+		/// <summary>
+		/// スプライトの描画
+		/// </summary>
+		void Draw();
 
-    void  SetColor(Vector4 color) { materialData_->color = color; }
+		// ImGuiの描画
+		void DrawImGui();
 
-    void SetFlipX(bool flag) { isFlipX_ = flag; }
-    void SetFlipY(bool flag) { isFlipY_ = flag; }
+		// 各項目のゲッターセッター
+		Vector3& Anchor() { return anchor_; }
+		Vector2& Size() { return size_; }
+		Vector2& Scale() { return scale_; }
+		Vector2& Rotate() { return rotate_; }
+		Vector2& Translate() { return translate_; }
+		Vector4&  Color() { return color_; }
 
-private:
-    // 頂点リソース
-    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_ = nullptr;
-    VertexData* vertexData_ = nullptr;
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
+		void SetFlipX(bool flag) { isFlipX_ = flag; }
+		void SetFlipY(bool flag) { isFlipY_ = flag; }
 
-    // インデックスリソース
-    Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_ = nullptr;
-    uint32_t* indexData_ = nullptr;
-    D3D12_INDEX_BUFFER_VIEW indexBufferView_{};
+	private:
+		// 頂点リソース
+		Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_ = nullptr;
+		VertexData* vertexData_ = nullptr;
+		D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
 
-    // マテリアルリソース
-    Material* materialData_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_ = nullptr;
+		// インデックスリソース
+		Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_ = nullptr;
+		uint32_t* indexData_ = nullptr;
+		D3D12_INDEX_BUFFER_VIEW indexBufferView_{};
 
-    // WVP リソース
-    TransformationMatrix* wvpData_ = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource_ = nullptr;
+		// マテリアルリソース
+		Material* materialData_ = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_ = nullptr;
 
-    WorldTransform transform_;
-    int textureHandle_ = 0;
+		// WVP リソース
+		TransformationMatrix* wvpData_ = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource_ = nullptr;
 
-    // ビュー行列
-    Matrix4x4 viewMatrix_;
-    // 射影行列
-    Matrix4x4 projectionMatrix_;
-    // ビュープロジェクション行列
-    Matrix4x4 viewProjectionMatrix_;
+		// 各項目
+		Vector3 anchor_;
+		Vector2 size_;
+		Vector2 scale_;
+		Vector2 rotate_;
+		Vector2 translate_;
+		Vector4 color_;
 
-    bool isFlipX_ = false;
-    bool isFlipY_ = false;
+		int textureHandle_ = 0;
 
-    void UpdateUVTransform();
-};
+		// ビュー行列
+		Matrix4x4 viewMatrix_;
+		// 射影行列
+		Matrix4x4 projectionMatrix_;
+		// ビュープロジェクション行列
+		Matrix4x4 viewProjectionMatrix_;
+
+		bool isFlipX_ = false;
+		bool isFlipY_ = false;
+
+		void UpdateUVTransform();
+
+		void CorrectionVertexData();
+	};
+
+}

@@ -2,29 +2,38 @@
 
 #include"../system/utility/random/RandomEngine.h"
 
-using namespace BonjinEngine;
+using namespace Bonjin;
 
-void GameScene::Initialize(Camera* camera) {
+void GameScene::Initialize(Camera* camera)
+{
+
 	// 今のシーンと遷移後シーン(初期値は同じ)
 	currentSceneType_ = SceneType::kGame;
 	nextSceneType_ = SceneType::kGame;
 
 	this->camera_ = camera;
 
-	particle_ = new Particle;
-	particle_->LoadModel("plane");
-	particle_->Emit({ 0.0f, 0.0f, 0.0f }, { 5.0f, 5.0f, 5.0f }, 50.0f, 1.0f, 3.0f);
+	// スプライト共通
+	spriteCommon_ = new SpriteCommon;
+	spriteCommon_->Initialize();
+
+	// スプライト
+	sprite_ = Sprite();
+	sprite_.Initialize("uvChecker.png");
+	sprite_.Scale() = { 1.f,1.f };
+	sprite_.Rotate() = { 0.f,0.f };
+	sprite_.Translate() = { 640.f, 360.f};
+	sprite_.Anchor() = { 0.5f,0.5f };
+	sprite_.Size() = { 640.f, 360.f };
+
 }
 
 void GameScene::Unload() {
-	if (particle_ != nullptr) {
-		delete particle_;
-		particle_ = nullptr;
-	}
 }
 
 void GameScene::Update(float deltaTime) {
-	particle_->Update(camera_);
+
+	sprite_.Update();
 
 	if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
 		nextSceneType_ = SceneType::kTitle;
@@ -32,12 +41,18 @@ void GameScene::Update(float deltaTime) {
 }
 
 void GameScene::Draw() {
-	particle_->Draw();
+
+	spriteCommon_->PreDraw();
+
+	sprite_.Draw();
+
+	spriteCommon_->PostDraw();
+
 }
 
 void GameScene::DrawSceneImGui() {
 
-	particle_->DrawImGui();
+	sprite_.DrawImGui();
 
 }
 

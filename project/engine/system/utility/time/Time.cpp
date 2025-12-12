@@ -1,7 +1,7 @@
-﻿#include "Time.h"
+#include "Time.h"
 #include <iostream> // デバッグ用など (必要に応じて)
 
-using namespace BonjinEngine;
+using namespace Bonjin;
 using namespace std::chrono;
 
 // 1. シングルトンインスタンスの実体

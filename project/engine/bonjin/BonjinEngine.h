@@ -32,7 +32,7 @@ struct D3DResourceLeakChecker {
 	}
 };
 
-namespace BonjinEngine {
+namespace Bonjin {
 	/// <summary>
 	/// 初期化
 	/// </summary>

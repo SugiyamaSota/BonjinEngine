@@ -3,7 +3,7 @@
 
 #include"../bonjin/BonjinEngine.h"
 
-namespace BonjinEngine
+namespace Bonjin
 {
     class TitleScene : public IScene
     {
@@ -31,12 +31,6 @@ namespace BonjinEngine
     private:
         // --- ゲーム固有の変数 ---
 
-        // 
-        WorldTransform worldTransform_{};
-        Sprite* sprite_{ nullptr };
-
-        //
-        //Sprite* sprite_ = nullptr;
 
     private:
         // --- ゲーム固有の関数 ---

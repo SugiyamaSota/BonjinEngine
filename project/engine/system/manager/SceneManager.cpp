@@ -1,7 +1,7 @@
-﻿#include "SceneManager.h"
+#include "SceneManager.h"
 #include "time/Time.h" // デルタタイムを取得するため（Timeクラスのパスは適宜修正）
 
-using namespace BonjinEngine;
+using namespace Bonjin;
 
 // 💡 1. シングルトンインスタンスの実体
 SceneManager* SceneManager::instance = nullptr;

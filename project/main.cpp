@@ -5,7 +5,7 @@
 #include"application/scene/title/TitleScene.h"
 #include"application/scene/game/GameScene.h"
 
-using namespace BonjinEngine;
+using namespace Bonjin;
 
 //クライアント領域のサイズ
 const int32_t kClientWidth = 1280;

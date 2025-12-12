@@ -23,7 +23,7 @@ std::string logFilePath = std::string("logs/") + dateString + ".log";
 // ファイルを使って書き込み準備
 std::ofstream logStream(logFilePath);
 
-void BonjinEngine::Initialize() {
+void Bonjin::Initialize() {
 	// directXcommon、Input、テクスチャのインスタンスを取得
 	DirectXCommon::GetInstance();
 	WinApp::GetInstance();
@@ -34,7 +34,7 @@ void BonjinEngine::Initialize() {
 	Time::GetInstance();
 }
 
-void BonjinEngine::Finalize() {
+void Bonjin::Finalize() {
 	// directXcommon、Input、テクスチャのインスタンスを破壊
 	ImGuiManager::DestroyInstance();
 	TextureManager::DestroyInstance();
@@ -43,7 +43,7 @@ void BonjinEngine::Finalize() {
 	Time::DestroyInstance();
 }
 
-void BonjinEngine::NewFrame() {
+void Bonjin::NewFrame() {
 	Time::GetInstance()->Update();
 	Input::GetInstance()->Update();
 	ID3D12DescriptorHeap* descriptorHeaps[] = { DirectXCommon::GetInstance()->GetSRVDescriptorHeap() };
@@ -51,11 +51,11 @@ void BonjinEngine::NewFrame() {
 	ImGuiManager::GetInstance()->NewFrame();
 }
 
-void BonjinEngine::PreDraw() {
+void Bonjin::PreDraw() {
 	DirectXCommon::GetInstance()->NewFeame();
 }
 
-void BonjinEngine::EndFrame() {
+void Bonjin::EndFrame() {
 	ImGuiManager::GetInstance()->EndFrame();
 	DirectXCommon::GetInstance()->EndFrame();
 }

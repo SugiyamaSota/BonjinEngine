@@ -1,9 +1,11 @@
-﻿#pragma once
+#pragma once
 #include "../bonjin/BonjinEngine.h"
 
 #include"../graphics/rendering/draw/Grid.h"
 
-namespace BonjinEngine 
+#include<memory>
+
+namespace Bonjin
 {
 
 	// シーンの種類を識別するための列挙型

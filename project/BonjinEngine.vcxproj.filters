@@ -201,7 +201,7 @@
     <ClCompile Include="engine\interface\IScene.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="InspectorManager.cpp">
+    <ClCompile Include="engine\graphics\rendering\sprite\SpriteCommon.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -326,7 +326,7 @@
     <ClInclude Include="engine\system\utility\random\RandomEngine.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="InspectorManager.h">
+    <ClInclude Include="engine\graphics\rendering\sprite\SpriteCommon.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
