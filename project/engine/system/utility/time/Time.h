@@ -1,7 +1,7 @@
-﻿#pragma once
+#pragma once
 #include <chrono>
 
-namespace BonjinEngine {
+namespace Bonjin {
 
     class Time {
     public:

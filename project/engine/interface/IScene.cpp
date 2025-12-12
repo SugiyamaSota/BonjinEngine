@@ -1,6 +1,6 @@
-﻿#include"IScene.h"
+#include"IScene.h"
 
-using namespace BonjinEngine;
+using namespace Bonjin;
 
 void IScene::Initialize(Camera* camera) {
 	assert(camera);

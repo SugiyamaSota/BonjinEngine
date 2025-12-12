@@ -84,7 +84,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -108,7 +108,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
@@ -136,7 +136,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -176,7 +176,6 @@
     <ClCompile Include="externals\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="externals\imgui\imgui_tables.cpp" />
     <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="InspectorManager.cpp" />
     <ClCompile Include="main.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
@@ -191,6 +190,7 @@
     <ClCompile Include="engine\graphics\assets\model\ModelBuilder.cpp" />
     <ClCompile Include="engine\graphics\assets\model\Particle.cpp" />
     <ClCompile Include="engine\system\utility\random\RandomEngine.cpp" />
+    <ClCompile Include="engine\graphics\rendering\sprite\SpriteCommon.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\interface\IScene.h" />
@@ -233,7 +233,7 @@
     <ClInclude Include="engine\graphics\assets\model\ModelBuilder.h" />
     <ClInclude Include="engine\graphics\assets\model\Particle.h" />
     <ClInclude Include="engine\system\utility\random\RandomEngine.h" />
-    <ClInclude Include="InspectorManager.h" />
+    <ClInclude Include="engine\graphics\rendering\sprite\SpriteCommon.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

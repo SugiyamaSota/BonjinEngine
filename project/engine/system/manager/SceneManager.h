@@ -1,11 +1,12 @@
-﻿#pragma once
+#pragma once
 #include"BonjinEngine.h"
 #include <map>
 #include<memory>
 
 #include"../interface/IScene.h"
 
-namespace BonjinEngine {
+namespace Bonjin
+{
 
     class SceneManager {
     public:

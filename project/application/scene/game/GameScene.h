@@ -3,7 +3,10 @@
 
 #include"../bonjin/BonjinEngine.h"
 
-namespace BonjinEngine 
+#include"Sprite.h"
+#include"SpriteCommon.h"
+
+namespace Bonjin
 {
 	class GameScene : public IScene
 	{
@@ -29,7 +32,10 @@ namespace BonjinEngine
 
 	private:
 		// --- ゲーム固有の変数 ---
-		Particle* particle_ = nullptr;
+		Bonjin::SpriteCommon* spriteCommon_ = nullptr;
+
+		WorldTransform worldTransform_;
+		Bonjin::Sprite sprite_;
 
 	private:
 		// --- ゲーム固有の関数 ---

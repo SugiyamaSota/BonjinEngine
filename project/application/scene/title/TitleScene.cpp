@@ -1,6 +1,6 @@
 #include "TitleScene.h"
 
-using namespace BonjinEngine;
+using namespace Bonjin;
 
 void TitleScene::Initialize(Camera* camera) {
 	currentSceneType_ = SceneType::kTitle;
@@ -8,24 +8,16 @@ void TitleScene::Initialize(Camera* camera) {
 
 	this->camera_ = camera;
 
-	worldTransform_ = InitializeWorldTransform();
-	sprite_ = new Sprite;
-	sprite_->Initialize(worldTransform_, Color::White, { 0.5f,0.5f }, { 640.f,360.f }, "uvChecker.png");
+	
 }
 
 void TitleScene::Unload() {
-	if (sprite_ != nullptr) {
-		delete sprite_;
-		sprite_ = nullptr;
-	}
+	
 }
 
 void TitleScene::Update(float deltaTime) {
 
-	//worldTransform_.rotate.z += 0.1f;
-	sprite_->Update(worldTransform_, Color::White);
-
-
+	
 
 	if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
 		nextSceneType_ = SceneType::kGame;
@@ -33,12 +25,10 @@ void TitleScene::Update(float deltaTime) {
 }
 
 void TitleScene::Draw() {
-	sprite_->Draw();
 }
 
 void TitleScene::DrawSceneImGui() {
 
-	sprite_->DrawImGui();
 
 }
 
