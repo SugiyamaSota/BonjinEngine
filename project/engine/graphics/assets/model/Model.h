@@ -53,7 +53,7 @@ public:
 private:
 	/// --- 変数 ---
 	// モデルデータ
-	ModelData modelData_;
+	const ModelData* modelData_ = nullptr;
 
 	// 頂点リソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_ = nullptr;

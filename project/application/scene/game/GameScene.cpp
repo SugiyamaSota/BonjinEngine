@@ -22,6 +22,10 @@ void GameScene::Initialize(Camera* camera)
 	sprite_.Anchor() = { 0.f,0.f };
 	sprite_.Size() = { 320.f, 180.f };
 
+	//
+	model_ = Model();
+	model_.LoadModel("axis");
+
 }
 
 void GameScene::Unload() {
@@ -31,6 +35,8 @@ void GameScene::Update(float deltaTime) {
 
 	sprite_.Update();
 
+	model_.Update(InitializeWorldTransform(), camera_);
+
 	if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
 		nextSceneType_ = SceneType::kTitle;
 	}
@@ -39,6 +45,8 @@ void GameScene::Update(float deltaTime) {
 void GameScene::Draw() {
 
 	sprite_.Draw();
+
+	model_.Draw();
 
 }
 

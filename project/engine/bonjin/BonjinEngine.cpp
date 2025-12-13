@@ -29,6 +29,7 @@ void Bonjin::Initialize() {
 	WinApp::GetInstance();
 	Input::GetInstance()->Initialize(WinApp::GetInstance()->GetHInstance(), WinApp::GetInstance()->GetHWND());
 	Input::GetInstance()->SetMouseLock(false);
+	ModelManager::GetInstance();
 	TextureManager::GetInstance();
 	ImGuiManager::GetInstance()->Initialize();
 	Time::GetInstance();
@@ -38,6 +39,7 @@ void Bonjin::Finalize() {
 	// directXcommon、Input、テクスチャのインスタンスを破壊
 	ImGuiManager::DestroyInstance();
 	TextureManager::DestroyInstance();
+	ModelManager::GetInstance()->Finalize();
 	WinApp::GetInstance()->DestroyInstance();
 	DirectXCommon::GetInstance()->DestroyInstance();
 	Time::DestroyInstance();
