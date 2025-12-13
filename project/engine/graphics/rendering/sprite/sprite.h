@@ -71,6 +71,15 @@ namespace Bonjin {
 
 		int textureHandle_ = 0;
 
+		// dxCommon変数
+		DirectXCommon* dxCommon_;
+
+		// デバイス
+		ID3D12Device* device_;
+
+		// スプライト用pso
+		ID3D12PipelineState* pso_;
+
 		// ビュー行列
 		Matrix4x4 viewMatrix_;
 		// 射影行列

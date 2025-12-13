@@ -4,7 +4,6 @@
 #include"../bonjin/BonjinEngine.h"
 
 #include"Sprite.h"
-#include"SpriteCommon.h"
 
 namespace Bonjin
 {
@@ -32,10 +31,10 @@ namespace Bonjin
 
 	private:
 		// --- ゲーム固有の変数 ---
-		Bonjin::SpriteCommon* spriteCommon_ = nullptr;
-
-		WorldTransform worldTransform_;
+		// スプライト
 		Bonjin::Sprite sprite_;
+
+		Model model_;
 
 	private:
 		// --- ゲーム固有の関数 ---

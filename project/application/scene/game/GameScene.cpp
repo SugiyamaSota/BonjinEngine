@@ -13,18 +13,18 @@ void GameScene::Initialize(Camera* camera)
 
 	this->camera_ = camera;
 
-	// スプライト共通
-	spriteCommon_ = new SpriteCommon;
-	spriteCommon_->Initialize();
-
 	// スプライト
 	sprite_ = Sprite();
 	sprite_.Initialize("uvChecker.png");
 	sprite_.Scale() = { 1.f,1.f };
 	sprite_.Rotate() = { 0.f,0.f };
-	sprite_.Translate() = { 640.f, 360.f};
-	sprite_.Anchor() = { 0.5f,0.5f };
-	sprite_.Size() = { 640.f, 360.f };
+	sprite_.Translate() = { 0.f, 0.f};
+	sprite_.Anchor() = { 0.f,0.f };
+	sprite_.Size() = { 320.f, 180.f };
+
+	//
+	model_ = Model();
+	model_.LoadModel("axis");
 
 }
 
@@ -35,6 +35,8 @@ void GameScene::Update(float deltaTime) {
 
 	sprite_.Update();
 
+	model_.Update(InitializeWorldTransform(), camera_);
+
 	if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
 		nextSceneType_ = SceneType::kTitle;
 	}
@@ -42,18 +44,14 @@ void GameScene::Update(float deltaTime) {
 
 void GameScene::Draw() {
 
-	spriteCommon_->PreDraw();
-
 	sprite_.Draw();
 
-	spriteCommon_->PostDraw();
+	model_.Draw();
 
 }
 
 void GameScene::DrawSceneImGui() {
-
-	sprite_.DrawImGui();
-
+	
 }
 
 SceneType GameScene::GetNextScene() const {

@@ -17,6 +17,18 @@ namespace Bonjin {
 		translate_ = { 0.f,0.f };    // 原点
 		color_ = { 1.f,1.f,1.f,1.f };// 白
 
+		dxCommon_ = DirectXCommon::GetInstance();
+		device_ = dxCommon_->GetDevice();
+
+		pso_ =
+			dxCommon_->GetPSO()->GetPipelineState(
+				device_,
+				PrimitiveType::kModel,
+				BlendMode::kNormal,
+				D3D12_FILL_MODE_SOLID,
+				D3D12_CULL_MODE_BACK
+			);
+
 	}
 
 	Sprite::~Sprite()
@@ -130,23 +142,30 @@ namespace Bonjin {
 
 	void Sprite::Draw() {
 
-		DirectXCommon* common = DirectXCommon::GetInstance();
+		// ルートシグネチャ
+		dxCommon_->GetCommandList()->SetGraphicsRootSignature(dxCommon_->GetPSO()->GetRootSignature(PrimitiveType::kModel));
+
+		// psoセット
+		dxCommon_->GetCommandList()->SetPipelineState(pso_);
+
+		// プリミティブトポロジの設定 (三角形リスト)
+		dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 
 		// インデックスバッファビューの設定
-		common->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
+		dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
 		// 頂点バッファビューの設定
-		common->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
+		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
 
 
 		// マテリアルCBufferの場所を設定
-		common->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
 		// WVP CBufferの場所を設定
-		common->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource_->GetGPUVirtualAddress());
+		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource_->GetGPUVirtualAddress());
 		// テクスチャのDescriptorTableを設定
-		common->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetGPUHandle(textureHandle_));
-
+		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetGPUHandle(textureHandle_));
 		// 描画コマンド
-		common->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0); // 6つのインデックス (2つの三角形) を描画
+		dxCommon_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0); // 6つのインデックス (2つの三角形) を描画
 	}
 
 	void Sprite::UpdateUVTransform() {

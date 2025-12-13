@@ -1,5 +1,7 @@
 #include "Model.h"
 
+#include"ModelManager.h"
+
 Model::Model() {
 	common = DirectXCommon::GetInstance();
 	transform_ = InitializeWorldTransform();
@@ -9,16 +11,20 @@ Model::Model() {
 }
 
 void Model::LoadModel(const std::string& fileName) {
-	// モデルファイル読み込み
-	modelData_ = ModelBuilder::LoadObjFile("resources/models/" + fileName, fileName + ".obj");
+	// モデルファイルをModelManager経由で読み込み/取得
+	const std::string directoryPath = "resources/models/" + fileName;
+	const std::string objFilename = fileName + ".obj";
+
+	// ModelManagerからModelDataを取得
+	modelData_= &ModelManager::GetInstance()->LoadModel(directoryPath, objFilename);
 
 	// 頂点用のリソース
-	vertexResource_ = CreateBufferResource(common->GetDevice(), sizeof(VertexData) * modelData_.vertices.size());
+	vertexResource_ = CreateBufferResource(common->GetDevice(), sizeof(VertexData) * modelData_->vertices.size());
 	vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
-	vertexBufferView_.SizeInBytes = UINT(sizeof(VertexData) * modelData_.vertices.size());
+	vertexBufferView_.SizeInBytes = UINT(sizeof(VertexData) * modelData_->vertices.size());
 	vertexBufferView_.StrideInBytes = sizeof(VertexData);
 	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
-	std::memcpy(vertexData_, modelData_.vertices.data(), sizeof(VertexData) * modelData_.vertices.size());
+	std::memcpy(vertexData_, modelData_->vertices.data(), sizeof(VertexData) * modelData_->vertices.size());
 
 	// マテリアル用のリソース
 	materialResource_ = CreateBufferResource(common->GetDevice(), sizeof(Material));
@@ -36,7 +42,7 @@ void Model::LoadModel(const std::string& fileName) {
 	wvpData_->World = MakeIdentity4x4();
 
 	// テクスチャ
-	textureHandle_ = TextureManager::GetInstance()->LoadTexture(modelData_.material.textureFilepath);
+	textureHandle_ = TextureManager::GetInstance()->LoadTexture(modelData_->material.textureFilepath);
 	common->WaitAndResetCommandList();
 	TextureManager::GetInstance()->ReleaseIntermediateResources();
 }
@@ -86,6 +92,6 @@ void Model::Draw() {
 	// 光
 	common->GetCommandList()->SetGraphicsRootConstantBufferView(3, common->GetDirectionalLightResource()->GetGPUVirtualAddress());
 	// 描画
-	common->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
+	common->GetCommandList()->DrawInstanced(UINT(modelData_->vertices.size()), 1, 0, 0);
 }
 

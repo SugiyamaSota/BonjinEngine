@@ -190,7 +190,7 @@
     <ClCompile Include="engine\graphics\assets\model\ModelBuilder.cpp" />
     <ClCompile Include="engine\graphics\assets\model\Particle.cpp" />
     <ClCompile Include="engine\system\utility\random\RandomEngine.cpp" />
-    <ClCompile Include="engine\graphics\rendering\sprite\SpriteCommon.cpp" />
+    <ClCompile Include="engine\graphics\assets\model\ModelManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\interface\IScene.h" />
@@ -233,7 +233,7 @@
     <ClInclude Include="engine\graphics\assets\model\ModelBuilder.h" />
     <ClInclude Include="engine\graphics\assets\model\Particle.h" />
     <ClInclude Include="engine\system\utility\random\RandomEngine.h" />
-    <ClInclude Include="engine\graphics\rendering\sprite\SpriteCommon.h" />
+    <ClInclude Include="engine\graphics\assets\model\ModelManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
