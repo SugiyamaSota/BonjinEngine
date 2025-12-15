@@ -28,12 +28,13 @@ jobs:
         run:
           # ディレクトリ条件を構築(最初の不要な -o を後で削除)
           DIR_CONDITIONS=()
-          for pattern in $UNWANTED_DIR_PATTERNS; dm
+          for pattern in $UNWANTED_DIR_PATTERNS; do
             DIR_CONDITIONS+=(-o -iname "$pattern")
           done
           unset DIR_CONDITIONS[0]
          
           # ファイル条件を構築(最初の不要な -o を後で削除)
+        run:
           NAME_CONDITIONS=()
           for pattern in $UNWANTED_NAME_PATTERNS; do
             NAME_CONDITIONS+=(-o -iname "$pattern")
@@ -46,7 +47,7 @@ jobs:
          # 3. または不要なファイルを検索し、パスを出力
         UNWANTED_LIST=$(find . -path "./.git" -prune -o \
           \( \( "${DIR_CONDITIONS[@]}" \) -a -type d -print -prune \) -o \
-          \( \( "${NAME_CONDITIONS[@]}" \) -a -type d -print \) \
+          \( \( "${NAME_CONDITIONS[@]}" \) -a -type f -print \) \
         )
 
         # 検索結果があればエラー年、失敗
