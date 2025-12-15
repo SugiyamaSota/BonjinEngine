@@ -1,4 +1,3 @@
-# 
 name: CheckUnwantedFiles
 
 on:
@@ -22,39 +21,41 @@ jobs:
 
     steps:
       - name: リポジトリをチェックアウト
-        uses: action/checkout@v4
+        uses: actions/checkout@v4
 
+      # 修正点: 複数の処理を単一の run ブロックに統合
       - name: 不要なファイルとディレクトリを検索(bash)
-        run:
+        run: |
           # ディレクトリ条件を構築(最初の不要な -o を後で削除)
           DIR_CONDITIONS=()
           for pattern in $UNWANTED_DIR_PATTERNS; do
             DIR_CONDITIONS+=(-o -iname "$pattern")
           done
+          # 配列の最初の要素（-o）を削除
           unset DIR_CONDITIONS[0]
-         
+          
           # ファイル条件を構築(最初の不要な -o を後で削除)
-        run:
           NAME_CONDITIONS=()
           for pattern in $UNWANTED_NAME_PATTERNS; do
             NAME_CONDITIONS+=(-o -iname "$pattern")
           done
+          # 配列の最初の要素（-o）を削除
           unset NAME_CONDITIONS[0]
 
-         # 1回のfind実行で全体を検索
-         # 1. .gitを除外
-         # 2. 不要なディレクトリを検索し、見つけたらパスを出力し、その中身を枝刈り
-         # 3. または不要なファイルを検索し、パスを出力
-        UNWANTED_LIST=$(find . -path "./.git" -prune -o \
-          \( \( "${DIR_CONDITIONS[@]}" \) -a -type d -print -prune \) -o \
-          \( \( "${NAME_CONDITIONS[@]}" \) -a -type f -print \) \
-        )
+          # 1回のfind実行で全体を検索
+          # 1. .gitを除外
+          # 2. 不要なディレクトリを検索し、見つけたらパスを出力し、その中身を枝刈り
+          # 3. または不要なファイルを検索し、パスを出力
+          UNWANTED_LIST=$(find . -path "./.git" -prune -o \
+            \( \( "${DIR_CONDITIONS[@]}" \) -a -type d -print -prune \) -o \
+            \( \( "${NAME_CONDITIONS[@]}" \) -a -type f -print \) \
+          )
 
-        # 検索結果があればエラー年、失敗
-        if [ -n "$UNWANTED_LIST" ]; then
-          echo "::error::不要なファイルまたはディレクトリが見つかりました ! "
-          echo "$UNWANTED_LIST"
-          exit 1
-        fi
+          # 検索結果があればエラーにし、失敗
+          if [ -n "$UNWANTED_LIST" ]; then
+            echo "::error::不要なファイルまたはディレクトリが見つかりました ! "
+            echo "$UNWANTED_LIST"
+            exit 1
+          fi
 
-        echo "リポジトリはクリーンです"
+          echo "リポジトリはクリーンです"
