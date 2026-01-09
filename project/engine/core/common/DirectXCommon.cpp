@@ -5,7 +5,7 @@
 
 #include"function/function.h"
 #include"windows/WinApp.h"
-#include"imgui/ImGuiManager.h"
+#include"ImGuiManager.h"
 
 DirectXCommon* DirectXCommon::instance_ = nullptr;
 

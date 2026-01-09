@@ -1,6 +1,6 @@
 #include "Core.h"
 #include "BonjinEngine.h"
-#include "../system/manager/SceneManager.h"
+#include "SceneManager.h"
 #include "TitleScene.h"
 #include "GameScene.h"
 
