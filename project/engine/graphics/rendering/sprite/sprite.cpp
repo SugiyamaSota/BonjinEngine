@@ -200,15 +200,6 @@ namespace Bonjin {
 		);
 	}
 
-	void Sprite::DrawImGui() {
-
-		ImGui::Separator();
-		ImGui::Text("sprite");
-		ImGui::Checkbox("flipX", &isFlipX_);
-		ImGui::Checkbox("flipY", &isFlipY_);
-
-	}
-
 	void Sprite::CorrectionVertexData() {
 		// スプライトの幅と高さを定義
 		float width = size_.x;  // 現在の頂点データに基づく幅
