@@ -84,7 +84,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)engine\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -108,7 +108,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)engine\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
@@ -136,7 +136,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)engine\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -151,6 +151,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="application\scene\game\GameScene.cpp" />
+    <ClCompile Include="engine\core\Core.cpp" />
     <ClCompile Include="engine\system\manager\SceneManager.cpp" />
     <ClCompile Include="engine\graphics\rendering\color\Color.cpp" />
     <ClCompile Include="engine\bonjin\BonjinEngine.cpp" />
@@ -207,6 +208,7 @@
     <ClCompile Include="engine\graphics\assets\model\ModelManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="engine\core\Core.h" />
     <ClInclude Include="engine\interface\IScene.h" />
     <ClInclude Include="application\scene\game\GameScene.h" />
     <ClInclude Include="engine\system\manager\SceneManager.h" />
