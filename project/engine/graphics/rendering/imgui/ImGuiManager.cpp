@@ -22,13 +22,16 @@ void ImGuiManager::DestroyInstance() {
 
 
 ImGuiManager::~ImGuiManager() {
+#ifdef USE_IMGUI
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 	// シングルトンインスタンスをnullptrに戻す
+#endif
 }
 
 void ImGuiManager::Initialize() {
+#ifdef USE_IMGUI
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
@@ -41,15 +44,20 @@ void ImGuiManager::Initialize() {
 		DirectXCommon::GetInstance()->GetSRVDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
 		DirectXCommon::GetInstance()->GetSRVDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
 	);
+#endif
 }
 
 void ImGuiManager::NewFrame() {
+#ifdef USE_IMGUI
 	ImGui_ImplWin32_NewFrame();
 	ImGui_ImplDX12_NewFrame();
 	ImGui::NewFrame();
+#endif
 }
 
 void ImGuiManager::EndFrame() {
+#ifdef USE_IMGUI
 	ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), DirectXCommon::GetInstance()->GetCommandList());
+#endif
 }

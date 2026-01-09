@@ -8,6 +8,7 @@ void IScene::Initialize(Camera* camera) {
 }
 
 void IScene::DrawImGui() {
+#ifdef USE_IMGUI
 	ImGui::Begin(GetScenename());
 
 	ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
@@ -15,5 +16,6 @@ void IScene::DrawImGui() {
 	DrawSceneImGui();
 
 	ImGui::End();
+#endif
 }
 

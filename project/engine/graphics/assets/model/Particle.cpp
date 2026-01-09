@@ -282,41 +282,6 @@ void Particle::End() {
 void Particle::DrawImGui()
 {
 
-	// 横線
-	ImGui::Separator();
-
-	// オブジェクト名
-	ImGui::Text("Particle");
-
-	// emitter設定
-	if (ImGui::CollapsingHeader("Emit Option"))
-	{
-
-		ImGui::InputFloat3("StartPosition", &emitPositionDebug_.x); // emitterの中心座標
-		ImGui::InputFloat3("EmitRange", &emitRangeDebug_.x); // emitterの範囲
-		ImGui::InputFloat("MinLifeTime", &minLifetimeDebug_); // 最低生存時間
-		ImGui::InputFloat("MaxLifeTime", &maxLifetimeDebug_); // 最大生存時間
-		if (ImGui::Button("Confirm"))
-		{
-			Emit(emitPositionDebug_, emitRangeDebug_, durationTimer_, minLifetimeDebug_, maxLifetimeDebug_); // 設定を反映
-		}
-
-	}
 	
-	if (!isSystemActive_) 
-	{
-		if (ImGui::Button("Begin")) 
-		{
-			Begin();
-		}
-
-	} else {
-
-		if (ImGui::Button("End")) 
-		{
-			End();
-		}
-
-	}
 
 }
