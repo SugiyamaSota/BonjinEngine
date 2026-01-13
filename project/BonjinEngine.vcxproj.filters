@@ -117,20 +117,14 @@
     <ClCompile Include="externals\Audio\xaudio_player_mf.cpp">
       <Filter>外部ファイル\audio</Filter>
     </ClCompile>
-    <ClCompile Include="engine\system\utility\common\DirectXCommon.cpp">
+    <ClCompile Include="engine\core\common\DirectXCommon.cpp">
       <Filter>engine\directXCommon</Filter>
     </ClCompile>
     <ClCompile Include="engine\system\utility\function\function.cpp">
       <Filter>engine\Func</Filter>
     </ClCompile>
-    <ClCompile Include="engine\graphics\rendering\imgui\ImGuiManager.cpp">
-      <Filter>engine\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="engine\system\platform\input\Input.cpp">
       <Filter>engine\input</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\graphics\assets\texture\TextureManager.cpp">
-      <Filter>engine\texture</Filter>
     </ClCompile>
     <ClCompile Include="engine\audio\AudioPlayer.cpp">
       <Filter>engine\audio</Filter>
@@ -144,7 +138,7 @@
     <ClCompile Include="engine\system\utility\math\vector.cpp">
       <Filter>engine\math\ソース</Filter>
     </ClCompile>
-    <ClCompile Include="engine\bonjin\BonjinEngine.cpp">
+    <ClCompile Include="engine\core\bonjin\BonjinEngine.cpp">
       <Filter>engine</Filter>
     </ClCompile>
     <ClCompile Include="engine\graphics\camera\Camera.cpp">
@@ -174,9 +168,6 @@
     <ClCompile Include="engine\system\platform\windows\WinApp.cpp">
       <Filter>engine\windows</Filter>
     </ClCompile>
-    <ClCompile Include="engine\system\manager\SceneManager.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="application\scene\game\GameScene.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -192,7 +183,7 @@
     <ClCompile Include="engine\graphics\assets\model\ModelBuilder.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="engine\graphics\assets\model\Particle.cpp">
+    <ClCompile Include="engine\graphics\rendering\particle\Particle.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="engine\system\utility\random\RandomEngine.cpp">
@@ -201,7 +192,19 @@
     <ClCompile Include="engine\interface\IScene.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="engine\graphics\assets\model\ModelManager.cpp">
+    <ClCompile Include="application\core\Core.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\system\manager\imgui\ImGuiManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\system\manager\model\ModelManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\system\manager\scene\SceneManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\system\manager\texture\TextureManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -242,14 +245,8 @@
     <ClInclude Include="engine\system\utility\function\function.h">
       <Filter>engine\Func</Filter>
     </ClInclude>
-    <ClInclude Include="engine\graphics\rendering\imgui\ImGuiManager.h">
-      <Filter>engine\imgui</Filter>
-    </ClInclude>
     <ClInclude Include="engine\system\platform\input\Input.h">
       <Filter>engine\input</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\graphics\assets\texture\TextureManager.h">
-      <Filter>engine\texture</Filter>
     </ClInclude>
     <ClInclude Include="engine\audio\AudioPlayer.h">
       <Filter>engine\audio</Filter>
@@ -263,7 +260,7 @@
     <ClInclude Include="engine\system\utility\math\Convert.h">
       <Filter>engine\math\ヘッダー</Filter>
     </ClInclude>
-    <ClInclude Include="engine\bonjin\BonjinEngine.h">
+    <ClInclude Include="engine\core\bonjin\BonjinEngine.h">
       <Filter>engine</Filter>
     </ClInclude>
     <ClInclude Include="engine\system\utility\math\Struct.h">
@@ -275,7 +272,7 @@
     <ClInclude Include="engine\graphics\rendering\sprite\Sprite.h">
       <Filter>engine\sprite</Filter>
     </ClInclude>
-    <ClInclude Include="engine\system\utility\common\DirectXCommon.h">
+    <ClInclude Include="engine\core\common\DirectXCommon.h">
       <Filter>engine\directXCommon</Filter>
     </ClInclude>
     <ClInclude Include="engine\graphics\rendering\color\Color.h">
@@ -299,9 +296,6 @@
     <ClInclude Include="engine\system\platform\windows\WinApp.h">
       <Filter>engine\windows</Filter>
     </ClInclude>
-    <ClInclude Include="engine\system\manager\SceneManager.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="application\scene\game\GameScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -320,13 +314,25 @@
     <ClInclude Include="engine\graphics\assets\model\ModelBuilder.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="engine\graphics\assets\model\Particle.h">
+    <ClInclude Include="engine\graphics\rendering\particle\Particle.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\system\utility\random\RandomEngine.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="engine\graphics\assets\model\ModelManager.h">
+    <ClInclude Include="application\core\Core.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\system\manager\imgui\ImGuiManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\system\manager\model\ModelManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\system\manager\scene\SceneManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\system\manager\texture\TextureManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

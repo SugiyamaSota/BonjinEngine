@@ -1,23 +1,25 @@
 #pragma once
 #include"../audio/AudioPlayer.h"
 #include"../camera/Camera.h"
-#include"common/DirectXCommon.h"
+#include"DirectXCommon.h"
 #include"function/function.h"
-#include"imgui/ImGuiManager.h"
 #include"input/Input.h"
 #include"math/Struct.h"
 #include"math/Vector.h"
 #include"math/Matrix.h"
 #include"math/Convert.h"
-#include"model/Model.h"
-#include"model/ModelManager.h"
-#include"pso/PSOManager.h"
-#include"texture/TextureManager.h"
+#include"Model.h"
 #include"sprite/sprite.h"
 #include"color/Color.h"
 #include"windows/WinApp.h"
 #include"time/Time.h"
-#include"model/Particle.h"
+#include"Particle.h"
+#include"pso/PSOManager.h"
+
+
+#include"ImGuiManager.h"
+#include"TextureManager.h"
+#include"ModelManager.h"
 
 /// <summary>
 /// リソースリークチェッカーの構造体
