@@ -1,13 +1,20 @@
 #pragma once
-#include "../interface/IScene.h" // ISceneをインクルード
+#include "../interface/BaseScene.h" // ISceneをインクルード
 
-#include"../bonjin/BonjinEngine.h"
+#include"BonjinEngine.h"
 
 #include"Sprite.h"
 
 namespace Bonjin
 {
-	class GameScene : public IScene
+
+	enum class GamePhase {
+		kStart,
+		kPlay,
+		kGoal,
+	};
+
+	class GameScene : public BaseScene<GamePhase>
 	{
 	public:
 		// --- オーバーライド関数 --- 

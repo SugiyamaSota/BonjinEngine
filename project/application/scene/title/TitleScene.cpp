@@ -16,12 +16,26 @@ void TitleScene::Unload() {
 }
 
 void TitleScene::Update(float deltaTime) {
+    // フェーズに応じた処理
+    switch (phase_) {
+    case TitlePhase::kFadeIn:
+        // フェード演出など
+        ChangePhase(TitlePhase::kActive);
+        break;
 
-	
+    case TitlePhase::kActive:
 
-	if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
-		nextSceneType_ = SceneType::kGame;
-	}
+        if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
+            ChangePhase(TitlePhase::kFadeOut);
+        }
+        break;
+
+    case TitlePhase::kFadeOut:
+
+        nextSceneType_ = SceneType::kGame;
+
+        break;
+    }
 }
 
 void TitleScene::Draw() {

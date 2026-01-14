@@ -37,8 +37,25 @@ void GameScene::Update(float deltaTime) {
 
 	model_.Update(InitializeWorldTransform(), camera_);
 
-	if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
-		nextSceneType_ = SceneType::kTitle;
+	// フェーズに応じた処理
+	switch (phase_) {
+	case GamePhase::kStart:
+		// フェード演出など
+		ChangePhase(GamePhase::kPlay);
+		break;
+
+	case GamePhase::kPlay:
+
+		if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
+			ChangePhase(GamePhase::kGoal);
+		}
+		break;
+
+	case GamePhase::kGoal:
+
+		nextSceneType_ = SceneType::kGame;
+
+		break;
 	}
 }
 

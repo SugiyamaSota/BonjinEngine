@@ -1,11 +1,18 @@
 #pragma once
-#include"../interface/IScene.h"
+#include"../interface/BaseScene.h"
 
 #include"../bonjin/BonjinEngine.h"
 
 namespace Bonjin
 {
-    class TitleScene : public IScene
+
+    enum class TitlePhase {
+        kFadeIn,
+        kActive,
+        kFadeOut,
+    };
+
+    class TitleScene : public BaseScene<TitlePhase>
     {
     public:
         // --- オーバーライド関数 ---
