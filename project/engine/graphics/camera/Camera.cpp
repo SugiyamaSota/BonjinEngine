@@ -155,3 +155,22 @@ Matrix4x4 Camera::MakeLookAtMatrix(const Vector3& eye, const Vector3& target, co
 void Camera::SetTarget(Vector3 targetPosition) {
 	targetPosition_ = targetPosition; isTargeting_ = true;
 }
+
+Vector3 Camera::Project(const Vector3& worldPos) {
+
+	float clientWidth = WinApp::GetInstance()->GetClientWidth();
+	float clientHeight = WinApp::GetInstance()->GetClientHeight();
+
+	// 2. ビュープロジェクション行列を使って、ワールド座標をスクリーン空間のニア・ファー平面（-1.0 ～ 1.0）へ変換
+	// 内部で w 除算が行われる既存の Conversion 関数を利用します
+	Vector3 ndcPos = Conversion(worldPos, viewProjectionMatrix_);
+
+	// 3. ビューポート変換を行ってスクリーン座標（ピクセル単位）へ変換
+	// ビューポート行列と同じ計算を適用します
+	Vector3 screenPos;
+	screenPos.x = (ndcPos.x + 1.0f) * clientWidth * 0.5f;
+	screenPos.y = (1.0f - ndcPos.y) * clientHeight * 0.5f; // Y軸は上下反転
+	screenPos.z = ndcPos.z; // 深度値 (0.0 ～ 1.0)
+
+	return screenPos;
+}
