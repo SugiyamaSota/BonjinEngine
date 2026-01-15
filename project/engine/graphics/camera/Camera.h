@@ -79,6 +79,8 @@ public:
 	/// <param name="targetPosition">注視する座標</param>
 	void SetTarget(Vector3 targetPosition);
 
+	Vector3 Project(const Vector3& worldPos);
+
 	///// --- ゲッター関数 --- /////
 	Matrix4x4 GetViewMatrix()const { return viewMatrix_; }
 	Matrix4x4 GetProjectionMatrix()const {return projectionMatrix_; }
