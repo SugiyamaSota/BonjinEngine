@@ -209,6 +209,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\core\Core.h" />
+    <ClInclude Include="engine\interface\BaseScene.h" />
     <ClInclude Include="engine\interface\IScene.h" />
     <ClInclude Include="application\scene\game\GameScene.h" />
     <ClInclude Include="engine\system\manager\imgui\ImGuiManager.h" />

@@ -72,3 +72,8 @@ struct ParticleForGPU {
 	Matrix4x4 World;
 	Vector4 color;
 };
+
+struct AABB {
+	Vector3 min;
+	Vector3 max;
+};

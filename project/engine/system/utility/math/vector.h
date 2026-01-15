@@ -26,3 +26,5 @@ Vector3 Normalize(const Vector3& vector);
 
 //クロス積
 Vector3 Cross(const Vector3& vector1, const Vector3& vector2);
+
+Vector3 Lerp(const Vector3& start, const Vector3& end, float t);
