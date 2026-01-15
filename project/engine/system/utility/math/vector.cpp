@@ -63,3 +63,11 @@ Vector3 Cross(const Vector3& vector1, const Vector3& vector2) {
 	result.z = vector1.x * vector2.y - vector1.y * vector2.x;
 	return result;
 }
+
+Vector3 Lerp(const Vector3& start, const Vector3& end, float t) {
+	Vector3 result;
+	result.x = start.x + t * (end.x - start.x);
+	result.y = start.y + t * (end.y - start.y);
+	result.z = start.z + t * (end.z - start.z);
+	return result;
+}
