@@ -6,6 +6,12 @@
 
 
 class Camera {
+
+	enum class Direction{
+		kFront,
+		kBack,
+	};
+
 private:
 	///// --- 変数 --- /////
 	// 累積回転行列
@@ -56,6 +62,8 @@ private:
 
 	// ターゲットするかどうかのチェック関数
 	void Check() { isTargeting_ = false; }
+
+	Direction direction_ = Direction::kFront;
 public:
 	enum class CameraType {
 		kNormal,
