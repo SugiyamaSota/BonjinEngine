@@ -164,8 +164,8 @@ void Camera::SetTarget(Vector3 targetPosition) {
 
 Vector3 Camera::Project(const Vector3& worldPos) {
 
-	float clientWidth = WinApp::GetInstance()->GetClientWidth();
-	float clientHeight = WinApp::GetInstance()->GetClientHeight();
+	float clientWidth = float(WinApp::GetInstance()->GetClientWidth());
+	float clientHeight = float(WinApp::GetInstance()->GetClientHeight());
 
 	// 2. ビュープロジェクション行列を使って、ワールド座標をスクリーン空間のニア・ファー平面（-1.0 ～ 1.0）へ変換
 	// 内部で w 除算が行われる既存の Conversion 関数を利用します

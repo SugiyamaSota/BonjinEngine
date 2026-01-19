@@ -24,7 +24,7 @@ void GameScene::Initialize(Camera* camera)
 
 	//
 	model_ = Model();
-	model_.LoadModel("axis");
+	model_.CreateSphere(36);
 
 }
 

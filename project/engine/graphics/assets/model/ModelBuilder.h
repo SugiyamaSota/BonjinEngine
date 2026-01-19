@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include"BonjinEngine.h"
 
 class ModelBuilder
@@ -9,10 +9,19 @@ public:
 	/// </summary>
 	static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
 
+	/// <summary>
+	/// 球体のモデルを生成
+	/// </summary>
+	/// <param name="subdivision"></param>
+	/// <returns></returns>
+	static ModelData CreateSphereModel(uint32_t subdivision);
+
 private:
 	/// <summary>
 	/// mtlファイルの読み込み
 	/// </summary>
 	static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
+
+	static VertexData GetSphereVertex(uint32_t index, uint32_t subdivision);
 };
 

@@ -11,38 +11,32 @@ Model::Model() {
 }
 
 void Model::LoadModel(const std::string& fileName) {
-	// モデルファイルをModelManager経由で読み込み/取得
 	const std::string directoryPath = "resources/models/" + fileName;
 	const std::string objFilename = fileName + ".obj";
 
-	// ModelManagerからModelDataを取得
-	modelData_= &ModelManager::GetInstance()->LoadModel(directoryPath, objFilename);
+	// ModelManagerから取得
+	modelData_ = &ModelManager::GetInstance()->LoadModel(directoryPath, objFilename);
 
-	// 頂点用のリソース
-	vertexResource_ = CreateBufferResource(common->GetDevice(), sizeof(VertexData) * modelData_->vertices.size());
-	vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
-	vertexBufferView_.SizeInBytes = UINT(sizeof(VertexData) * modelData_->vertices.size());
-	vertexBufferView_.StrideInBytes = sizeof(VertexData);
-	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
-	std::memcpy(vertexData_, modelData_->vertices.data(), sizeof(VertexData) * modelData_->vertices.size());
+	// リソースのセットアップ
+	SetupResources();
 
-	// マテリアル用のリソース
-	materialResource_ = CreateBufferResource(common->GetDevice(), sizeof(Material));
-	materialData_ = nullptr;
-	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
-	materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	materialData_->enableLighting = false;
-	materialData_->uvTransform = MakeIdentity4x4();
-
-	// WVP用のリソース
-	wvpResource_ = CreateBufferResource(common->GetDevice(), sizeof(TransformationMatrix));
-	wvpData_ = nullptr;
-	wvpResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
-	wvpData_->WVP = MakeIdentity4x4();
-	wvpData_->World = MakeIdentity4x4();
-
-	// テクスチャ
+	// テクスチャのロード (ファイルモデル特有)
 	textureHandle_ = TextureManager::GetInstance()->LoadTexture(modelData_->material.textureFilepath);
+	common->WaitAndResetCommandList();
+	TextureManager::GetInstance()->ReleaseIntermediateResources();
+}
+
+void Model::CreateSphere(uint32_t subdivision) {
+	// ModelBuilderを使用して球体データを生成
+	// ※ModelManagerで管理したい場合は ModelManager側に CreateSphereModel を作り、そこからポインタをもらう形が理想的です
+	static ModelData sphereData; // インスタンスが破棄されるまでデータを保持
+	sphereData = ModelBuilder::CreateSphereModel(subdivision);
+	modelData_ = &sphereData;
+
+	// リソースのセットアップ
+	SetupResources();
+
+	textureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/uvChecker.png");
 	common->WaitAndResetCommandList();
 	TextureManager::GetInstance()->ReleaseIntermediateResources();
 }
@@ -93,5 +87,28 @@ void Model::Draw() {
 	common->GetCommandList()->SetGraphicsRootConstantBufferView(3, common->GetDirectionalLightResource()->GetGPUVirtualAddress());
 	// 描画
 	common->GetCommandList()->DrawInstanced(UINT(modelData_->vertices.size()), 1, 0, 0);
+}
+
+void Model::SetupResources() {
+	// 頂点用のリソース
+	vertexResource_ = CreateBufferResource(common->GetDevice(), sizeof(VertexData) * modelData_->vertices.size());
+	vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
+	vertexBufferView_.SizeInBytes = UINT(sizeof(VertexData) * modelData_->vertices.size());
+	vertexBufferView_.StrideInBytes = sizeof(VertexData);
+	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+	std::memcpy(vertexData_, modelData_->vertices.data(), sizeof(VertexData) * modelData_->vertices.size());
+
+	// マテリアル用のリソース
+	materialResource_ = CreateBufferResource(common->GetDevice(), sizeof(Material));
+	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
+	materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	materialData_->enableLighting = true;
+	materialData_->uvTransform = MakeIdentity4x4();
+
+	// WVP用のリソース
+	wvpResource_ = CreateBufferResource(common->GetDevice(), sizeof(TransformationMatrix));
+	wvpResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
+	wvpData_->WVP = MakeIdentity4x4();
+	wvpData_->World = MakeIdentity4x4();
 }
 
