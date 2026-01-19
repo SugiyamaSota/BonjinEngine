@@ -74,6 +74,10 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource_ = nullptr;
 	TransformationMatrix* wvpData_ = nullptr;
 
+	// カメラresource
+	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource_ = nullptr;
+	CameraForGPU* cameraData_ = nullptr;
+
 	// トランスフォーム
 	WorldTransform transform_;
 

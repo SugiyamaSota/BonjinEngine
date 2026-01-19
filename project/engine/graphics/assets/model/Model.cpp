@@ -42,11 +42,15 @@ void Model::CreateSphere(uint32_t subdivision) {
 }
 
 void Model::Update(WorldTransform worldTransform, Camera* camera) {
+	
 	// ワールドトランスフォーム
 	transform_ = worldTransform;
 	wvpData_->World = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
 	Matrix4x4 worldViewProjectionMatrix = Multiply(wvpData_->World, camera->GetViewProjectionMatrix());
 	wvpData_->WVP = worldViewProjectionMatrix;
+
+	cameraData_->worldPosition = camera->GetWorldPosition();
+
 }
 
 void Model::Draw() {
@@ -85,6 +89,11 @@ void Model::Draw() {
 	common->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetGPUHandle(textureHandle_));
 	// 光
 	common->GetCommandList()->SetGraphicsRootConstantBufferView(3, common->GetDirectionalLightResource()->GetGPUVirtualAddress());
+
+	if (cameraResource_) {
+		common->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource_->GetGPUVirtualAddress());
+	}
+
 	// 描画
 	common->GetCommandList()->DrawInstanced(UINT(modelData_->vertices.size()), 1, 0, 0);
 }
@@ -104,11 +113,17 @@ void Model::SetupResources() {
 	materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	materialData_->enableLighting = true;
 	materialData_->uvTransform = MakeIdentity4x4();
+	materialData_->shininess = 1000.f;
 
 	// WVP用のリソース
 	wvpResource_ = CreateBufferResource(common->GetDevice(), sizeof(TransformationMatrix));
 	wvpResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
 	wvpData_->WVP = MakeIdentity4x4();
 	wvpData_->World = MakeIdentity4x4();
+
+	// カメラ
+	cameraResource_ = CreateBufferResource(common->GetDevice(), sizeof(CameraForGPU));
+	cameraResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
+	cameraData_->worldPosition = Vector3(0.f, 0.f, 0.f);
 }
 

@@ -95,6 +95,7 @@ public:
 	Matrix4x4 GetViewProjectionMatrix()const { return viewProjectionMatrix_; }
 	Vector3 GetEye() const { return translation_; } // カメラの視点位置を返す
 	float GetFarZ() const { return farZ_; }         // 遠クリップ距離を返す
+	Vector3 GetWorldPosition()const ;
 
 	///// --- セッター関数 --- /////
 	void ResetPosition();

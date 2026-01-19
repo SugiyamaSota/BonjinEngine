@@ -14,13 +14,13 @@ void GameScene::Initialize(Camera* camera)
 	this->camera_ = camera;
 
 	// スプライト
-	sprite_ = Sprite();
-	sprite_.Initialize("uvChecker.png");
-	sprite_.Scale() = { 1.f,1.f };
-	sprite_.Rotate() = { 0.f,0.f };
-	sprite_.Translate() = { 0.f, 0.f};
-	sprite_.Anchor() = { 0.f,0.f };
-	sprite_.Size() = { 320.f, 180.f };
+	//sprite_ = Sprite();
+	//sprite_.Initialize("uvChecker.png");
+	//sprite_.Scale() = { 1.f,1.f };
+	//sprite_.Rotate() = { 0.f,0.f };
+	//sprite_.Translate() = { 0.f, 0.f};
+	//sprite_.Anchor() = { 0.f,0.f };
+	//sprite_.Size() = { 320.f, 180.f };
 
 	//
 	model_ = Model();
@@ -33,7 +33,7 @@ void GameScene::Unload() {
 
 void GameScene::Update(float deltaTime) {
 
-	sprite_.Update();
+	//sprite_.Update();
 
 	model_.Update(InitializeWorldTransform(), camera_);
 
@@ -61,7 +61,7 @@ void GameScene::Update(float deltaTime) {
 
 void GameScene::Draw() {
 
-	sprite_.Draw();
+	//sprite_.Draw();
 
 	model_.Draw();
 

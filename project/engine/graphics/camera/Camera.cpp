@@ -180,3 +180,11 @@ Vector3 Camera::Project(const Vector3& worldPos) {
 
 	return screenPos;
 }
+
+Vector3 Camera::GetWorldPosition() const{
+	// ビュー行列の逆行列（カメラのワールド行列）を計算
+	Matrix4x4 worldMatrix = Inverse(viewMatrix_);
+
+	// 4行目の成分がワールド座標
+	return { worldMatrix.m[3][0], worldMatrix.m[3][1], worldMatrix.m[3][2] };
+}

@@ -26,11 +26,13 @@ struct VertexData {
 };
 
 struct Material {
-	Vector4 color;
-	int32_t enableLighting;
-	float padding[3];
-	Matrix4x4 uvTransform;
-};
+	Vector4 color;          // 16バイト
+	int32_t enableLighting; // 4バイト
+	float padding[3];       // 12バイト (uvTransformを16バイト境界に合わせる)
+	Matrix4x4 uvTransform;  // 64バイト
+	float shininess;        // 4バイト
+	float padding2[3];      // 12バイト (構造体サイズを16の倍数にする)
+}; 
 
 struct TransformationMatrix {
 	Matrix4x4 WVP;
@@ -76,4 +78,8 @@ struct ParticleForGPU {
 struct AABB {
 	Vector3 min;
 	Vector3 max;
+};
+
+struct CameraForGPU {
+	Vector3 worldPosition;
 };

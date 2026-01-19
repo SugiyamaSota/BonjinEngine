@@ -62,7 +62,7 @@ void PSOManager::CreateRootSignature(ID3D12Device* device)
     descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    D3D12_ROOT_PARAMETER rootParameters[4] = {};
+    D3D12_ROOT_PARAMETER rootParameters[5] = {};
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[0].Descriptor.ShaderRegister = 0;
@@ -76,6 +76,9 @@ void PSOManager::CreateRootSignature(ID3D12Device* device)
     rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[3].Descriptor.ShaderRegister = 1;
+    rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // カメラ
+    rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[4].Descriptor.ShaderRegister = 2;
 
     for (int i = 0; i < _countof(rootParameters); ++i) {
         rootSigBuilder.AddRootParameter(rootParameters[i]);
