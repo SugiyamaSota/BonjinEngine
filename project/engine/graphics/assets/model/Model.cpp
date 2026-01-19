@@ -51,6 +51,8 @@ void Model::Update(WorldTransform worldTransform, Camera* camera) {
 
 	cameraData_->worldPosition = camera->GetWorldPosition();
 
+
+
 }
 
 void Model::Draw() {
@@ -98,6 +100,15 @@ void Model::Draw() {
 	common->GetCommandList()->DrawInstanced(UINT(modelData_->vertices.size()), 1, 0, 0);
 }
 
+void Model::DrawImGUi() {
+#ifdef USE_IMGUI
+
+	ImGui::DragFloat("shine", &materialData_->shininess);
+
+#endif // 
+
+}
+
 void Model::SetupResources() {
 	// 頂点用のリソース
 	vertexResource_ = CreateBufferResource(common->GetDevice(), sizeof(VertexData) * modelData_->vertices.size());
@@ -112,9 +123,9 @@ void Model::SetupResources() {
 	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 	materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	materialData_->enableLighting = true;
-	materialData_->enableSpecular = false;
+	materialData_->enableSpecular = true;
 	materialData_->uvTransform = MakeIdentity4x4();
-	materialData_->shininess = 1000.f;
+	materialData_->shininess = 10.f;
 
 	// WVP用のリソース
 	wvpResource_ = CreateBufferResource(common->GetDevice(), sizeof(TransformationMatrix));

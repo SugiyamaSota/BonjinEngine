@@ -25,11 +25,11 @@ PixelShaderOutput main(VertexShaderOutput input)
     
     float32_t3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
     
-    float32_t3 reflectLight = reflect(gDirectionalLight.direction, normalize(input.normal));
+    float32_t3 reflectLight = reflect(-gDirectionalLight.direction, normalize(input.normal));
     
     float RdotE = dot(reflectLight, toEye);
     
-    float specularPow = pow(saturate(RdotE), gMaterial.shininess);
+    float specularPow = pow(saturate(RdotE*0.9f), gMaterial.shininess);
 
     if (gMaterial.enableLighting != 0)
     {
@@ -47,7 +47,8 @@ PixelShaderOutput main(VertexShaderOutput input)
         // 鏡面反射
         // specularPow が負にならないよう saturate を忘れないこと
         // 強すぎる場合は最後に 0.5f などを掛けて調整
-            specular = gDirectionalLight.color.rgb * gDirectionalLight.intentity * specularPow;
+            specular = gDirectionalLight.color.rgb * gDirectionalLight.intentity * specularPow * float32_t3(1.0f, 1.0f, 1.0f);
+            
         }
 
         // 最終的な色は 拡散反射 + 鏡面反射

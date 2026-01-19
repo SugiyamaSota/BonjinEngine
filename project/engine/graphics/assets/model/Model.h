@@ -33,6 +33,7 @@ public:
 	/// </summary>
 	void Draw();
 
+	void DrawImGUi();
 
 	/// --- 設定関数 ---
 	/// <summary>

@@ -398,9 +398,9 @@ void DirectXCommon::CreateLight() {
 	directionalLightResource_ = CreateBufferResource(device_.Get(), sizeof(DirectionalLight));
 	directionalLightData_ = nullptr;
 	directionalLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData_));
-	directionalLightData_->color = { 1.0f,1.0f,1.0f,1.0f };
+	directionalLightData_->color = { 1.0f,1.0f,1.0f,1.f };
 	directionalLightData_->direction = { 0.5f,-1.0f,0.0f };
-	directionalLightData_->intentity = 1.0f;
+	directionalLightData_->intentity = 1.f;
 }
 
 void DirectXCommon::InitializeFixFPS()
