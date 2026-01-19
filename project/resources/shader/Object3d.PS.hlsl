@@ -35,17 +35,22 @@ PixelShaderOutput main(VertexShaderOutput input)
     {
         float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
         float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
-        
-        // 拡散反射
-        float32_t3 diffuse =
-        gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intentity;
-        
-        //鏡面反射
-        float32_t3 specular =
-        gDirectionalLight.color.rgb * gDirectionalLight.intentity * specularPow * float32_t3(1.f, 1.f, 1.f);
-        
-        // 拡散+鏡面
-        //output.color.rgb = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intentity;
+    
+        // --- 拡散反射 (共通計算) ---
+        // テクスチャの色を反映させるのはここ
+        float32_t3 diffuse = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intentity;
+    
+        float32_t3 specular = float32_t3(0.0f, 0.0f, 0.0f);
+    
+        if (gMaterial.enableSpecular != 0) // フラグがONなら計算
+        {
+        // 鏡面反射
+        // specularPow が負にならないよう saturate を忘れないこと
+        // 強すぎる場合は最後に 0.5f などを掛けて調整
+            specular = gDirectionalLight.color.rgb * gDirectionalLight.intentity * specularPow;
+        }
+
+        // 最終的な色は 拡散反射 + 鏡面反射
         output.color.rgb = diffuse + specular;
         output.color.a = gMaterial.color.a * textureColor.a;
     }

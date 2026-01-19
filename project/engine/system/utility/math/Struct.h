@@ -28,7 +28,8 @@ struct VertexData {
 struct Material {
 	Vector4 color;          // 16バイト
 	int32_t enableLighting; // 4バイト
-	float padding[3];       // 12バイト (uvTransformを16バイト境界に合わせる)
+	int32_t enableSpecular;
+	float padding[2];       // 12バイト (uvTransformを16バイト境界に合わせる)
 	Matrix4x4 uvTransform;  // 64バイト
 	float shininess;        // 4バイト
 	float padding2[3];      // 12バイト (構造体サイズを16の倍数にする)
