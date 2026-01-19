@@ -3,6 +3,9 @@
 #include <map>
 #include<memory>
 
+#include<thread>
+#include<atomic>
+
 #include"../interface/IScene.h"
 
 namespace Bonjin
@@ -32,17 +35,23 @@ namespace Bonjin
         // シングルトン関連の禁止
         SceneManager() = default;
         ~SceneManager() = default;
-        // ... (コピー禁止など)
 
-        // 💡 現在アクティブなシーン
+        // 現在アクティブなシーン
         IScene* currentScene_ = nullptr;
-        // 💡 登録されたすべてのシーンを保持するマップ
+        // 登録されたすべてのシーンを保持するマップ
         std::map<SceneType, IScene*> scenes_;
 
-        // 💡 シーン切り替えロジック
+        // シーン切り替えロジック
         void ChangeScene(SceneType nextSceneType);
 
         Camera* camera = nullptr;
+
+        // バックグラウンド
+        std::unique_ptr<std::thread> loadingThread_;
+        std::atomic<bool> isInitializeFinished_ = false;
+       // IScene* loadingScene_ = nullptr;
+        bool isLoading_ = false;
+        SceneType nextSceneType_;
 
     };
 

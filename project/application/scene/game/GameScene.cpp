@@ -53,7 +53,7 @@ void GameScene::Update(float deltaTime) {
 
 	case GamePhase::kGoal:
 
-		nextSceneType_ = SceneType::kGame;
+		nextSceneType_ = SceneType::kTitle;
 
 		break;
 	}
