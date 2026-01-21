@@ -28,6 +28,8 @@ namespace Bonjin
 
         Camera* GetCamera()const { return camera; };
 
+        float GetFadeIOAlpha()const { return currentScene_->GetFadeIOAlpha(); }
+
     private:
         static SceneManager* instance;
 

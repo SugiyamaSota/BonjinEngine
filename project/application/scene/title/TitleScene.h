@@ -37,7 +37,7 @@ namespace Bonjin
 
 	private:
 		// --- ゲーム固有の変数 ---
-		float phaseTimer_ = 0.0f;
+		//float phaseTimer_ = 0.0f;
 
 		// タイトルモデル(Anchor)
 		std::unique_ptr <Model> titleModel_ = nullptr;
@@ -46,6 +46,10 @@ namespace Bonjin
 		// スタートするHUDのモデル
 		std::unique_ptr <Model> startHUDModel_ = nullptr;
 		WorldTransform startHUDWT_;
+
+		// HUDモデル回転用変数
+		float hudRotationY_ = 0.0f;      // 現在の角度
+		float hudRotationSpeed_ = 0.0f;
 
 	private:
 		// --- ゲーム固有の関数 ---

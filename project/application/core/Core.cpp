@@ -30,7 +30,7 @@ void Core::Initialize() {
     fadeIOSprite_->Rotate() = { 0.f,0.f };
     fadeIOSprite_->Translate() = { 0.f, 0.f};
     fadeIOSprite_->Anchor() = { 0.f,0.f };
-    fadeIOSprite_->Color() = { 0.f,0.f,0.f,0.5f };
+    fadeIOSprite_->Color() = { 0.f,0.f,0.f,1.f };
     fadeIOSprite_->Size() = { 1280.f, 720.f };
 
 }
@@ -46,6 +46,8 @@ void Core::Run() {
         // 更新処理
         float deltaTime = Time::GetInstance()->GetDeltaTime();
         SceneManager::GetInstance()->Update(deltaTime);
+
+        fadeIOSprite_->Color() = { 0.f,0.f,0.f,SceneManager::GetInstance()->GetFadeIOAlpha() };
 
         skydome_->Update();
         fadeIOSprite_->Update();

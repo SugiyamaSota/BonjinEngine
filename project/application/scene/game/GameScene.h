@@ -38,10 +38,7 @@ namespace Bonjin
 
 	private:
 		// --- ゲーム固有の変数 ---
-		// スプライト
-		//Bonjin::Sprite sprite_;
-
-		Model model_;
+		
 
 	private:
 		// --- ゲーム固有の関数 ---

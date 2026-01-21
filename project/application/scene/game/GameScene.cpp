@@ -10,7 +10,7 @@ void GameScene::Initialize(Camera* camera)
 	// 今のシーンと遷移後シーン(初期値は同じ)
 	currentSceneType_ = SceneType::kGame;
 	nextSceneType_ = SceneType::kGame;
-
+	ChangePhase(GamePhase::kStart);
 	
 
 	this->camera_ = camera;
@@ -24,21 +24,12 @@ void GameScene::Initialize(Camera* camera)
 	//sprite_.Anchor() = { 0.f,0.f };
 	//sprite_.Size() = { 320.f, 180.f };
 
-	//
-	model_ = Model();
-	model_.CreateSphere(36);
-	model_.Update(InitializeWorldTransform(), camera_);
-
 }
 
 void GameScene::Unload() {
 }
 
 void GameScene::Update(float deltaTime) {
-
-	//sprite_.Update();
-
-	model_.Update(InitializeWorldTransform(), camera_);
 
 	// フェーズに応じた処理
 	switch (phase_) {
@@ -57,7 +48,7 @@ void GameScene::Update(float deltaTime) {
 	case GamePhase::kGoal:
 
 		nextSceneType_ = SceneType::kTitle;
-		ChangePhase(GamePhase::kStart);
+		
 
 		break;
 	}
@@ -65,14 +56,12 @@ void GameScene::Update(float deltaTime) {
 
 void GameScene::Draw() {
 
-	//sprite_.Draw();
-
-	model_.Draw();
+	
 
 }
 
 void GameScene::DrawSceneImGui() {
-	model_.DrawImGUi();
+
 }
 
 SceneType GameScene::GetNextScene() const {
