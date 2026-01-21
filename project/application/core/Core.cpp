@@ -17,6 +17,13 @@ void Core::Initialize() {
     sceneManager->Initialize();
     sceneManager->AddScene(SceneType::kTitle, new TitleScene());
     sceneManager->AddScene(SceneType::kGame, new GameScene());
+
+    // 天球
+    skydomeModel_ = std::make_unique<Model>();
+    skydomeModel_->LoadModel("debugSkydome");
+    skydome_ = std::make_unique<Skydome>();
+    skydome_->Initialize(skydomeModel_.get(),sceneManager->GetCamera());
+
 }
 
 void Core::Run() {
@@ -31,10 +38,14 @@ void Core::Run() {
         float deltaTime = Time::GetInstance()->GetDeltaTime();
         SceneManager::GetInstance()->Update(deltaTime);
 
+        skydome_->Update();
+
         PreDraw();
 
         // 描画処理
         SceneManager::GetInstance()->Draw();
+
+        skydome_->Draw();
 
         EndFrame();
     }

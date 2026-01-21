@@ -42,6 +42,13 @@ public:
 	/// <param name="enableLighting">フラグ</param>
 	void SetEnableLighting(bool enableLighting) { materialData_->enableLighting = enableLighting; }
 
+	/// --- 設定関数 ---
+	/// <summary>
+	/// ライティングの有無
+	/// </summary>
+	/// <param name="enableLighting">フラグ</param>
+	void SetEnableSpecular(bool enableSpecular) { materialData_->enableSpecular = enableSpecular; }
+
 	/// <summary>
 	/// 色と透明度
 	/// </summary>

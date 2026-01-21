@@ -26,6 +26,8 @@ namespace Bonjin
         // 💡 エンジンのループから呼ばれる描画関数
         void Draw();
 
+        Camera* GetCamera()const { return camera; };
+
     private:
         static SceneManager* instance;
 

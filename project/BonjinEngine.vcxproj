@@ -150,6 +150,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="application\core\skydome\Skydome.cpp" />
     <ClCompile Include="application\scene\game\GameScene.cpp" />
     <ClCompile Include="application\core\Core.cpp" />
     <ClCompile Include="engine\system\manager\imgui\ImGuiManager.cpp" />
@@ -209,6 +210,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\core\Core.h" />
+    <ClInclude Include="application\core\skydome\Skydome.h" />
     <ClInclude Include="engine\interface\BaseScene.h" />
     <ClInclude Include="engine\interface\IScene.h" />
     <ClInclude Include="application\scene\game\GameScene.h" />
