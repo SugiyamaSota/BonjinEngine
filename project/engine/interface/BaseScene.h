@@ -11,6 +11,7 @@ namespace Bonjin
 	protected:
 		// 各シーン固有フェーズ
 		T phase_;
+		float phaseTimer_ = 0.0f;
 
 	public:
 		virtual ~BaseScene() = default;
@@ -18,10 +19,15 @@ namespace Bonjin
 		// フェーズ変更
 		virtual void ChangePhase(T nextPhase) {
 			phase_ = nextPhase;
+			phaseTimer_ = 0.0f;
 		}
 
-		// フェーズ取得
+		void UpdatePhaseTimer(float deltaTime) {
+			phaseTimer_ += deltaTime;
+		}
+
 		T GetPhase() const { return phase_; }
+		float GetPhaseTimer() const { return phaseTimer_; }
 	};
 
 }

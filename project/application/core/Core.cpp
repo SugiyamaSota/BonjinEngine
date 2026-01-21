@@ -15,8 +15,8 @@ void Core::Initialize() {
     // シーンマネージャーのセットアップ
     auto sceneManager = SceneManager::GetInstance();
     sceneManager->Initialize();
-    sceneManager->AddScene(SceneType::kGame, new GameScene());
     sceneManager->AddScene(SceneType::kTitle, new TitleScene());
+    sceneManager->AddScene(SceneType::kGame, new GameScene());
 }
 
 void Core::Run() {

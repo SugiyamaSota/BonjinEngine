@@ -6,41 +6,49 @@
 namespace Bonjin
 {
 
-    enum class TitlePhase {
-        kFadeIn,
-        kActive,
-        kFadeOut,
-    };
+	enum class TitlePhase {
+		kFadeIn,
+		kActive,
+		kFadeOut,
+	};
 
-    class TitleScene : public BaseScene<TitlePhase>
-    {
-    public:
-        // --- オーバーライド関数 ---
-        virtual ~TitleScene() = default;
+	class TitleScene : public BaseScene<TitlePhase>
+	{
+	public:
+		// --- オーバーライド関数 ---
+		virtual ~TitleScene() = default;
 
-        void Initialize(Camera* camera) override;
+		void Initialize(Camera* camera) override;
 
-        void Unload()override;
+		void Unload()override;
 
-        void Update(float deltaTime) override;
+		void Update(float deltaTime) override;
 
-        void Draw() override;
+		void Draw() override;
 
-        void DrawSceneImGui()override;
+		void DrawSceneImGui()override;
 
-        SceneType GetNextScene() const override;
+		SceneType GetNextScene() const override;
 
-        const char* GetScenename()const override
-        {
-            return "TitleScene";
-        }
+		const char* GetScenename()const override
+		{
+			return "TitleScene";
+		}
 
-    private:
-        // --- ゲーム固有の変数 ---
+	private:
+		// --- ゲーム固有の変数 ---
+		float phaseTimer_ = 0.0f;
 
+		// タイトルモデル(Anchor)
+		std::unique_ptr <Model> titleModel_ = nullptr;
+		WorldTransform titleWT_;
 
-    private:
-        // --- ゲーム固有の関数 ---
+		// スタートするHUDのモデル
+		std::unique_ptr <Model> startHUDModel_ = nullptr;
+		WorldTransform startHUDWT_;
 
-    };
+	private:
+		// --- ゲーム固有の関数 ---
+
+	};
 }
