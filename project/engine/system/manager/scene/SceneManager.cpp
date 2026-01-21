@@ -53,29 +53,6 @@ void SceneManager::AddScene(SceneType type, IScene* scene) {
 
 // 💡 5. シーンの更新処理
 void SceneManager::Update(float deltaTime) {
-	
-	if (isLoading_) {
-
-		//loadingScene_->Update(deltaTime);
-
-		if (isInitializeFinished_) {
-
-			if (loadingThread_ && loadingThread_->joinable()) {
-				loadingThread_->join();
-				loadingThread_.reset();
-			}
-
-
-			currentScene_ = scenes_[nextSceneType_];
-
-			isLoading_ = false;
-
-			return;
-
-		}
-
-	}
-	
 	if (currentScene_ == nullptr) {
 		return;
 	}
@@ -106,27 +83,33 @@ void SceneManager::Draw() {
 }
 
 // 💡 7. シーン切り替えロジック（プライベート関数）
-void SceneManager::ChangeScene(SceneType nextType) {
-	if (isLoading_) return; // 重複防止
+void SceneManager::ChangeScene(SceneType nextSceneType) {
 
-	// 1. 現在のシーンをアンロード
-	if (currentScene_) {
+	// 終了シーンならゲームを終了
+	if (nextSceneType == SceneType::kExit) {
+		// WinAppの終了フラグを立てるなどの処理
+		return;
+	}
+
+	if (currentScene_ != nullptr) {
 		currentScene_->Unload();
 	}
 
-	nextSceneType_ = nextType;
+	// 遷移先のシーンが登録されているか確認
+	auto it = scenes_.find(nextSceneType);
+	if (it == scenes_.end()) {
+		// エラー: 遷移先が登録されていません
+		return;
+	}
 
-	// 2. 次のシーンを準備
-	IScene* nextScene = scenes_[nextType];
-	isInitializeFinished_ = false;
-	isLoading_ = true;
+	// 💡 シーンの切り替え実行
+	IScene* nextScene = it->second;
 
-	// 3. 別スレッドで Initialize を開始
-	loadingThread_ = std::make_unique<std::thread>([this, nextScene]() {
-		nextScene->Initialize(this->camera);
-		isInitializeFinished_ = true; // 完了フラグを立てる
-		});
+	// 1. 新しいシーンを初期化
+	nextScene->Initialize(camera);
 
-	// 4. 一旦カレントをロード画面用シーンにする（あれば）
-	//currentScene_ = loadingScene_; 
+	// 2. カレントシーンを更新
+	currentScene_ = nextScene;
+
+	// 3. （オプション）ここでフェードアウトの完了とフェードインの開始処理を行う
 }
