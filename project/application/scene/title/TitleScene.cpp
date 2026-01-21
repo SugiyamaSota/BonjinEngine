@@ -29,10 +29,19 @@ void TitleScene::Unload() {
 
 void TitleScene::Update(float deltaTime) {
 
+	phaseTimer_ += 1.0f / 60.0f;
+
+	// 1. タイトルロゴの揺れ（ゆっくり、大きく）
+    float titleY = std::sin(phaseTimer_ * 2.0f) * 0.3f; 
+    titleWT_.translate.y = 0.5f + titleY; // 0.5f は基準となる高さ（調整してください）
+
+    // 2. スタートHUDの揺れ（少し速く、小さく）
+    // phaseTimer_ に 0.5f などを足すと、タイトルと動きのタイミングがズレて自然になります
+    float hudY = std::sin((phaseTimer_ + 0.5f) * 3.0f) * 0.15f;
+    startHUDWT_.translate.y = -1.0f + hudY; // -1.0f は基準となる高さ（調整してください）
+
 	titleModel_->Update(titleWT_, camera_);
 	startHUDModel_->Update(startHUDWT_, camera_);
-
-	phaseTimer_ += 1.0f / 60.0f;
 
     // フェーズに応じた処理
     switch (phase_) {

@@ -11,6 +11,8 @@ void GameScene::Initialize(Camera* camera)
 	currentSceneType_ = SceneType::kGame;
 	nextSceneType_ = SceneType::kGame;
 
+	
+
 	this->camera_ = camera;
 
 	// スプライト
@@ -25,6 +27,7 @@ void GameScene::Initialize(Camera* camera)
 	//
 	model_ = Model();
 	model_.CreateSphere(36);
+	model_.Update(InitializeWorldTransform(), camera_);
 
 }
 
@@ -53,7 +56,8 @@ void GameScene::Update(float deltaTime) {
 
 	case GamePhase::kGoal:
 
-		nextSceneType_ = SceneType::kGame;
+		nextSceneType_ = SceneType::kTitle;
+		ChangePhase(GamePhase::kStart);
 
 		break;
 	}

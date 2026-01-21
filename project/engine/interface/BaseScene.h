@@ -2,7 +2,7 @@
 
 #include"IScene.h"
 
-namespace Bonjin 
+namespace Bonjin
 {
 	// TはTitlePgaseやGamePhaseなど
 	template<typename T>
@@ -23,7 +23,7 @@ namespace Bonjin
 		}
 
 		void UpdatePhaseTimer(float deltaTime) {
-			phaseTimer_ += deltaTime;
+			phaseTimer_ += 1.f * deltaTime;
 		}
 
 		T GetPhase() const { return phase_; }
