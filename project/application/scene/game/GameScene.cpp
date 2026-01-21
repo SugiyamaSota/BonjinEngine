@@ -68,7 +68,7 @@ void GameScene::Draw() {
 }
 
 void GameScene::DrawSceneImGui() {
-	model_.DrawImGUi();
+	model_.DrawImGui();
 }
 
 SceneType GameScene::GetNextScene() const {

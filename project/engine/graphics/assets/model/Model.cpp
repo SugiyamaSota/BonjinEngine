@@ -100,13 +100,22 @@ void Model::Draw() {
 	common->GetCommandList()->DrawInstanced(UINT(modelData_->vertices.size()), 1, 0, 0);
 }
 
-void Model::DrawImGUi() {
+void Model::DrawImGui() {
 #ifdef USE_IMGUI
+	if (ImGui::BeginTabBar("ModelDebug")) {
 
-	ImGui::DragFloat("shine", &materialData_->shininess);
+		// --- マテリアルタブ ---
+		if (ImGui::BeginTabItem("Material")) {
+			ImGui::ColorEdit4("Base Color", &materialData_->color.x);
+			ImGui::DragFloat("Shininess", &materialData_->shininess, 0.1f, 0.1f, 100.0f);
+			ImGui::Checkbox("Enable Lighting", reinterpret_cast<bool*>(&materialData_->enableLighting));
+			ImGui::Checkbox("Enable Specular", reinterpret_cast<bool*>(&materialData_->enableSpecular));
+			ImGui::EndTabItem();
+		}
 
-#endif // 
-
+		ImGui::EndTabBar();
+	}
+#endif
 }
 
 void Model::SetupResources() {
