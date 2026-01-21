@@ -19,4 +19,7 @@ private:
 
     std::unique_ptr<Skydome> skydome_ = nullptr;
     std::unique_ptr<Model> skydomeModel_ = nullptr;
+
+    std::unique_ptr <Bonjin::Sprite> fadeIOSprite_;
+
 };

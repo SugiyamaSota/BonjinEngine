@@ -75,6 +75,8 @@ namespace Bonjin
 		/// <returns></returns>
 		virtual const char* GetScenename()const = 0;
 
+		float GetFadeIOAlpha()const { return fadeIOAlpha_; }
+
 	protected:
 		// カメラ
 		Camera* camera_ = nullptr;
@@ -84,6 +86,8 @@ namespace Bonjin
 
 		// 次に遷移したいシーンタイプ
 		SceneType nextSceneType_ = SceneType::kTitle;
+
+		float fadeIOAlpha_ = 1.f;
 
 	};
 }

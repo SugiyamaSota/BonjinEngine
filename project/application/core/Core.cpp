@@ -24,6 +24,15 @@ void Core::Initialize() {
     skydome_ = std::make_unique<Skydome>();
     skydome_->Initialize(skydomeModel_.get(),sceneManager->GetCamera());
 
+    fadeIOSprite_ = std::make_unique<Sprite>();
+    fadeIOSprite_->Initialize("uvChecker.png");
+    fadeIOSprite_->Scale() = { 1.f,1.f };
+    fadeIOSprite_->Rotate() = { 0.f,0.f };
+    fadeIOSprite_->Translate() = { 0.f, 0.f};
+    fadeIOSprite_->Anchor() = { 0.f,0.f };
+    fadeIOSprite_->Color() = { 0.f,0.f,0.f,0.5f };
+    fadeIOSprite_->Size() = { 1280.f, 720.f };
+
 }
 
 void Core::Run() {
@@ -39,13 +48,15 @@ void Core::Run() {
         SceneManager::GetInstance()->Update(deltaTime);
 
         skydome_->Update();
+        fadeIOSprite_->Update();
 
         PreDraw();
 
         // 描画処理
         SceneManager::GetInstance()->Draw();
-
+        
         skydome_->Draw();
+        fadeIOSprite_->Draw();
 
         EndFrame();
     }
