@@ -17,7 +17,7 @@ void GameScene::Initialize(Camera* camera)
 
 	// マップチップフィールド
 	mapChipField_ = std::make_unique<MapChipField>();
-	mapChipField_->LoadmapChipCsv("resources/maps/tutrial.csv");
+	mapChipField_->LoadmapChipCsv("resources/maps/tutorial.csv");
 
 	// カメラ
 	camera_->SetTarget(goalWorldTransform_.translate);
@@ -39,10 +39,11 @@ void GameScene::Unload() {
 }
 
 void GameScene::Update(float deltaTime) {
+	UpdatePhaseTimer(deltaTime);
+
 	switch (phase_) {
 	case GamePhase::kStart:
-		// フェーズ開始からの時間を計測
-		phaseTimer_ += 1.0f / 60.0f;
+		
 
 		// フェードインのアルファ値を計算（2秒かけて不透明から透明へ）
 		fadeIOAlpha_ = 1.0f - min(phaseTimer_ / 2.0f, 1.0f);
@@ -124,7 +125,7 @@ void GameScene::Update(float deltaTime) {
 			});
 
 		// 操作方法の表示操作
-		if (Input::GetInstance()->IsPadTrigger(7)) {
+		if (Input::GetInstance()->IsPadTrigger(7)||Input::GetInstance()->IsTrigger(DIK_TAB)) {
 			if (showTutrial == false) {
 				showTutrial = true;
 			} else {
@@ -224,7 +225,7 @@ void GameScene::Draw() {
 	if (showTutrial == false) {
 		HUD_Tab_->Draw();
 		DrawHUD();
-	} else {
+	} else if (showTutrial == true) {
 		tutrialSprites_[currentTutrialPage_]->Draw();
 	}
 
@@ -461,7 +462,7 @@ void GameScene::HUDInit() {
 
 
 	for (int i = 1; i <= 4; ++i) {
-		std::string filename = "tutrial" + std::to_string(i) + ".png";
+		std::string filename = "tutorial" + std::to_string(i) + ".png";
 		std::unique_ptr<Sprite> sprite = std::make_unique<Sprite>();
 		sprite->Initialize(filename);
 		sprite->Scale() = { 1.f,1.f };

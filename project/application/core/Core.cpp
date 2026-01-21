@@ -54,10 +54,10 @@ void Core::Run() {
 
         PreDraw();
 
+        skydome_->Draw();
         // 描画処理
         SceneManager::GetInstance()->Draw();
         
-        skydome_->Draw();
         fadeIOSprite_->Draw();
 
         EndFrame();
