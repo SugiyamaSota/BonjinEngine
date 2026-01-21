@@ -69,6 +69,7 @@ void GameScene::Draw() {
 
 void GameScene::DrawSceneImGui() {
 	model_.DrawImGui();
+	LightManager::GetInstance()->DrawImGui();
 }
 
 SceneType GameScene::GetNextScene() const {
