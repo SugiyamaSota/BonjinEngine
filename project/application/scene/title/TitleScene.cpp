@@ -57,6 +57,10 @@ void TitleScene::Update(float deltaTime) {
 }
 
 void TitleScene::Draw() {
+
+	titleModel_->Draw();
+	startHUDModel_->Draw();
+
 }
 
 void TitleScene::DrawSceneImGui() {
