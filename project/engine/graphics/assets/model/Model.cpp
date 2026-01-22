@@ -141,6 +141,7 @@ void Model::SetupResources() {
 	wvpResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
 	wvpData_->WVP = MakeIdentity4x4();
 	wvpData_->World = MakeIdentity4x4();
+	wvpData_->WorldInverseTranspose = MakeIdentity4x4();
 
 	// カメラ
 	cameraResource_ = CreateBufferResource(common->GetDevice(), sizeof(CameraForGPU));
