@@ -41,7 +41,12 @@ void Camera::Update(CameraType type) {
 
 	CalculateCameraPositionAndRotation();
 
-	viewMatrix_ = MakeLookAtMatrix(translation_, targetPosition_, { 0, 1, 0 });
+	Vector3 up = { 0, 1, 0 };
+	// もしカメラがほぼ真上/真下を向いたら、upベクトルを少しずらす
+	if (abs(Dot(Normalize(Subtract(targetPosition_, translation_)), up)) > 0.99f) {
+		up = { 0, 0, 1 }; // 回避策
+	}
+	viewMatrix_ = MakeLookAtMatrix(translation_, targetPosition_, up);
 
 	viewProjectionMatrix_ = Multiply(viewMatrix_, projectionMatrix_);
 }
@@ -109,10 +114,9 @@ void Camera::CalculateCameraPositionAndRotation() {
 	// XZ平面での投影された半径
 	float projectedRadius = radius_ * std::sin(phi_);
 
-	// カメラのワールド座標を計算
-	translation_.x = targetPosition_.x + projectedRadius * std::sin(theta_);
-	translation_.z = targetPosition_.z + projectedRadius * std::cos(theta_);
+	translation_.x = targetPosition_.x + radius_ * std::sin(phi_) * std::sin(theta_);
 	translation_.y = targetPosition_.y + radius_ * std::cos(phi_);
+	translation_.z = targetPosition_.z + radius_ * std::sin(phi_) * std::cos(theta_);
 
 	matRot_ = Multiply(MakeRotateYMatrix(theta_), MakeRotateXMatrix(phi_));
 }
@@ -182,9 +186,5 @@ Vector3 Camera::Project(const Vector3& worldPos) {
 }
 
 Vector3 Camera::GetWorldPosition() const{
-	// ビュー行列の逆行列（カメラのワールド行列）を計算
-	Matrix4x4 worldMatrix = Inverse(viewMatrix_);
-
-	// 4行目の成分がワールド座標
-	return { worldMatrix.m[3][0], worldMatrix.m[3][1], worldMatrix.m[3][2] };
+	return translation_;
 }

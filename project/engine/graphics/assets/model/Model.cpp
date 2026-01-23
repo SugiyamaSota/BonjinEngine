@@ -134,7 +134,7 @@ void Model::SetupResources() {
 	materialData_->enableLighting = true;
 	materialData_->enableSpecular = true;
 	materialData_->uvTransform = MakeIdentity4x4();
-	materialData_->shininess = 10.f;
+	materialData_->shininess = 70.f;
 
 	// WVP用のリソース
 	wvpResource_ = CreateBufferResource(common->GetDevice(), sizeof(TransformationMatrix));
