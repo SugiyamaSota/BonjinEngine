@@ -32,12 +32,14 @@ void LightManager::Initialize(ID3D12Device* device) {
 
 	// 初期値設定
 	pointLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	pointLightData_->position = { 0.5f, -1.0f, 0.0f };
+	pointLightData_->position = { 0.f, 2.f, 0.f };
 	pointLightData_->intensity = 1.0f;
+	pointLightData_->radius = 5.f;
+	pointLightData_->decay = 2.f;
 }
 
 void LightManager::Update() {
-	// 必要に応じて更新処理（現在はMap済みなので自動で反映されます）
+	
 }
 
 void LightManager::DrawImGui() {
@@ -53,8 +55,10 @@ void LightManager::DrawImGui() {
 #ifdef USE_IMGUI
 	if (ImGui::TreeNode("point Light")) {
 		ImGui::ColorEdit4("point_Color", &pointLightData_->color.x);
-		ImGui::DragFloat3("point_Direction", &pointLightData_->position.x, 0.01f, -100.0f, 1.00f);
+		ImGui::DragFloat3("point_Position", &pointLightData_->position.x, 0.01f, -10.0f, 10.f);
 		ImGui::DragFloat("point_Intensity", &pointLightData_->intensity, 0.01f, 0.0f, 10.0f);
+		ImGui::DragFloat("point_Radius", &pointLightData_->radius, 0.01f, 0.0f, 10.0f);
+		ImGui::DragFloat("point_Decay", &pointLightData_->decay, 0.01f, 0.0f, 10.0f);
 		ImGui::TreePop();
 	}
 #endif

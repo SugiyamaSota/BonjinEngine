@@ -75,6 +75,9 @@ struct PointLight {
 	Vector4 color;
 	Vector3 position;
 	float intensity;
+	float radius; // ライトが届く最大距離
+	float decay;  // 減衰率
+	float paddiong[2];
 };
 
 
