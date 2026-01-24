@@ -68,16 +68,29 @@ struct Plane {
 struct DirectionalLight {
 	Vector4 color;
 	Vector3 direction;
-	float intentity;
+	float intensity;
 };
 
+// ポイント
 struct PointLight {
 	Vector4 color;
 	Vector3 position;
 	float intensity;
 	float radius; // ライトが届く最大距離
 	float decay;  // 減衰率
-	float paddiong[2];
+	float padding[2];
+};
+
+// スポット
+struct SpotLight{
+	Vector4 color; // 色
+	Vector3 position; // 位置
+	float intensity; // 輝度
+	Vector3 direction; // 方向
+	float distance; // ライトが届く最大距離
+	float decay; // 減衰率
+	float cosAngle; // スポットライトの余弦
+	float padding[2];
 };
 
 

@@ -27,6 +27,10 @@ void GameScene::Initialize(Camera* camera)
 	model_ = Model();
 	model_.CreateSphere(36);
 
+	terrainWT_ = InitializeWorldTransform();
+	terrainModel_ = Model();
+	terrainModel_.LoadModel("terrain");
+
 }
 
 void GameScene::Unload() {
@@ -37,6 +41,7 @@ void GameScene::Update(float deltaTime) {
 	//sprite_.Update();
 
 	model_.Update(WT_, camera_);
+	terrainModel_.Update(WT_, camera_);
 
 	// フェーズに応じた処理
 	switch (phase_) {
@@ -62,6 +67,7 @@ void GameScene::Update(float deltaTime) {
 
 void GameScene::Draw() {
 	model_.Draw();
+	terrainModel_.Draw();
 }
 
 void GameScene::DrawSceneImGui() {
