@@ -14,6 +14,13 @@ struct DirectionalLight
     float intentity;
 };
 
+struct PointLight
+{
+    float32_t4 color;
+    float32_t3 position;
+    float intensity;
+};
+
 struct Material
 {
     float32_t4 color;

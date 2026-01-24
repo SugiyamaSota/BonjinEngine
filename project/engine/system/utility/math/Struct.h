@@ -71,6 +71,14 @@ struct DirectionalLight {
 	float intentity;
 };
 
+struct PointLight {
+	Vector4 color;
+	Vector3 position;
+	float intensity;
+};
+
+
+
 struct ParticleForGPU {
 	Matrix4x4 WVP;
 	Matrix4x4 World;

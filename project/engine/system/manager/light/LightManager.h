@@ -15,6 +15,7 @@ public:
 
     // Getter
     ID3D12Resource* GetDirectionalLightResource() { return directionalLightResource_.Get(); }
+    ID3D12Resource* GetPointLightResource() { return pointLightResource_.Get(); }
 
 private:
     LightManager() = default;
@@ -22,6 +23,9 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource_;
     DirectionalLight* directionalLightData_ = nullptr;
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> pointLightResource_;
+    PointLight* pointLightData_ = nullptr;
 
     static LightManager* instance_;
 };

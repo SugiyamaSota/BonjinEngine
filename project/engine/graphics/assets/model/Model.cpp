@@ -92,6 +92,9 @@ void Model::Draw() {
 	// 光
 	common->GetCommandList()->SetGraphicsRootConstantBufferView(3, LightManager::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
 
+	// 光
+	common->GetCommandList()->SetGraphicsRootConstantBufferView(5, LightManager::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
+
 	if (cameraResource_) {
 		common->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource_->GetGPUVirtualAddress());
 	}
