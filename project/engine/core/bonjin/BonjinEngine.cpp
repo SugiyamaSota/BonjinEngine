@@ -26,6 +26,7 @@ std::ofstream logStream(logFilePath);
 void Bonjin::Initialize() {
 	// directXcommon、Input、テクスチャのインスタンスを取得
 	DirectXCommon::GetInstance();
+	LightManager::GetInstance()->Initialize(DirectXCommon::GetInstance()->GetDevice());
 	WinApp::GetInstance();
 	Input::GetInstance()->Initialize(WinApp::GetInstance()->GetHInstance(), WinApp::GetInstance()->GetHWND());
 	Input::GetInstance()->SetMouseLock(false);
@@ -41,6 +42,7 @@ void Bonjin::Finalize() {
 	TextureManager::DestroyInstance();
 	ModelManager::GetInstance()->Finalize();
 	WinApp::GetInstance()->DestroyInstance();
+	LightManager::DestroyInstance();
 	DirectXCommon::GetInstance()->DestroyInstance();
 	Time::DestroyInstance();
 }

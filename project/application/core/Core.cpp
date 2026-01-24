@@ -30,6 +30,7 @@ void Core::Run() {
         // 更新処理
         float deltaTime = Time::GetInstance()->GetDeltaTime();
         SceneManager::GetInstance()->Update(deltaTime);
+        
 
         PreDraw();
 

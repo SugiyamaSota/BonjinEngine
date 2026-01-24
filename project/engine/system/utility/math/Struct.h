@@ -38,6 +38,7 @@ struct Material {
 struct TransformationMatrix {
 	Matrix4x4 WVP;
 	Matrix4x4 World;
+	Matrix4x4 WorldInverseTranspose;
 };
 
 struct MaterialData {
@@ -69,6 +70,17 @@ struct DirectionalLight {
 	Vector3 direction;
 	float intentity;
 };
+
+struct PointLight {
+	Vector4 color;
+	Vector3 position;
+	float intensity;
+	float radius; // ライトが届く最大距離
+	float decay;  // 減衰率
+	float paddiong[2];
+};
+
+
 
 struct ParticleForGPU {
 	Matrix4x4 WVP;

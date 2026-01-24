@@ -23,6 +23,7 @@ void GameScene::Initialize(Camera* camera)
 	//sprite_.Size() = { 320.f, 180.f };
 
 	//
+	WT_ = InitializeWorldTransform();
 	model_ = Model();
 	model_.CreateSphere(36);
 
@@ -35,7 +36,7 @@ void GameScene::Update(float deltaTime) {
 
 	//sprite_.Update();
 
-	model_.Update(InitializeWorldTransform(), camera_);
+	model_.Update(WT_, camera_);
 
 	// フェーズに応じた処理
 	switch (phase_) {
@@ -60,15 +61,20 @@ void GameScene::Update(float deltaTime) {
 }
 
 void GameScene::Draw() {
-
-	//sprite_.Draw();
-
 	model_.Draw();
-
 }
 
 void GameScene::DrawSceneImGui() {
-	model_.DrawImGUi();
+#ifdef USE_IMGUI
+	if (ImGui::TreeNode("WorldTransform")) {
+		ImGui::DragFloat3("scale", &WT_.scale.x, 0.1f);
+		ImGui::DragFloat3("rotate", &WT_.rotate.x, 0.1f);
+		ImGui::DragFloat3("translate", &WT_.translate.x, 0.1f);
+		ImGui::TreePop();
+	}
+#endif
+	model_.DrawImGui();
+	LightManager::GetInstance()->DrawImGui();
 }
 
 SceneType GameScene::GetNextScene() const {

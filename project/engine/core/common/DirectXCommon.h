@@ -73,9 +73,6 @@ public:
 	// 深度
 	ID3D12DescriptorHeap* GetDSVDescriptorHeap() { return dsvDescriptorHeap_.Get(); }
 
-	// 光
-	ID3D12Resource* GetDirectionalLightResource() { return directionalLightResource_.Get(); }
-
 	// PSO
 	PSOManager* GetPSO()const { return pso; }
 
@@ -128,10 +125,6 @@ private:
 	// PSO
 	PSOManager* pso = nullptr;
 
-	// 光
-	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource_ = nullptr;
-	DirectionalLight* directionalLightData_ = nullptr;
-
 	// ビューポート
 	D3D12_VIEWPORT viewport_{};
 
@@ -150,7 +143,6 @@ private:
 	void CreateSwapChain(); // スワップチェーン
 	void CreateFence();     // フェンス
 	void CreateDepth();     // 深度
-	void CreateLight();     // 光
 	void InitializeFixFPS();// FPS固定初期化
 	void UpdateFixFPS();    // FPS固定更新
 

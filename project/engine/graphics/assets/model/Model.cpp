@@ -90,7 +90,10 @@ void Model::Draw() {
 	// SRV用のdescriptionTavleの先頭を設定
 	common->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetGPUHandle(textureHandle_));
 	// 光
-	common->GetCommandList()->SetGraphicsRootConstantBufferView(3, common->GetDirectionalLightResource()->GetGPUVirtualAddress());
+	common->GetCommandList()->SetGraphicsRootConstantBufferView(3, LightManager::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
+
+	// 光
+	common->GetCommandList()->SetGraphicsRootConstantBufferView(5, LightManager::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
 
 	if (cameraResource_) {
 		common->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource_->GetGPUVirtualAddress());
@@ -100,13 +103,22 @@ void Model::Draw() {
 	common->GetCommandList()->DrawInstanced(UINT(modelData_->vertices.size()), 1, 0, 0);
 }
 
-void Model::DrawImGUi() {
+void Model::DrawImGui() {
 #ifdef USE_IMGUI
+	if (ImGui::BeginTabBar("ModelDebug")) {
 
-	ImGui::DragFloat("shine", &materialData_->shininess);
+		// --- マテリアルタブ ---
+		if (ImGui::BeginTabItem("Material")) {
+			ImGui::ColorEdit4("Base Color", &materialData_->color.x);
+			ImGui::DragFloat("Shininess", &materialData_->shininess, 0.1f, 0.1f, 100.0f);
+			ImGui::Checkbox("Enable Lighting", reinterpret_cast<bool*>(&materialData_->enableLighting));
+			ImGui::Checkbox("Enable Specular", reinterpret_cast<bool*>(&materialData_->enableSpecular));
+			ImGui::EndTabItem();
+		}
 
-#endif // 
-
+		ImGui::EndTabBar();
+	}
+#endif
 }
 
 void Model::SetupResources() {
@@ -125,13 +137,14 @@ void Model::SetupResources() {
 	materialData_->enableLighting = true;
 	materialData_->enableSpecular = true;
 	materialData_->uvTransform = MakeIdentity4x4();
-	materialData_->shininess = 10.f;
+	materialData_->shininess = 70.f;
 
 	// WVP用のリソース
 	wvpResource_ = CreateBufferResource(common->GetDevice(), sizeof(TransformationMatrix));
 	wvpResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
 	wvpData_->WVP = MakeIdentity4x4();
 	wvpData_->World = MakeIdentity4x4();
+	wvpData_->WorldInverseTranspose = MakeIdentity4x4();
 
 	// カメラ
 	cameraResource_ = CreateBufferResource(common->GetDevice(), sizeof(CameraForGPU));
