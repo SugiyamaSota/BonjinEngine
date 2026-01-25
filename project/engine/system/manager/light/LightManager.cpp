@@ -2,6 +2,10 @@
 #include "function/function.h" // CreateBufferResourceがある想定
 #include "ImGuiManager.h"
 
+#include<numbers>
+#include"math/vector.h"
+#include <cmath>
+
 LightManager* LightManager::instance_ = nullptr;
 
 LightManager* LightManager::GetInstance() {
@@ -37,12 +41,13 @@ void LightManager::Initialize(ID3D12Device* device) {
 	spotLightResource_ = CreateBufferResource(device, sizeof(SpotLight));
 	spotLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&spotLightData_));
 	spotLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	spotLightData_->position = { 0.f, 2.f, 0.f };
-	spotLightData_->intensity = 1.0f;
-	spotLightData_->direction = { 0.f,0.f,0.f };
-	spotLightData_->distance = 0.f;
+	spotLightData_->position = { 2.f, 1.25f, 0.f };
+	spotLightData_->intensity = 7.0f;
+	spotLightData_->direction = Normalize({ -1.f,-1.f,0.f });
+	
+	spotLightData_->distance = 4.f;
 	spotLightData_->decay = 2.f;
-	spotLightData_->cosAngle = 0.f;
+	spotLightData_->cosAngle = cos(std::numbers::pi_v<float> / 3.f);
 }
 
 void LightManager::Update() {

@@ -41,7 +41,7 @@ void GameScene::Update(float deltaTime) {
 	//sprite_.Update();
 
 	model_.Update(WT_, camera_);
-	terrainModel_.Update(WT_, camera_);
+	terrainModel_.Update(terrainWT_, camera_);
 
 	// フェーズに応じた処理
 	switch (phase_) {

@@ -42,9 +42,12 @@ PixelShaderOutput main(VertexShaderOutput input)
     
     // スポットライト
     float32_t3 spotLightDirectionOnSurface = normalize(input.worldPosition - gSpotLight.position);
-    float32_t3 halfVector_Spot = normalize(SpotLightDirection + toEye);
+    float32_t3 halfVector_Spot = normalize(spotLightDirectionOnSurface + toEye);
     float NDotH_Spot = dot(normalize(input.normal), halfVector_Spot);
     float specularPow_Spot = pow(saturate(NDotH_Spot), gMaterial.shininess);
+    float32_t3 spotLightDirection = normalize(gSpotLight.position - input.worldPosition);
+    float NdotL_Spot = dot(normalize(input.normal), spotLightDirection);
+    float cos_NdotL_Spot = pow(NdotL_Spot * 0.5f + 0.5f, 2.0f);
 
     if (gMaterial.enableLighting != 0)
     {
@@ -52,7 +55,7 @@ PixelShaderOutput main(VertexShaderOutput input)
         // ディレクショナルライト
         float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
         float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
-        float32_t3 diffuse_Directional = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intentity;
+        float32_t3 diffuse_Directional = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
         float32_t3 specular_Directional = float32_t3(0.0f, 0.0f, 0.0f);
         
         // ポイントライト
@@ -67,14 +70,14 @@ PixelShaderOutput main(VertexShaderOutput input)
         float32_t cos_Spot = dot(spotLightDirectionOnSurface, gSpotLight.direction);
         float32_t falloffFactor = saturate((cos_Spot - gSpotLight.cosAngle) / (1.f - gSpotLight.cosAngle));
         float32_t distance_Spot = length(gSpotLight.position - input.worldPosition); // ポイントライトとの距離
-        float32_t factor_Spot = pow(saturate(-distance / gSpotLight.direction + 1.f), gSpotLight.decay); // 指数によるコントロール
-        float32_t3 diffuse_Spot = gMaterial.color.rgb * textureColor.rgb * gSpotLight.color.rgb * factor_Spot * cos_Spot * gSpotLight.intensity * falloffFactor;
+        float32_t factor_Spot = pow(saturate(1.0f - (distance_Spot / gSpotLight.distance)), gSpotLight.decay); // 指数によるコントロール
+        float32_t3 diffuse_Spot = gMaterial.color.rgb * textureColor.rgb * gSpotLight.color.rgb * factor_Spot * cos_NdotL_Spot * gSpotLight.intensity * falloffFactor;
         float32_t3 specular_Spot = float32_t3(0.0f, 0.0f, 0.0f);
     
         if (gMaterial.enableSpecular != 0)// 鏡面反射フラグ
         {
         
-            specular_Directional = gDirectionalLight.color.rgb * gDirectionalLight.intentity * specularPow * float32_t3(1.0f, 1.0f, 1.0f);
+            specular_Directional = gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float32_t3(1.0f, 1.0f, 1.0f);
             specular_Point = gPointLight.color.rgb * gPointLight.intensity * factor * specularPow_Point;
             specular_Spot = gSpotLight.color.rgb * gSpotLight.intensity * factor_Spot * specularPow_Spot;
             
