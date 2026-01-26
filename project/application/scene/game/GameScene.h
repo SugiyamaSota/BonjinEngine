@@ -43,6 +43,9 @@ namespace Bonjin
 		WorldTransform WT_;
 		Model model_;
 
+		WorldTransform terrainWT_;
+		Model terrainModel_;
+
 	private:
 		// --- ゲーム固有の関数 ---
 	};
