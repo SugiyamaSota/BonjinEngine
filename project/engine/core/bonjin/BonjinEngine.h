@@ -16,10 +16,10 @@
 #include"Particle.h"
 #include"pso/PSOManager.h"
 
-
 #include"ImGuiManager.h"
 #include"TextureManager.h"
 #include"ModelManager.h"
+#include"LightManager.h"
 
 /// <summary>
 /// リソースリークチェッカーの構造体

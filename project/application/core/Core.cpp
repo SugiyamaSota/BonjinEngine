@@ -46,6 +46,7 @@ void Core::Run() {
         // 更新処理
         float deltaTime = Time::GetInstance()->GetDeltaTime();
         SceneManager::GetInstance()->Update(deltaTime);
+        
 
         fadeIOSprite_->Color() = { 0.f,0.f,0.f,SceneManager::GetInstance()->GetFadeIOAlpha() };
 

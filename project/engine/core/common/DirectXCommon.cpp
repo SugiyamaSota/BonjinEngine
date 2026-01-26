@@ -77,7 +77,6 @@ void DirectXCommon::Initialize() {
 	CreateSwapChain();
 	CreateFence();
 	CreateDepth();
-	CreateLight();
 	InitializeFixFPS();
 
 	pso = new PSOManager();
@@ -391,16 +390,6 @@ void DirectXCommon::CreateDepth() {
 	depthStencilDesc_.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 	//比較関数
 	depthStencilDesc_.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-}
-
-void DirectXCommon::CreateLight() {
-	///// 光用のリソース /////
-	directionalLightResource_ = CreateBufferResource(device_.Get(), sizeof(DirectionalLight));
-	directionalLightData_ = nullptr;
-	directionalLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData_));
-	directionalLightData_->color = { 1.0f,1.0f,1.0f,1.f };
-	directionalLightData_->direction = { 0.5f,-1.0f,0.0f };
-	directionalLightData_->intentity = 1.f;
 }
 
 void DirectXCommon::InitializeFixFPS()
