@@ -30,6 +30,7 @@ void GameScene::Initialize(Camera* camera)
 	terrainWT_ = InitializeWorldTransform();
 	terrainModel_ = Model();
 	terrainModel_.LoadModel("terrain");
+	terrainModel_.SetCullMode(D3D12_CULL_MODE_BACK);
 
 }
 
