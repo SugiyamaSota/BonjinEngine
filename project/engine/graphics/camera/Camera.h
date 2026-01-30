@@ -64,6 +64,10 @@ private:
 	void Check() { isTargeting_ = false; }
 
 	Direction direction_ = Direction::kFront;
+
+	bool isFollowTarget = true;
+
+	void FollowTarget();
 public:
 	enum class CameraType {
 		kNormal,
@@ -101,4 +105,5 @@ public:
 	void ResetPosition();
 	void ResetRotation();
 	void SetPosition(Vector3 position) { translation_ = position; }
+	void SetFollowTarget(bool flag) { isFollowTarget = flag; }
 };

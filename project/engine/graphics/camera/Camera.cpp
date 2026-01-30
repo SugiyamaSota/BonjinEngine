@@ -8,8 +8,10 @@ float DegToRad(float deg) {
 }
 
 void Camera::Initialize(uint32_t clientWidth, uint32_t clientHeight) {
+	translation_ = { 0.f,0.f,-50.f };
+
 	radius_ = 50.0f;
-	direction_ = Direction::kFront;
+	direction_ = Direction::kBack;
 
 	if (direction_ == Direction::kFront) {
 		theta_ = DegToRad(180.0f);
@@ -39,54 +41,47 @@ void Camera::Update(CameraType type) {
 		break;
 	}
 
-	CalculateCameraPositionAndRotation();
-
 	Vector3 up = { 0, 1, 0 };
-	// もしカメラがほぼ真上/真下を向いたら、upベクトルを少しずらす
-	if (abs(Dot(Normalize(Subtract(targetPosition_, translation_)), up)) > 0.99f) {
-		up = { 0, 0, 1 }; // 回避策
-	}
-	viewMatrix_ = MakeLookAtMatrix(translation_, targetPosition_, up);
+	// カメラからターゲットへの方向ベクトル
+	Vector3 diff = Subtract(targetPosition_, translation_);
 
+	if (abs(Dot(Normalize(diff), up)) > 0.99f) {
+		up = { 0, 0, 1 };
+	}
+
+	FollowTarget();
+
+	// translation_（現在地）は変えず、targetPosition_ を向く行列を作る
+	viewMatrix_ = MakeLookAtMatrix(translation_, targetPosition_, up);
 	viewProjectionMatrix_ = Multiply(viewMatrix_, projectionMatrix_);
 }
 
 void Camera::Move() {
 	Input* input = Input::GetInstance();
-
-	// マウスホイールによるズーム
-	if (input->GetMouseWheel() != 0) {
-		long mouseDeltaZ = input->GetMouseWheel();
-
-		// multiSpeed_ -> zoomSpeed_ に変更
-		radius_ -= static_cast<float>(mouseDeltaZ) * zoomSpeed_;
-		radius_ = std::clamp(radius_, 1.0f, 500.0f);
-	}
-
-	// マウスによる上下左右移動
+	// 中ボタン＋Shiftで「カメラそのもの」を平行移動させる
 	if (input->IsMousePress(2) && input->IsPress(DIK_LSHIFT)) {
 		long mouseDeltaX = input->GetMouseDeltaX();
 		long mouseDeltaY = input->GetMouseDeltaY();
 
-
 		Vector3 moveLocal = {
-			// multiSpeed_ -> moveSpeed_ に変更
-			static_cast<float>(-mouseDeltaX) * moveSpeed_, // X軸方向 (左右)
-			// multiSpeed_ -> moveSpeed_ に変更
-			static_cast<float>(mouseDeltaY) * moveSpeed_,  // Y軸方向 (上下)
+			static_cast<float>(-mouseDeltaX) * moveSpeed_,
+			static_cast<float>(mouseDeltaY) * moveSpeed_,
 			0.0f
 		};
 
-
-		// ローカル移動ベクトルをワールド座標系に変換
 		Matrix4x4 cameraWorldMatrix = Inverse(viewMatrix_);
 		Vector3 worldRight = { cameraWorldMatrix.m[0][0], cameraWorldMatrix.m[0][1], cameraWorldMatrix.m[0][2] };
 		Vector3 worldUp = { cameraWorldMatrix.m[1][0], cameraWorldMatrix.m[1][1], cameraWorldMatrix.m[1][2] };
 
-		// worldRightとworldUpを使ってtargetPosition_を更新
-		targetPosition_ = Add(targetPosition_, Multiply(moveLocal.x, worldRight));
-		targetPosition_ = Add(targetPosition_, Multiply(moveLocal.y, worldUp));
+		// ★ 修正：targetPosition_ ではなく translation_ を更新する
+		translation_ = Add(translation_, Multiply(moveLocal.x, worldRight));
+		translation_ = Add(translation_, Multiply(moveLocal.y, worldUp));
 	}
+}
+
+void Camera::FollowTarget() {
+	translation_ = targetPosition_;
+	translation_.z = -50;
 }
 
 void Camera::Rotate() {
@@ -114,9 +109,9 @@ void Camera::CalculateCameraPositionAndRotation() {
 	// XZ平面での投影された半径
 	float projectedRadius = radius_ * std::sin(phi_);
 
-	translation_.x = targetPosition_.x + radius_ * std::sin(phi_) * std::sin(theta_);
-	translation_.y = targetPosition_.y + radius_ * std::cos(phi_);
-	translation_.z = targetPosition_.z + radius_ * std::sin(phi_) * std::cos(theta_);
+	//translation_.x = targetPosition_.x + radius_ * std::sin(phi_) * std::sin(theta_);
+	//translation_.y = targetPosition_.y + radius_ * std::cos(phi_);
+	//translation_.z = targetPosition_.z + radius_ * std::sin(phi_) * std::cos(theta_);
 
 	matRot_ = Multiply(MakeRotateYMatrix(theta_), MakeRotateXMatrix(phi_));
 }

@@ -104,7 +104,7 @@ private:
 
 	// 各モードの変数
 	D3D12_FILL_MODE fillMode_ = D3D12_FILL_MODE_SOLID; // デフォルト設定
-	D3D12_CULL_MODE cullMode_ = D3D12_CULL_MODE_FRONT;   // デフォルト設定
+	D3D12_CULL_MODE cullMode_ = D3D12_CULL_MODE_NONE;   // デフォルト設定
 	BlendMode blendMode_ = BlendMode::kNone;     // デフォルト設定
 
 	//

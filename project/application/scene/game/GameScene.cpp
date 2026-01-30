@@ -21,7 +21,7 @@ void GameScene::Initialize(Camera* camera)
 
 	// カメラ
 	camera_->SetTarget(goalWorldTransform_.translate);
-	camera_->Update(Camera::CameraType::kNormal);
+	camera_->Update(Camera::CameraType::kDebug);
 
 	fadeIOAlpha_ = 1.0f;
 
