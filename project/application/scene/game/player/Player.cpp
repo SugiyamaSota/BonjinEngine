@@ -21,6 +21,10 @@ void Player::Initialize(Model* model, Camera* camera, const Vector3& position) {
 	onGround_ = false;
 
 	firstStep_ = false;
+
+	teleportParticle_ = std::make_unique<Particle>();
+	teleportParticle_->LoadModel("plane");
+
 }
 
 void Player::Move() {
@@ -491,10 +495,14 @@ void Player::Update() {
 			// プレイヤーを計算された座標にテレポート
 			worldTransform_.translate = teleportPosition;
 
+			teleportParticle_->Emit(teleportPosition, { 0.5f,0.5f,0.f }, 1.f, 1.f, 2.f);
+
 			// アンカーを消去
 			anchor_ = nullptr;
 		}
 	}
+
+	teleportParticle_->Update(camera_);
 }
 
 void Player::Draw() {
@@ -507,6 +515,8 @@ void Player::Draw() {
 	if (anchor_ != nullptr) {
 		anchor_->Draw();
 	}
+
+	teleportParticle_->Draw();
 }
 
 void Player::shootAnchor() {

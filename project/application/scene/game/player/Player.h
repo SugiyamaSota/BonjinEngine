@@ -192,4 +192,6 @@ public:
 	void UpdateWorldTransform(){ model_->Update(worldTransform_, camera_); }
 
 	bool firstStep_ = false;
+
+	std::unique_ptr<Particle> teleportParticle_ = nullptr;
 };
