@@ -7,7 +7,7 @@ void Debris::Initialize(Camera* camera, const Vector3& position, const Vector3& 
         {0, 0, 0},
         position,
     };
-    model_ = new Model();
+    model_ = std::make_unique<Model>();
     model_->LoadModel("cube");
     camera_ = camera;
     velocity_ = velocity;

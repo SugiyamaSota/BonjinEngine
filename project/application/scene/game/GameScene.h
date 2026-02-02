@@ -64,11 +64,11 @@ namespace Bonjin
 		// --- ブロックとゴール関連 ---
 		static const uint32_t kNumBlockVirtical = 10;
 		static const uint32_t kNumBlockHorizontal = 60;
-		Model* blockModel_[kNumBlockVirtical][kNumBlockHorizontal] = { nullptr };
+		std::unique_ptr<Model> blockModel_[kNumBlockVirtical][kNumBlockHorizontal];
 		WorldTransform blockWorldTransform_[kNumBlockVirtical][kNumBlockHorizontal];
 		std::unique_ptr<MapChipField> mapChipField_;
 		void GenerateBlocksAndGoal();
-		Model* goalModel_ = nullptr;
+		std::unique_ptr<Model> goalModel_ = nullptr;
 		WorldTransform goalWorldTransform_;
 		bool isGoal_;
 		Vector3 goalPosition = { 0,0,0 };

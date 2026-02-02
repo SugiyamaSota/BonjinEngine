@@ -394,14 +394,14 @@ void GameScene::BlocksAndGoalInit() {
 			blockWorldTransform_[i][j].rotate = { 0,0,0 };
 			blockWorldTransform_[i][j].scale = { 1,1,1 };
 			blockWorldTransform_[i][j].translate = { 0,0,0 };
-			blockModel_[i][j] = new Model();
+			blockModel_[i][j] = std::make_unique<Model>();
 			blockModel_[i][j]->LoadModel("cube");
 		}
 	}
 
 	// ゴール
 	goalWorldTransform_ = InitializeWorldTransform();
-	goalModel_ = new Model();
+	goalModel_ = std::make_unique<Model>();
 	goalModel_->LoadModel("goal");
 	goalModel_->Update(goalWorldTransform_, camera_);
 

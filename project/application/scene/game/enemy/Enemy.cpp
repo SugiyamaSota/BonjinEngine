@@ -24,7 +24,7 @@ void Enemy::Initialize(Model* model, Camera* camera, const Vector3& position) {
 	walkTimer_ = 0.0f;
 
 	
-	lockedOnSprite_ = new Sprite();
+	lockedOnSprite_ = std::make_unique<Sprite>();
 	lockedOnSprite_->Initialize("lockOn.png");
 	lockedOnSprite_->Scale() = { 1.f,1.f };
 	lockedOnSprite_->Rotate() = { 0.f,0.f };

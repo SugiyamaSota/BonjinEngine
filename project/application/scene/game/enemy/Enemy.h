@@ -4,6 +4,8 @@
 #include "../others/Data.h"
 #include "Debris.h"
 
+#include<memory>
+
 class Enemy {
 public:
     /// <summary>
@@ -100,7 +102,7 @@ private:
     static inline const float kWalkMotionAngleEnd = 50.0f;    // 首を振る終了角度
     static inline const float kPi = 3.14159265359f; // 円周率
 
-    Bonjin::Sprite* lockedOnSprite_ = nullptr;
+    std::unique_ptr<Bonjin::Sprite> lockedOnSprite_ = nullptr;
 
 private:
     // --- プライベート関数 ---
