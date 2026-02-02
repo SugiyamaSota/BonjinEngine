@@ -43,6 +43,16 @@ void Camera::Update(CameraType type) {
 
 	CalculateCameraPositionAndRotation();
 
+	Vector3 up = { 0, 1, 0 };
+	// カメラからターゲットへの方向ベクトル
+	Vector3 diff = Subtract(targetPosition_, translation_);
+
+	if (abs(Dot(Normalize(diff), up)) > 0.99f) {
+		up = { 0, 0, 1 };
+	}
+
+	FollowTarget();
+
 	shakeOffset_ = { 0.0f, 0.0f, 0.0f };
 	if (shakeDuration_ > 0.0f) {
 		// ランダムな方向に揺らす (RandomEngineなどは適宜プロジェクトのものを使用)
@@ -55,7 +65,7 @@ void Camera::Update(CameraType type) {
 	}
 
 	// --- 行列生成 ---
-	Vector3 up = { 0, 1, 0 };
+	up = { 0, 1, 0 };
 	// 本来の座標にシェイク分を足した「現在の表示位置」
 	Vector3 currentEye = Add(translation_, shakeOffset_);
 

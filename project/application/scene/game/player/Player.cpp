@@ -22,8 +22,6 @@ void Player::Initialize(Model* model, Camera* camera, const Vector3& position) {
 
 	firstStep_ = false;
 
-	teleportParticle_ = std::make_unique<Particle>();
-	teleportParticle_->LoadModel("plane");
 
 }
 
@@ -495,14 +493,11 @@ void Player::Update() {
 			// プレイヤーを計算された座標にテレポート
 			worldTransform_.translate = teleportPosition;
 
-			teleportParticle_->Emit(teleportPosition, { 0.5f,0.5f,0.f }, 1.f, 1.f, 2.f);
-
 			// アンカーを消去
 			anchor_ = nullptr;
 		}
 	}
 
-	teleportParticle_->Update(camera_);
 }
 
 void Player::Draw() {
@@ -516,7 +511,6 @@ void Player::Draw() {
 		anchor_->Draw();
 	}
 
-	teleportParticle_->Draw();
 }
 
 void Player::shootAnchor() {
@@ -601,7 +595,10 @@ void Player::OnCollision(Enemy* enemy) {
 // Player::RemoveLockedOnEnemiesメソッドの実装
 void Player::RemoveLockedOnEnemies(std::list<Enemy*>& enemies) {
 	for (Enemy* enemy : enemies) {
-		enemy->SetIsDead(true); // 敵の死亡フラグを立てる
+		if (enemy->GetIsDead() == false) {
+			enemy->SetIsDead(true); // 敵の死亡フラグを立てる
+			camera_->StartShake(1.f, 0.5f);
+		}
 	}
 	enemies.clear(); // ロックオンリストをクリア
 }
@@ -617,6 +614,7 @@ void Player::HandleLockOnRemovalInput() {
 	if (Input::GetInstance()->IsPadTrigger(3) || Input::GetInstance()->IsTrigger(DIK_L)) {
 		// GameScene が持っていたリストへのポインタを介して、削除ロジックを呼び出す
 		RemoveLockedOnEnemies(*lockedOnEnemies_);
+		
 	}
 }
 
@@ -627,7 +625,7 @@ void Player::CheckDestroyAnchorInput() {
 		return;
 	}
 
-	if (Input::GetInstance()->IsPadPress(2)) {
+	if (Input::GetInstance()->IsPadPress(2)||Input::GetInstance()->IsPress(DIK_J)) {
 		destroyAnchorKeyTimer_ -= 1.f / 60.f;
 	} else {
 		destroyAnchorKeyTimer_ = kDestroyAnchorKeyTimerSet_;

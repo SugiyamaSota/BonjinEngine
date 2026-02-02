@@ -193,5 +193,4 @@ public:
 
 	bool firstStep_ = false;
 
-	std::unique_ptr<Particle> teleportParticle_ = nullptr;
 };

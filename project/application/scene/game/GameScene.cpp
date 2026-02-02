@@ -403,6 +403,8 @@ void GameScene::BlocksAndGoalInit() {
 	goalWorldTransform_ = InitializeWorldTransform();
 	goalModel_ = std::make_unique<Model>();
 	goalModel_->LoadModel("goal");
+	goalModel_->SetColor(Vector4(1.f, 1.f, 1.f, 0.3f));
+	goalModel_->SetBlendMode(BlendMode::kAdd);
 	goalModel_->Update(goalWorldTransform_, camera_);
 
 	isGoal_ = false;
