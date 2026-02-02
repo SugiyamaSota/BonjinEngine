@@ -65,6 +65,10 @@ private:
 
 	Direction direction_ = Direction::kFront;
 
+	Vector3 shakeOffset_ = { 0.0f, 0.0f, 0.0f }; // シェイクによるズレ
+	float shakeIntensity_ = 0.0f;              // 現在の強さ
+	float shakeDuration_ = 0.0f;
+
 	bool isFollowTarget = true;
 
 	void FollowTarget();
@@ -106,4 +110,8 @@ public:
 	void ResetRotation();
 	void SetPosition(Vector3 position) { translation_ = position; }
 	void SetFollowTarget(bool flag) { isFollowTarget = flag; }
+	void StartShake(float intensity, float duration) {
+		shakeIntensity_ = intensity;
+		shakeDuration_ = duration;
+	}
 };
