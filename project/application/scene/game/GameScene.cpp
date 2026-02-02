@@ -40,6 +40,10 @@ void GameScene::Unload() {
 void GameScene::Update(float deltaTime) {
 
 	//sprite_.Update();
+	if (Input::GetInstance()->IsTrigger(DIK_A)) {
+		camera_->StartShake(1.f, 1.f);
+	}
+
 
 	model_.Update(WT_, camera_);
 	terrainModel_.Update(terrainWT_, camera_);

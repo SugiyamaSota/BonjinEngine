@@ -64,6 +64,10 @@ private:
 	void Check() { isTargeting_ = false; }
 
 	Direction direction_ = Direction::kFront;
+
+	Vector3 shakeOffset_ = { 0.0f, 0.0f, 0.0f }; // シェイクによるズレ
+	float shakeIntensity_ = 0.0f;              // 現在の強さ
+	float shakeDuration_ = 0.0f;
 public:
 	enum class CameraType {
 		kNormal,
@@ -101,4 +105,8 @@ public:
 	void ResetPosition();
 	void ResetRotation();
 	void SetPosition(Vector3 position) { translation_ = position; }
+	void StartShake(float intensity, float duration) {
+		shakeIntensity_ = intensity;
+		shakeDuration_ = duration;
+	}
 };
