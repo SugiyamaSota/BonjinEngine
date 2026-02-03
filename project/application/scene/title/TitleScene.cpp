@@ -7,6 +7,7 @@ void TitleScene::Initialize(Camera* camera) {
 	nextSceneType_ = SceneType::kTitle;
 
 	this->camera_ = camera;
+	camera->Initialize(1280, 720);
 
 	// フェーズとタイマーを初期化
 	phase_ = TitlePhase::kFadeIn;

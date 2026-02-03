@@ -12,6 +12,7 @@ void Skydome::Initialize(Model* model,Camera* camera) {
 	};
 	camera_ = camera;
 	model_ = model;
+	model_->SetEnableLighting(false);
 }
 
 /// <summary>

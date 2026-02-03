@@ -19,9 +19,7 @@ void GameScene::Initialize(Camera* camera)
 	mapChipField_ = std::make_unique<MapChipField>();
 	mapChipField_->LoadmapChipCsv("resources/maps/tutorial.csv");
 
-	// カメラ
-	camera_->SetTarget(goalWorldTransform_.translate);
-	camera_->Update(Camera::CameraType::kDebug);
+	
 
 	fadeIOAlpha_ = 1.0f;
 
@@ -32,6 +30,16 @@ void GameScene::Initialize(Camera* camera)
 	BlocksAndGoalInit();
 
 	HUDInit();
+
+	// カメラ
+	camera_->SetTarget(goalWorldTransform_.translate);
+	camera_->Update(Camera::CameraType::kDebug);
+
+	lightMngr_ = LightManager::GetInstance();
+
+	lightMngr_->SpotLightData().direction = { 0,-1,0 };
+	lightMngr_->SpotLightData().intensity = 1000.f;
+	lightMngr_->SpotLightData().color = { 1.f,0.f,0.f,1.f };
 
 }
 
@@ -71,6 +79,7 @@ void GameScene::Update(float deltaTime) {
 		// 敵生存確認
 		if (enemies_.empty()) {
 			canGoal_ = true;
+			lightMngr_->SpotLightData().color = { 0.f,1.f,0.f,1.f };
 		}
 
 		if (player_->firstStep_ == true && showFirstTutrial_ == false) {
@@ -263,6 +272,10 @@ void GameScene::GenerateBlocksAndGoal() {
 					goalWorldTransform_.scale = { 1,1,1 };
 					goalWorldTransform_.translate = mapChipField_->GetMapChipPositionByIndex(j, i);
 					goalPosition = goalWorldTransform_.translate;
+
+					LightManager* lightMngr_ = LightManager::GetInstance();
+					Vector3 currentLightPosition = mapChipField_->GetMapChipPositionByIndex(j, i - 1);
+					lightMngr_->SpotLightData().position = currentLightPosition;
 				}
 		}
 	}
@@ -359,7 +372,8 @@ void GameScene::PlayerInit() {
 	player_->Update();
 
 	// カメラのターゲット座標をプレイヤーの初期座標に設定
-	cameraTarget_ = playerPosition;
+	/*cameraTarget_ = playerPosition;
+	camera_->Update(Camera::CameraType::kNormal);*/
 }
 
 void GameScene::EnemyInit() {

@@ -110,6 +110,8 @@ namespace Bonjin
 
 		float fadeTimer_;
 
+		LightManager* lightMngr_;
+
 	private:
 		// --- ゲーム固有の関数 ---
 	};

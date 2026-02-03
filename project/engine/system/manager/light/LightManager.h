@@ -18,6 +18,8 @@ public:
     ID3D12Resource* GetPointLightResource() { return pointLightResource_.Get(); }
     ID3D12Resource* GetSpotLightResource() { return spotLightResource_.Get(); }
 
+    SpotLight& SpotLightData() { return *spotLightData_; }
+
 private:
     LightManager() = default;
     ~LightManager() = default;
