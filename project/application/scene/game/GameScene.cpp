@@ -12,6 +12,7 @@ void GameScene::Initialize(Camera* camera)
 	nextSceneType_ = SceneType::kGame;
 	ChangePhase(GamePhase::kStart);
 	
+	phaseTimer_ = 0.0f;
 
 	this->camera_ = camera;
 
@@ -70,7 +71,7 @@ void GameScene::Update(float deltaTime) {
 
 			// カメラ演出が完了したら次のフェーズへ
 			if (t >= 1.0f) {
-				phase_ = GamePhase::kPlay;
+				ChangePhase(GamePhase::kPlay);
 			}
 		}
 		break;
@@ -80,6 +81,10 @@ void GameScene::Update(float deltaTime) {
 		if (enemies_.empty()) {
 			canGoal_ = true;
 			lightMngr_->SpotLightData().color = { 0.f,1.f,0.f,1.f };
+		}
+
+		if (player_->GetIsDead() == true) {
+			ChangePhase(GamePhase::kOver);
 		}
 
 		if (player_->firstStep_ == true && showFirstTutrial_ == false) {
@@ -164,6 +169,26 @@ void GameScene::Update(float deltaTime) {
 		// カメラをプレイヤーの位置に固定
 		camera_->SetPosition(player_->GetPosition());
 		break;
+	case GamePhase::kOver:
+		gameOverSprite_->Update();
+
+		// タイマーをインクリメント
+		phaseTimer_ += 1.0f / 60.0f;
+
+		// ゴール後1秒経過したらフェード開始
+		if (phaseTimer_ >= 1.0f) {
+			// フェードインのタイマーを更新
+			fadeTimer_ += 1.0f / 60.0f;
+			// アルファ値を0から1へ徐々に増加させる（例: 2秒かけてフェードイン）
+			fadeIOAlpha_ = min(fadeTimer_ / 2.0f, 1.0f);
+
+			// フェード完了後、シーン変更待機状態へ
+			if (fadeIOAlpha_ >= 1.0f) {
+				nextSceneType_ = SceneType::kTitle;
+			}
+		}
+		
+		break;
 	}
 
 	if (showTutrial == false) {
@@ -207,7 +232,10 @@ void GameScene::Update(float deltaTime) {
 void GameScene::Draw() {
 
 	// 自キャラの描画
-	player_->Draw();
+	
+	if (player_->GetIsDead() == false) {
+		player_->Draw();
+	}
 
 	// ブロックの描画
 	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
@@ -240,6 +268,10 @@ void GameScene::Draw() {
 
 	if (isGoal_ == true) {
 		gameClearSprite_->Draw();
+	}
+
+	if (player_->GetIsDead() == true) {
+		gameOverSprite_->Draw();
 	}
 
 }
@@ -335,7 +367,7 @@ void GameScene::CheckGoal() {
 			phaseTimer_ = 0.0f;
 		}
 		isGoal_ = true;
-		phase_ = GamePhase::kGoal;
+		ChangePhase(GamePhase::kGoal);
 	}
 }
 
@@ -490,12 +522,20 @@ void GameScene::HUDInit() {
 	}
 
 	gameClearSprite_ = std::make_unique<Sprite>();
-	gameClearSprite_->Initialize("GameClear.png");
+	gameClearSprite_->Initialize("StageClear.png");
 	gameClearSprite_->Scale() = { 1.f,1.f };
 	gameClearSprite_->Rotate() = { 0.f,0.f };
 	gameClearSprite_->Translate() = { 640.f, 360.f };
 	gameClearSprite_->Anchor() = { 0.5f,0.5f };
 	gameClearSprite_->Size() = { 1280.f, 720.f };
+
+	gameOverSprite_ = std::make_unique<Sprite>();
+	gameOverSprite_->Initialize("GameOver.png");
+	gameOverSprite_->Scale() = { 1.f,1.f };
+	gameOverSprite_->Rotate() = { 0.f,0.f };
+	gameOverSprite_->Translate() = { 640.f, 360.f };
+	gameOverSprite_->Anchor() = { 0.5f,0.5f };
+	gameOverSprite_->Size() = { 1280.f, 720.f };
 
 	showTutrial = false;
 	currentTutrialPage_ = 0;

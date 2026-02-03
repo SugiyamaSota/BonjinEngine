@@ -18,6 +18,7 @@ namespace Bonjin
 		kStart,
 		kPlay,
 		kGoal,
+		kOver,
 	};
 
 	class GameScene : public BaseScene<GamePhase>
@@ -84,6 +85,7 @@ namespace Bonjin
 		int currentTutrialPage_ = 0;
 		bool showTutrial;
 		std::unique_ptr<Sprite> gameClearSprite_ = nullptr;
+		std::unique_ptr<Sprite> gameOverSprite_ = nullptr;
 		void HUDInit();
 		void DrawHUD();
 

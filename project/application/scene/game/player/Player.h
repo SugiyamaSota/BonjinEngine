@@ -91,6 +91,8 @@ private:
 	const float kDestroyAnchorKeyTimerSet_ = 1.f;
 
 	void CheckDestroyAnchorInput();
+
+	bool isDead_;
 	
 public:
 	/// <summary>
@@ -192,5 +194,7 @@ public:
 	void UpdateWorldTransform(){ model_->Update(worldTransform_, camera_); }
 
 	bool firstStep_ = false;
+
+	bool GetIsDead() { return isDead_; }
 
 };

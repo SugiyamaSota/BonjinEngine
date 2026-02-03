@@ -22,7 +22,7 @@ void Player::Initialize(Model* model, Camera* camera, const Vector3& position) {
 
 	firstStep_ = false;
 
-
+	isDead_ = false;
 }
 
 void Player::Move() {
@@ -564,32 +564,34 @@ AABB Player::GetAABB() {
 }
 
 void Player::OnCollision(Enemy* enemy) {
-	// ノックバック中は再ノックバックさせない
-	if (isKnockedBack_) {
-		return;
-	}
+	//// ノックバック中は再ノックバックさせない
+	//if (isKnockedBack_) {
+	//	return;
+	//}
 
-	// 速度をゼロにリセット
-	velocity_ = { 0.0f, 0.0f, 0.0f };
+	//// 速度をゼロにリセット
+	//velocity_ = { 0.0f, 0.0f, 0.0f };
 
-	// 敵とプレイヤーの相対位置を計算
-	Vector3 toEnemy = Subtract(enemy->GetWorldPosition(), worldTransform_.translate);
+	//// 敵とプレイヤーの相対位置を計算
+	//Vector3 toEnemy = Subtract(enemy->GetWorldPosition(), worldTransform_.translate);
 
-	// 水平方向のみ正規化して方向を求める
-	toEnemy.y = 0.0f;
-	toEnemy = Normalize(toEnemy);
+	//// 水平方向のみ正規化して方向を求める
+	//toEnemy.y = 0.0f;
+	//toEnemy = Normalize(toEnemy);
 
-	// プレイヤーが敵に当たったときに受ける衝撃ベクトルを計算
-	Vector3 impactVector = {};
-	impactVector.x = -toEnemy.x * kKnockbackPower; // 敵と逆方向に飛ばす
-	impactVector.y = kKnockbackUpPower; // 上方向に少し浮かせる
+	//// プレイヤーが敵に当たったときに受ける衝撃ベクトルを計算
+	//Vector3 impactVector = {};
+	//impactVector.x = -toEnemy.x * kKnockbackPower; // 敵と逆方向に飛ばす
+	//impactVector.y = kKnockbackUpPower; // 上方向に少し浮かせる
 
-	// プレイヤーの速度に衝撃ベクトルを加算
-	velocity_ = Add(velocity_, impactVector);
+	//// プレイヤーの速度に衝撃ベクトルを加算
+	//velocity_ = Add(velocity_, impactVector);
 
-	// ノックバック状態を開始
-	isKnockedBack_ = true;
-	knockbackTimer_ = kKnockbackTime;
+	//// ノックバック状態を開始
+	//isKnockedBack_ = true;
+	//knockbackTimer_ = kKnockbackTime;
+
+	isDead_ = true;
 }
 
 // Player::RemoveLockedOnEnemiesメソッドの実装
