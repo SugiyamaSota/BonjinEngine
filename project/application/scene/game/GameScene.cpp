@@ -11,7 +11,7 @@ void GameScene::Initialize(Camera* camera)
 	currentSceneType_ = SceneType::kGame;
 	nextSceneType_ = SceneType::kGame;
 	ChangePhase(GamePhase::kStart);
-	
+
 	phaseTimer_ = 0.0f;
 
 	this->camera_ = camera;
@@ -20,7 +20,7 @@ void GameScene::Initialize(Camera* camera)
 	mapChipField_ = std::make_unique<MapChipField>();
 	mapChipField_->LoadmapChipCsv("resources/maps/tutorial.csv");
 
-	
+
 
 	fadeIOAlpha_ = 1.0f;
 
@@ -52,7 +52,7 @@ void GameScene::Update(float deltaTime) {
 
 	switch (phase_) {
 	case GamePhase::kStart:
-		
+
 
 		// フェードインのアルファ値を計算（2秒かけて不透明から透明へ）
 		fadeIOAlpha_ = 1.0f - min(phaseTimer_ / 2.0f, 1.0f);
@@ -139,7 +139,7 @@ void GameScene::Update(float deltaTime) {
 			});
 
 		// 操作方法の表示操作
-		if (Input::GetInstance()->IsPadTrigger(7)||Input::GetInstance()->IsTrigger(DIK_TAB)) {
+		if (Input::GetInstance()->IsPadTrigger(7) || Input::GetInstance()->IsTrigger(DIK_TAB)) {
 			if (showTutrial == false) {
 				showTutrial = true;
 			} else {
@@ -160,7 +160,7 @@ void GameScene::Update(float deltaTime) {
 			fadeTimer_ += 1.0f / 60.0f;
 			// アルファ値を0から1へ徐々に増加させる（例: 2秒かけてフェードイン）
 			fadeIOAlpha_ = min(fadeTimer_ / 2.0f, 1.0f);
-			
+
 			// フェード完了後、シーン変更待機状態へ
 			if (fadeIOAlpha_ >= 1.0f) {
 				nextSceneType_ = SceneType::kTitle;
@@ -170,6 +170,7 @@ void GameScene::Update(float deltaTime) {
 		camera_->SetPosition(player_->GetPosition());
 		break;
 	case GamePhase::kOver:
+		player_->Update();
 		gameOverSprite_->Update();
 
 		// タイマーをインクリメント
@@ -187,7 +188,7 @@ void GameScene::Update(float deltaTime) {
 				nextSceneType_ = SceneType::kTitle;
 			}
 		}
-		
+
 		break;
 	}
 
@@ -232,10 +233,7 @@ void GameScene::Update(float deltaTime) {
 void GameScene::Draw() {
 
 	// 自キャラの描画
-	
-	if (player_->GetIsDead() == false) {
-		player_->Draw();
-	}
+	player_->Draw();
 
 	// ブロックの描画
 	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
@@ -472,7 +470,7 @@ void GameScene::HUDInit() {
 	HUD_Tab_->Initialize("HUD.png");
 	HUD_Tab_->Scale() = { 1.f,1.f };
 	HUD_Tab_->Rotate() = { 0.f,0.f };
-	HUD_Tab_->Translate() = { 640.f, 360.f};
+	HUD_Tab_->Translate() = { 640.f, 360.f };
 	HUD_Tab_->Anchor() = { 0.5f,0.5f };
 	HUD_Tab_->Size() = { 1280.f, 720.f };
 

@@ -382,6 +382,22 @@ void Player::WallCollisionReaction(const CollisionMapInfo& info) {
 }
 
 void Player::Update() {
+	
+
+	if (isDead_ == true) {
+		velocity_.y -= kGravityAcceleration;
+		velocity_.y = std::max(velocity_.y, -kLimitFallSpeed);
+
+		// 💡 座標に速度を反映
+		worldTransform_.translate = Add(worldTransform_.translate, velocity_);
+
+		worldTransform_.rotate.y += 0.1f;
+
+		// 💡 モデルの行列更新を忘れずに
+		model_->Update(worldTransform_, camera_);
+		return;
+	}
+
 	if (firstStep_ == false && onGround_ == true) {
 		firstStep_ = true;
 	}
@@ -590,7 +606,7 @@ void Player::OnCollision(Enemy* enemy) {
 	//// ノックバック状態を開始
 	//isKnockedBack_ = true;
 	//knockbackTimer_ = kKnockbackTime;
-
+	velocity_ = Add(velocity_, Vector3(0, 0.1f, 0));
 	isDead_ = true;
 }
 
