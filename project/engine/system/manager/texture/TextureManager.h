@@ -71,6 +71,11 @@ public:
     /// </summary>
     void ReleaseIntermediateResources();
 
+    D3D12_RESOURCE_DESC GetResourceDesc(int textureIndex) const {
+        assert(static_cast<uint32_t>(textureIndex) < textureResources_.size());
+        return textureResources_[textureIndex]->GetDesc();
+    }
+
 private:
     /// --- 変数 ---
     // インスタンス

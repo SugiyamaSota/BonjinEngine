@@ -14,13 +14,14 @@ void GameScene::Initialize(Camera* camera)
 	this->camera_ = camera;
 
 	// スプライト
-	//sprite_ = Sprite();
-	//sprite_.Initialize("uvChecker.png");
-	//sprite_.Scale() = { 1.f,1.f };
-	//sprite_.Rotate() = { 0.f,0.f };
-	//sprite_.Translate() = { 0.f, 0.f};
-	//sprite_.Anchor() = { 0.f,0.f };
-	//sprite_.Size() = { 320.f, 180.f };
+	sprite_ = Sprite();
+	sprite_.Initialize("uvChecker.png");
+	sprite_.Scale() = { 1.f,1.f };
+	sprite_.Rotate() = { 0.f,0.f };
+	sprite_.Translate() = { 0.f, 0.f};
+	sprite_.Anchor() = { 0.f,0.f };
+	sprite_.Size() = { 320.f, 180.f };
+	sprite_.SetTextureRect(0, 0, 600.f, 600.f);
 
 	//
 	WT_ = InitializeWorldTransform();
@@ -41,6 +42,7 @@ void GameScene::Update(float deltaTime) {
 
 	model_.Update(WT_, camera_);
 	terrainModel_.Update(terrainWT_, camera_);
+	sprite_.Update();
 
 	// フェーズに応じた処理
 	switch (phase_) {
@@ -67,6 +69,7 @@ void GameScene::Update(float deltaTime) {
 void GameScene::Draw() {
 	model_.Draw();
 	terrainModel_.Draw();
+	sprite_.Draw();
 }
 
 void GameScene::DrawSceneImGui() {

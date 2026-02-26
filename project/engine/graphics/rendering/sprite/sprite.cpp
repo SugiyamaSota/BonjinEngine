@@ -3,239 +3,147 @@
 
 namespace Bonjin {
 
-	Sprite::Sprite()
-	{
-		viewMatrix_ = MakeIdentity4x4();
-		projectionMatrix_ = MakeOrthographicMatrix(0.0f, 0.0f, static_cast<float>(1280), static_cast<float>(720), 0.0f, 100.0f);
-		viewProjectionMatrix_ = Multiply(viewMatrix_, projectionMatrix_);
+    Sprite::Sprite()
+    {
+        viewMatrix_ = MakeIdentity4x4();
+        // 画面解像度に合わせて射影行列を作成
+        projectionMatrix_ = MakeOrthographicMatrix(0.0f, 0.0f, 1280.0f, 720.0f, 0.0f, 100.0f);
+        viewProjectionMatrix_ = Multiply(viewMatrix_, projectionMatrix_);
 
-		// 初期値で各項目を初期化
-		anchor_ = { 0.f,0.f };       // 中心が基準
-		size_ = { 0.f,0.f };         // サイズは0(描画されない)
-		scale_ = { 1.f,1.f };        // 等倍で描画
-		rotate_ = { 0.f,0.f };       // 回転無し
-		translate_ = { 0.f,0.f };    // 原点
-		color_ = { 1.f,1.f,1.f,1.f };// 白
+        // 初期値設定
+        anchor_ = { 0.0f, 0.0f, 0.0f };
+        size_ = { 100.0f, 100.0f }; // デフォルトサイズ
+        scale_ = { 1.0f, 1.0f };
+        rotate_ = { 0.0f, 0.0f };
+        translate_ = { 0.0f, 0.0f };
+        color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-		dxCommon_ = DirectXCommon::GetInstance();
-		device_ = dxCommon_->GetDevice();
+        dxCommon_ = DirectXCommon::GetInstance();
+        device_ = dxCommon_->GetDevice();
 
-		pso_ =
-			dxCommon_->GetPSO()->GetPipelineState(
-				device_,
-				PrimitiveType::kModel,
-				BlendMode::kNormal,
-				D3D12_FILL_MODE_SOLID,
-				D3D12_CULL_MODE_BACK
-			);
+        pso_ = dxCommon_->GetPSO()->GetPipelineState(
+            device_, PrimitiveType::kModel, BlendMode::kNormal,
+            D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_BACK
+        );
+    }
 
-	}
+    Sprite::~Sprite()
+    {
+        // Unmap処理
+        if (vertexResource_) vertexResource_->Unmap(0, nullptr);
+        if (materialResource_) materialResource_->Unmap(0, nullptr);
+        if (wvpResource_) wvpResource_->Unmap(0, nullptr);
+        if (indexResource_) indexResource_->Unmap(0, nullptr);
+    }
 
-	Sprite::~Sprite()
-	{
-		if (vertexResource_ && vertexData_) {
-			vertexResource_->Unmap(0, nullptr);
-		}
-		if (materialResource_ && materialData_) {
-			materialResource_->Unmap(0, nullptr);
-		}
-		if (wvpResource_ && wvpData_) {
-			wvpResource_->Unmap(0, nullptr);
-		}
-		if (indexResource_ && indexData_) {
-			indexResource_->Unmap(0, nullptr);
-		}
-	}
+    void Sprite::Initialize(const std::string& textureFilePath) {
+        // --- 1. リソースの生成 (一生に一度だけ) ---
 
-	void Sprite::Initialize(const std::string& textureFilePath) {
+        // 頂点バッファ
+        vertexResource_ = CreateBufferResource(device_, sizeof(VertexData) * 4);
+        vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
+        vertexBufferView_.SizeInBytes = sizeof(VertexData) * 4;
+        vertexBufferView_.StrideInBytes = sizeof(VertexData);
+        vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
 
-		// スプライトの幅と高さを定義
-		float width = size_.x;  // 現在の頂点データに基づく幅
-		float height = size_.y; // 現在の頂点データに基づく高さ
+        // インデックスバッファ
+        indexResource_ = CreateBufferResource(device_, sizeof(uint32_t) * 6);
+        indexBufferView_.BufferLocation = indexResource_->GetGPUVirtualAddress();
+        indexBufferView_.SizeInBytes = sizeof(uint32_t) * 6;
+        indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
+        indexResource_->Map(0, nullptr, reinterpret_cast<void**>(&indexData_));
 
-		// 頂点バッファの生成
-		vertexResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(VertexData) * 4);
-		vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
-		vertexBufferView_.SizeInBytes = sizeof(VertexData) * 4;
-		vertexBufferView_.StrideInBytes = sizeof(VertexData);
-		vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+        // インデックスは不変なのでここで固定
+        indexData_[0] = 0; indexData_[1] = 1; indexData_[2] = 2;
+        indexData_[3] = 1; indexData_[4] = 3; indexData_[5] = 2;
 
-		// 頂点データの定義 (正方形)
-		// anchorの概念を導入し、中心を原点とするように調整
-		// 例: anchor = {0.5f, 0.5f, 0.0f} で中心を意味する
-		float left = -width * anchor_.x;
-		float right = width * (1.0f - anchor_.x);
-		float top = -height * anchor_.y;
-		float bottom = height * (1.0f - anchor_.y);
+        // マテリアル
+        materialResource_ = CreateBufferResource(device_, sizeof(Material));
+        materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
+        materialData_->enableLighting = false;
+        materialData_->uvTransform = MakeIdentity4x4();
 
-		// 左下
-		vertexData_[0].position = { left, bottom, 0.0f, 1.0f };
-		vertexData_[0].texcoord = { 0.0f, 1.0f };
-		vertexData_[0].normal = { 0.0f, 0.0f, 1.0f };
-		// 左上
-		vertexData_[1].position = { left, top, 0.0f, 1.0f };
-		vertexData_[1].texcoord = { 0.0f, 0.0f };
-		vertexData_[1].normal = { 0.0f, 0.0f, 1.0f };
-		// 右下
-		vertexData_[2].position = { right, bottom, 0.0f, 1.0f };
-		vertexData_[2].texcoord = { 1.0f, 1.0f };
-		vertexData_[2].normal = { 0.0f, 0.0f, 1.0f };
-		// 右上
-		vertexData_[3].position = { right, top, 0.0f, 1.0f };
-		vertexData_[3].texcoord = { 1.0f, 0.0f };
-		vertexData_[3].normal = { 0.0f, 0.0f, 1.0f };
+        // WVP
+        wvpResource_ = CreateBufferResource(device_, sizeof(TransformationMatrix));
+        wvpResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
 
-		// インデックスバッファの生成
-		indexResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(uint32_t) * 6);
-		indexBufferView_.BufferLocation = indexResource_->GetGPUVirtualAddress();
-		indexBufferView_.SizeInBytes = sizeof(uint32_t) * 6;
-		indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
-		indexResource_->Map(0, nullptr, reinterpret_cast<void**>(&indexData_));
+        // テクスチャロード
+        textureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/" + textureFilePath);
 
-		// インデックスデータの定義 (2つの三角形で正方形を構成)
-		indexData_[0] = 0;
-		indexData_[1] = 1;
-		indexData_[2] = 2;
-		indexData_[3] = 1;
-		indexData_[4] = 3;
-		indexData_[5] = 2;
+        // 初回の頂点情報を構築
+        RefreshVertexData();
+    }
 
-		// マテリアルリソースの生成
-		materialResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(Material));
-		materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
-		// 引数で受け取ったcolorを設定
-		materialData_->color = color_;
-		materialData_->enableLighting = false; // スプライトはライティングを無効にする
-		materialData_->uvTransform = MakeIdentity4x4(); // UV変換を初期化
+    void Sprite::Update() {
+        // 頂点座標とUVの更新 (ポインタ書き換えのみ)
+        RefreshVertexData();
 
-		// WVP リソースの生成
-		wvpResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(TransformationMatrix));
-		wvpResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
-		wvpData_->WVP = MakeIdentity4x4(); // WVP 行列を初期化
-		wvpData_->World = MakeIdentity4x4(); // ワールド行列を初期化
+        // ワールド行列計算
+        Vector3 scale = { scale_.x, scale_.y,0.f };
+        Vector3 rotate = { rotate_.x,rotate_.y,0.f };
+        Vector3 translate = { translate_.x,translate_.y,0.f };
 
-		// テクスチャのロード
-		textureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/" + textureFilePath);
-	}
+        // ワールド行列の計算
+        Matrix4x4 worldMatrix = MakeAffineMatrix(scale, rotate, translate);
 
-	void Sprite::Update() {
-		CorrectionVertexData();
+        wvpData_->World = worldMatrix;
+        wvpData_->WVP = Multiply(worldMatrix, viewProjectionMatrix_);
+        materialData_->color = color_;
 
-		WorldTransform transform = InitializeWorldTransform();
+        UpdateUVTransform();
+    }
 
-		transform.scale = { scale_.x, scale_.y,0.f };
-		transform.rotate = { rotate_.x,rotate_.y,0.f };
-		transform.translate = { translate_.x,translate_.y,0.f };
+    void Sprite::RefreshVertexData() {
+        // テクスチャサイズの取得 (切り取り計算用)
+        const D3D12_RESOURCE_DESC& resDesc = TextureManager::GetInstance()->GetResourceDesc(textureHandle_);
+        float texW = static_cast<float>(resDesc.Width);
+        float texH = static_cast<float>(resDesc.Height);
 
-		// ワールド行列の計算
-		wvpData_->World = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+        // UVの決定
+        float u_left = 0.0f, u_right = 1.0f, v_top = 0.0f, v_bottom = 1.0f;
+        if (textureRect_.z != 0 && textureRect_.w != 0) {
+            u_left = textureRect_.x / texW;
+            v_top = textureRect_.y / texH;
+            u_right = (textureRect_.x + textureRect_.z) / texW;
+            v_bottom = (textureRect_.y + textureRect_.w) / texH;
+        }
 
-		// WVP 行列の計算
-		Matrix4x4 worldViewProjectionMatrix = Multiply(wvpData_->World, viewProjectionMatrix_);
-		wvpData_->WVP = worldViewProjectionMatrix;
+        // アンカーを考慮した座標計算
+        float left = -size_.x * anchor_.x;
+        float right = size_.x * (1.0f - anchor_.x);
+        float top = -size_.y * anchor_.y;
+        float bottom = size_.y * (1.0f - anchor_.y);
 
-		// マテリアルの更新
-		materialData_->color = color_;
+        // 頂点データの更新 (CreateBufferResourceを呼ばず、Map済みのポインタへ直接代入)
+        // 0:左下, 1:左上, 2:右下, 3:右上
+        vertexData_[0] = { {left, bottom, 0.0f, 1.0f}, {u_left, v_bottom}, {0,0,-1} };
+        vertexData_[1] = { {left, top, 0.0f, 1.0f},    {u_left, v_top},    {0,0,-1} };
+        vertexData_[2] = { {right, bottom, 0.0f, 1.0f}, {u_right, v_bottom}, {0,0,-1} };
+        vertexData_[3] = { {right, top, 0.0f, 1.0f},    {u_right, v_top},    {0,0,-1} };
+    }
 
-		UpdateUVTransform();
-	}
+    void Sprite::Draw() {
+        auto commandList = dxCommon_->GetCommandList();
 
-	void Sprite::Draw() {
+        commandList->SetGraphicsRootSignature(dxCommon_->GetPSO()->GetRootSignature(PrimitiveType::kModel));
+        commandList->SetPipelineState(pso_);
+        commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		// ルートシグネチャ
-		dxCommon_->GetCommandList()->SetGraphicsRootSignature(dxCommon_->GetPSO()->GetRootSignature(PrimitiveType::kModel));
+        commandList->IASetIndexBuffer(&indexBufferView_);
+        commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
 
-		// psoセット
-		dxCommon_->GetCommandList()->SetPipelineState(pso_);
+        commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+        commandList->SetGraphicsRootConstantBufferView(1, wvpResource_->GetGPUVirtualAddress());
+        commandList->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetGPUHandle(textureHandle_));
 
-		// プリミティブトポロジの設定 (三角形リスト)
-		dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+    }
 
+    void Sprite::UpdateUVTransform() {
+        // 反転フラグを反映させたUV変形行列を作成
+        Vector3 flipScale = { isFlipX_ ? -1.0f : 1.0f, isFlipY_ ? -1.0f : 1.0f, 1.0f };
+        Vector3 flipTranslate = { isFlipX_ ? 1.0f : 0.0f, isFlipY_ ? 1.0f : 0.0f, 0.0f };
 
-		// インデックスバッファビューの設定
-		dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
-		// 頂点バッファビューの設定
-		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
-
-
-		// マテリアルCBufferの場所を設定
-		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
-		// WVP CBufferの場所を設定
-		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource_->GetGPUVirtualAddress());
-		// テクスチャのDescriptorTableを設定
-		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetGPUHandle(textureHandle_));
-		// 描画コマンド
-		dxCommon_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0); // 6つのインデックス (2つの三角形) を描画
-	}
-
-	void Sprite::UpdateUVTransform() {
-		// スケーリング行列を計算 (反転の有無に応じて -1.0f または 1.0f を設定)
-		Vector3 scale = {
-			isFlipX_ ? -1.0f : 1.0f,
-			isFlipY_ ? -1.0f : 1.0f,
-			1.0f
-		};
-
-		// 1. 変換の中心 (0.5, 0.5) へ平行移動
-		Matrix4x4 translateToCenter = MakeTranslateMatrix({ 0.5f, 0.5f, 0.0f });
-		// 2. スケーリング (反転)
-		Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);
-		// 3. 元の場所 (-0.5, -0.5) へ戻す平行移動
-		Matrix4x4 translateBack = MakeTranslateMatrix({ -0.5f, -0.5f, 0.0f });
-
-		// 1. 基準点を中心 (0.5, 0.5) に持ってくる (逆移動)
-		Matrix4x4 matrix = Multiply(scaleMatrix, translateBack);
-		// 2. 反転 (スケーリング)
-		matrix = Multiply(matrix, translateToCenter);
-
-		// 単純な方法: スケーリングと移動を組み合わせる
-		materialData_->uvTransform = MakeAffineMatrix(
-			scale,
-			Vector3{ 0.0f, 0.0f, 0.0f }, // 回転はなし
-		{
-			isFlipX_ ? 1.0f : 0.0f,
-			isFlipY_ ? 1.0f : 0.0f,
-			0.0f
-		}
-		);
-	}
-
-	void Sprite::CorrectionVertexData() {
-		// スプライトの幅と高さを定義
-		float width = size_.x;  // 現在の頂点データに基づく幅
-		float height = size_.y; // 現在の頂点データに基づく高さ
-
-		// 頂点バッファの生成
-		vertexResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(VertexData) * 4);
-		vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
-		vertexBufferView_.SizeInBytes = sizeof(VertexData) * 4;
-		vertexBufferView_.StrideInBytes = sizeof(VertexData);
-		vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
-
-		// 頂点データの定義 (正方形)
-		// anchorの概念を導入し、中心を原点とするように調整
-		// 例: anchor = {0.5f, 0.5f, 0.0f} で中心を意味する
-		float left = -width * anchor_.x;
-		float right = width * (1.0f - anchor_.x);
-		float top = -height * anchor_.y;
-		float bottom = height * (1.0f - anchor_.y);
-
-		// 左下
-		vertexData_[0].position = { left, bottom, 0.0f, 1.0f };
-		vertexData_[0].texcoord = { 0.0f, 1.0f };
-		vertexData_[0].normal = { 0.0f, 0.0f, 1.0f };
-		// 左上
-		vertexData_[1].position = { left, top, 0.0f, 1.0f };
-		vertexData_[1].texcoord = { 0.0f, 0.0f };
-		vertexData_[1].normal = { 0.0f, 0.0f, 1.0f };
-		// 右下
-		vertexData_[2].position = { right, bottom, 0.0f, 1.0f };
-		vertexData_[2].texcoord = { 1.0f, 1.0f };
-		vertexData_[2].normal = { 0.0f, 0.0f, 1.0f };
-		// 右上
-		vertexData_[3].position = { right, top, 0.0f, 1.0f };
-		vertexData_[3].texcoord = { 1.0f, 0.0f };
-		vertexData_[3].normal = { 0.0f, 0.0f, 1.0f };
-	}
-
+        materialData_->uvTransform = MakeAffineMatrix(flipScale, Vector3{ 0,0,0 }, flipTranslate);
+    }
 }
