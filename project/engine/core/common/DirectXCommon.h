@@ -70,6 +70,8 @@ public:
 	void IncrementFencevalue() { fenceValue_++; }
 	HANDLE GetFenceEvent() { return fenceEvent_; }
 
+	uint64_t GetNextFenceValue() const { return fenceValue_ + 1; }
+
 	// 深度
 	ID3D12DescriptorHeap* GetDSVDescriptorHeap() { return dsvDescriptorHeap_.Get(); }
 

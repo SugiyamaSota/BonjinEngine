@@ -1,4 +1,5 @@
 #include "TextureManager.h"
+#include"../srv/SrvManager.h"
 
 TextureManager* TextureManager::instance_ = nullptr;
 
@@ -22,64 +23,34 @@ TextureManager::~TextureManager() {
 }
 
 void TextureManager::Initialize() {
-	srvHeapBaseOffset_ = 1;
-	nextHandleIndex_ = 0;
+
 }
 
 int TextureManager::LoadTexture(const std::string& filePath) {
-
-	// 既にロード済みであれば、既存のインデックスを返す
 	auto it = loadedTextures_.find(filePath);
 	if (it != loadedTextures_.end()) {
 		return it->second;
 	}
 
-	// ここからが新しいテクスチャのロード処理
 	DirectX::ScratchImage mipImages = LoadTextureInternal(filePath);
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 
-	// テクスチャリソースの作成
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = CreateTextureResourceInternal(DirectXCommon::GetInstance()->GetDevice(), metadata);
+	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureDataInternal(textureResource.Get(), mipImages, DirectXCommon::GetInstance()->GetDevice(), DirectXCommon::GetInstance()->GetCommandList());
 
-	// テクスチャデータのアップロード
-	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureDataInternal(
-		textureResource.Get(), mipImages, DirectXCommon::GetInstance()->GetDevice(), DirectXCommon::GetInstance()->GetCommandList());
+	pendingUploadResources_.push_back({ intermediateResource, DirectXCommon::GetInstance()->GetNextFenceValue() });
 
-	// SRV (Shader Resource View) の設定
-	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = GetCPUDescriptorHandle(DirectXCommon::GetInstance()->GetSRVDescriptorHeap(),
-		DirectXCommon::GetInstance()->GetSRVSize(), srvHeapBaseOffset_ + nextHandleIndex_);
-	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = GetGPUDescriptorHandle(DirectXCommon::GetInstance()->GetSRVDescriptorHeap(),
-		DirectXCommon::GetInstance()->GetSRVSize(), srvHeapBaseOffset_ + nextHandleIndex_);
+	// SrvManagerからインデックスを取得してSRV作成
+	uint32_t srvIndex = SrvManager::GetInstance()->Allocate();
+	SrvManager::GetInstance()->CreateTextureSrv(srvIndex, textureResource.Get());
 
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = metadata.format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
-
-	// SRVヒープにSRVを作成
-	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(textureResource.Get(), &srvDesc, cpuHandle);
-
-	// 現在のnextHandleIndex_を新しいテクスチャのインデックスとして使用
-	int newIndex = nextHandleIndex_;
-
-	// ★ここが重要な追加・修正点★
-	// ロードしたテクスチャの情報を各vectorに格納する
+	int index = (int)textureResources_.size();
 	textureResources_.push_back(textureResource);
-	gpuDescriptorHandles_.push_back(gpuHandle);
-	cpuDescriptorHandles_.push_back(cpuHandle); // CPUハンドルも保持するなら
 	metadatas_.push_back(metadata);
 
-	// ロード済みマップに登録
-	loadedTextures_[filePath] = newIndex;
-
-	// アップロード用中間リソースをリストに追加
-	pendingUploadResources_.push_back({ intermediateResource, DirectXCommon::GetInstance()->GetFenceValue() });
-
-	// 次のテクスチャのためのインデックスをインクリメント
-	nextHandleIndex_++;
-
-	return newIndex; // ロードしたテクスチャのインデックスを返す
+	// filePath に対して srvIndex を紐付け
+	loadedTextures_[filePath] = (int)srvIndex;
+	return (int)srvIndex;
 }
 
 void TextureManager::ReleaseIntermediateResources() {
@@ -96,9 +67,8 @@ void TextureManager::ReleaseIntermediateResources() {
 }
 
 // GetGPUHandle の引数を int に変更
-D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetGPUHandle(int textureIndex) const {
-	assert(static_cast<uint32_t>(textureIndex) < gpuDescriptorHandles_.size()); // キャストして比較
-	return gpuDescriptorHandles_[textureIndex];
+D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetGPUHandle(int textureIndex) const{
+	return SrvManager::GetInstance()->GetGPUHandle(static_cast<uint32_t>(textureIndex));
 }
 
 // GetMetadata の引数を int に変更

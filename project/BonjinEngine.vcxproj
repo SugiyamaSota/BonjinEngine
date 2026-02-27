@@ -207,6 +207,7 @@
     <ClCompile Include="engine\graphics\assets\model\ModelBuilder.cpp" />
     <ClCompile Include="engine\graphics\rendering\particle\Particle.cpp" />
     <ClCompile Include="engine\system\utility\random\RandomEngine.cpp" />
+    <ClCompile Include="engine\system\manager\srv\SrvManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\core\Core.h" />
@@ -253,6 +254,7 @@
     <ClInclude Include="engine\graphics\rendering\particle\Particle.h" />
     <ClInclude Include="engine\system\utility\random\RandomEngine.h" />
     <ClInclude Include="engine\system\manager\light\LightManager.h" />
+    <ClInclude Include="engine\system\manager\srv\SrvManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

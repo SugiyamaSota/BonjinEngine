@@ -72,8 +72,8 @@ public:
     void ReleaseIntermediateResources();
 
     D3D12_RESOURCE_DESC GetResourceDesc(int textureIndex) const {
-        assert(static_cast<uint32_t>(textureIndex) < textureResources_.size());
-        return textureResources_[textureIndex]->GetDesc();
+        assert(textureIndex > 0 && textureIndex <= textureResources_.size());
+        return textureResources_[textureIndex - 1]->GetDesc();
     }
 
 private:
