@@ -33,6 +33,11 @@ void GameScene::Initialize(Camera* camera)
 	terrainModel_.LoadModel("terrain");
 	terrainModel_.SetCullMode(D3D12_CULL_MODE_BACK);
 
+	particle_ = Particle();
+	particle_.LoadModel("plane");
+	particle_.Emit({ 0.f,0.f,0.f }, { 5.f,5.f,5.f }, 1.f, 1.f, 5.f);
+	particle_.Begin();
+
 }
 
 void GameScene::Unload() {
@@ -40,9 +45,12 @@ void GameScene::Unload() {
 
 void GameScene::Update(float deltaTime) {
 
+	
+
 	model_.Update(WT_, camera_);
 	terrainModel_.Update(terrainWT_, camera_);
 	sprite_.Update();
+	particle_.Update(camera_);
 
 	// フェーズに応じた処理
 	switch (phase_) {
@@ -67,13 +75,16 @@ void GameScene::Update(float deltaTime) {
 }
 
 void GameScene::Draw() {
+	
 	model_.Draw();
 	terrainModel_.Draw();
 	sprite_.Draw();
+	particle_.Draw();
 }
 
 void GameScene::DrawSceneImGui() {
 #ifdef USE_IMGUI
+	particle_.DrawImGui();
 	if (ImGui::TreeNode("WorldTransform")) {
 		ImGui::DragFloat3("scale", &WT_.scale.x, 0.1f);
 		ImGui::DragFloat3("rotate", &WT_.rotate.x, 0.1f);
