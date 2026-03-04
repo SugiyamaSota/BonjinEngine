@@ -18,7 +18,7 @@ void GameScene::Initialize(Camera* camera)
 	sprite_.Initialize("uvChecker.png");
 	sprite_.Scale() = { 1.f,1.f };
 	sprite_.Rotate() = { 0.f,0.f };
-	sprite_.Translate() = { 0.f, 0.f };
+	sprite_.Translate() = { 100.f, 100.f };
 	sprite_.Anchor() = { 0.f,0.f };
 	sprite_.Size() = { 320.f, 180.f };
 	sprite_.SetTextureRect(0, 0, 600.f, 600.f);
@@ -80,11 +80,21 @@ void GameScene::Draw() {
 	terrainModel_.Draw();
 	sprite_.Draw();
 	particleMgr_->Draw();
+
+	ImGui::Begin("sprite");
+	ImGui::SetNextWindowSize(ImVec2(500, 100), ImGuiCond_FirstUseEver);
+	ImGui::DragFloat2("SpritePosition", &sprite_.Translate().x, 1.0f, 0.0f, 9999.9f, "%.1f");
+	ImGui::End();
 }
 
 void GameScene::DrawSceneImGui() {
+#ifdef USE_IMGUI
+	
+
 	model_.DrawImGui();
 	LightManager::GetInstance()->DrawImGui();
+
+#endif
 }
 
 SceneType GameScene::GetNextScene() const {
