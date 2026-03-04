@@ -18,7 +18,7 @@ void GameScene::Initialize(Camera* camera)
 	sprite_.Initialize("uvChecker.png");
 	sprite_.Scale() = { 1.f,1.f };
 	sprite_.Rotate() = { 0.f,0.f };
-	sprite_.Translate() = { 0.f, 0.f};
+	sprite_.Translate() = { 0.f, 0.f };
 	sprite_.Anchor() = { 0.f,0.f };
 	sprite_.Size() = { 320.f, 180.f };
 	sprite_.SetTextureRect(0, 0, 600.f, 600.f);
@@ -33,24 +33,24 @@ void GameScene::Initialize(Camera* camera)
 	terrainModel_.LoadModel("terrain");
 	terrainModel_.SetCullMode(D3D12_CULL_MODE_BACK);
 
-	particle_ = Particle();
-	particle_.LoadModel("plane");
-	particle_.Emit({ 0.f,0.f,0.f }, { 5.f,5.f,5.f }, 1.f, 1.f, 5.f);
-	particle_.Begin();
+	particleMgr_ = ParticleManager::GetInstance();
+	particleMgr_->CreateParticleGroup("Fire", "plane");
+	particleMgr_->Emit("Fire", { 0.f,0.f,0.f }, { 1.0f, 1.0f, 1.0f }, 0.5f, 1.0f, 2.0f);
 
 }
 
 void GameScene::Unload() {
+	ParticleManager::GetInstance()->Finalize();
 }
 
 void GameScene::Update(float deltaTime) {
 
-	
+
 
 	model_.Update(WT_, camera_);
 	terrainModel_.Update(terrainWT_, camera_);
 	sprite_.Update();
-	particle_.Update(camera_);
+	particleMgr_->Update(camera_);
 
 	// フェーズに応じた処理
 	switch (phase_) {
@@ -75,23 +75,14 @@ void GameScene::Update(float deltaTime) {
 }
 
 void GameScene::Draw() {
-	
+
 	model_.Draw();
 	terrainModel_.Draw();
 	sprite_.Draw();
-	particle_.Draw();
+	particleMgr_->Draw();
 }
 
 void GameScene::DrawSceneImGui() {
-#ifdef USE_IMGUI
-	particle_.DrawImGui();
-	if (ImGui::TreeNode("WorldTransform")) {
-		ImGui::DragFloat3("scale", &WT_.scale.x, 0.1f);
-		ImGui::DragFloat3("rotate", &WT_.rotate.x, 0.1f);
-		ImGui::DragFloat3("translate", &WT_.translate.x, 0.1f);
-		ImGui::TreePop();
-	}
-#endif
 	model_.DrawImGui();
 	LightManager::GetInstance()->DrawImGui();
 }

@@ -5,6 +5,8 @@
 
 #include"Sprite.h"
 
+#include"../particle/ParticleManager.h"
+
 namespace Bonjin
 {
 
@@ -46,7 +48,7 @@ namespace Bonjin
 		WorldTransform terrainWT_;
 		Model terrainModel_;
 
-		Particle particle_;
+		ParticleManager* particleMgr_;
 	private:
 		// --- ゲーム固有の関数 ---
 	};

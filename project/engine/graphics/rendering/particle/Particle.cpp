@@ -247,11 +247,11 @@ void Particle::InitializeParticle(uint32_t index)
 
 }
 
-void Particle::Begin() 
+void Particle::Begin()
 {
 
 	// 起動済みならスルー
-	if (isSystemActive_) 
+	if (isSystemActive_)
 	{
 		return;
 	}
@@ -260,7 +260,7 @@ void Particle::Begin()
 	isSystemActive_ = true;
 
 	// 全てのインスタンスを初期化
-	for (uint32_t index = 0; index < kNumInstance_; ++index) 
+	for (uint32_t index = 0; index < kNumInstance_; ++index)
 	{
 		InitializeParticle(index);
 	}
@@ -282,6 +282,6 @@ void Particle::End() {
 void Particle::DrawImGui()
 {
 
-	
+
 
 }

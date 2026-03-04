@@ -123,7 +123,7 @@ private:
 
 	// WVPリソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_ = nullptr;
-	ParticleForGPU* instancingData_ =  nullptr ;
+	ParticleForGPU* instancingData_ = nullptr;
 
 	// トランスフォーム
 	ParticleData particles_[kNumInstance_];
@@ -143,4 +143,3 @@ private:
 
 	bool isSystemActive_ = false;
 };
-
