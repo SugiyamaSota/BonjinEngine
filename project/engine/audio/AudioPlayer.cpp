@@ -8,12 +8,12 @@
 #pragma comment(lib, "xaudio2.lib")
 
 AudioPlayer::AudioPlayer() :
+    coinit_(COINIT_MULTITHREADED), // 明示的に初期化リストに書く
     masteringVoice_(nullptr),
     isInitialized_(false),
-    isPlaying_(false) {
-    // 音声
-    co_initializer coinit(COINIT_MULTITHREADED);
-    mf_initializer mfinit;
+    isPlaying_(false)
+{
+    
 }
 
 AudioPlayer::~AudioPlayer() {

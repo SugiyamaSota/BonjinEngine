@@ -32,4 +32,6 @@ private:
     xaudio_player_mf player_;
     bool isInitialized_;
     bool isPlaying_;
+
+    co_initializer coinit_;
 };
