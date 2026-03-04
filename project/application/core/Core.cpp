@@ -10,38 +10,38 @@ Core::Core() {}
 Core::~Core() {}
 
 void Core::Initialize() {
-    Bonjin::Initialize(); // エンジン本体の初期化
+	Bonjin::Initialize(); // エンジン本体の初期化
 
-    // シーンマネージャーのセットアップ
-    auto sceneManager = SceneManager::GetInstance();
-    sceneManager->Initialize();
-    sceneManager->AddScene(SceneType::kGame, new GameScene());
-    sceneManager->AddScene(SceneType::kTitle, new TitleScene());
+	// シーンマネージャーのセットアップ
+	auto sceneManager = SceneManager::GetInstance();
+	sceneManager->Initialize();
+	sceneManager->AddScene(SceneType::kGame, std::make_unique<GameScene>());
+	sceneManager->AddScene(SceneType::kTitle, std::make_unique<TitleScene>());
 }
 
 void Core::Run() {
-    while (true) {
-        if (WinApp::GetInstance()->ProcessMessage()) {
-            break;
-        }
+	while (true) {
+		if (WinApp::GetInstance()->ProcessMessage()) {
+			break;
+		}
 
-        NewFrame();
+		NewFrame();
 
-        // 更新処理
-        float deltaTime = Time::GetInstance()->GetDeltaTime();
-        SceneManager::GetInstance()->Update(deltaTime);
-        
+		// 更新処理
+		float deltaTime = Time::GetInstance()->GetDeltaTime();
+		SceneManager::GetInstance()->Update(deltaTime);
 
-        PreDraw();
 
-        // 描画処理
-        SceneManager::GetInstance()->Draw();
+		PreDraw();
 
-        EndFrame();
-    }
+		// 描画処理
+		SceneManager::GetInstance()->Draw();
+
+		EndFrame();
+	}
 }
 
 void Core::Finalize() {
-    SceneManager::DestroyInstance();
-    Bonjin::Finalize();
+	SceneManager::DestroyInstance();
+	Bonjin::Finalize();
 }

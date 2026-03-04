@@ -14,40 +14,41 @@ SceneManager* SceneManager::GetInstance() {
 	return instance;
 }
 
-// 💡 3. シングルトン: インスタンスの破棄
 void SceneManager::DestroyInstance() {
-	// 登録されているシーンをすべて破棄（メモリリーク防止）
+	if (instance == nullptr) return;
+
 	for (auto& pair : instance->scenes_) {
-		pair.second->Unload();
-		delete pair.second;
+		if (pair.second) {
+			pair.second->Unload();
+		}
 	}
 
 	instance->scenes_.clear();
-	delete instance->camera;
+
+	instance->camera_.reset();
 
 	delete instance;
 	instance = nullptr;
 }
 
 void SceneManager::Initialize() {
-	camera = new Camera();
-	camera->Initialize(1280, 720);
+	camera_ = std::make_unique<Camera>();
+	camera_->Initialize(1280, 720);
 }
 
 // 💡 4. シーンの登録
-void SceneManager::AddScene(SceneType type, IScene* scene) {
+void SceneManager::AddScene(SceneType type, std::unique_ptr<IScene> scene) {
 	// 既に登録されているかチェック（オプション）
 	if (scenes_.find(type) != scenes_.end()) {
 		// エラー処理または上書き処理
 		return;
 	}
 
-	scenes_[type] = scene;
-
+	scenes_[type] = std::move(scene);
 	// 最初のシーンであれば、カレントシーンとして設定
 	if (currentScene_ == nullptr) {
-		currentScene_ = scene;
-		currentScene_->Initialize(camera);
+		currentScene_ = scenes_[type].get();
+		currentScene_->Initialize(camera_.get());
 	}
 }
 
@@ -57,7 +58,7 @@ void SceneManager::Update(float deltaTime) {
 		return;
 	}
 
-	camera->Update(Camera::CameraType::kDebug);
+	camera_->Update(Camera::CameraType::kDebug);
 
 	// 現在のシーンの更新処理を呼び出し
 	currentScene_->Update(deltaTime);
@@ -82,12 +83,9 @@ void SceneManager::Draw() {
 	currentScene_->DrawImGui();
 }
 
-// 💡 7. シーン切り替えロジック（プライベート関数）
 void SceneManager::ChangeScene(SceneType nextSceneType) {
-
-	// 終了シーンならゲームを終了
 	if (nextSceneType == SceneType::kExit) {
-		// WinAppの終了フラグを立てるなどの処理
+		// 終了処理
 		return;
 	}
 
@@ -95,21 +93,10 @@ void SceneManager::ChangeScene(SceneType nextSceneType) {
 		currentScene_->Unload();
 	}
 
-	// 遷移先のシーンが登録されているか確認
 	auto it = scenes_.find(nextSceneType);
-	if (it == scenes_.end()) {
-		// エラー: 遷移先が登録されていません
-		return;
-	}
+	if (it == scenes_.end()) return;
 
-	// 💡 シーンの切り替え実行
-	IScene* nextScene = it->second;
-
-	// 1. 新しいシーンを初期化
-	nextScene->Initialize(camera);
-
-	// 2. カレントシーンを更新
-	currentScene_ = nextScene;
-
-	// 3. （オプション）ここでフェードアウトの完了とフェードインの開始処理を行う
+	// unique_ptr が管理する実体のアドレスをセット
+	currentScene_ = it->second.get();
+	currentScene_->Initialize(camera_.get());
 }

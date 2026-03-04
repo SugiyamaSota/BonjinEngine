@@ -18,7 +18,7 @@ namespace Bonjin
         //
         void Initialize();
         // 💡 全シーンを登録
-        void AddScene(SceneType type, IScene* scene);
+        void AddScene(SceneType type, std::unique_ptr<IScene> scene);
 
         // 💡 エンジンのループから呼ばれる更新関数
         void Update(float deltaTime);
@@ -37,12 +37,12 @@ namespace Bonjin
         // 💡 現在アクティブなシーン
         IScene* currentScene_ = nullptr;
         // 💡 登録されたすべてのシーンを保持するマップ
-        std::map<SceneType, IScene*> scenes_;
+        std::map<SceneType, std::unique_ptr<IScene>> scenes_;
 
         // 💡 シーン切り替えロジック
         void ChangeScene(SceneType nextSceneType);
 
-        Camera* camera = nullptr;
+        std::unique_ptr<Camera> camera_ = nullptr;
 
     };
 

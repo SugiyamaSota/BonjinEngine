@@ -76,7 +76,7 @@ public:
 	ID3D12DescriptorHeap* GetDSVDescriptorHeap() { return dsvDescriptorHeap_.Get(); }
 
 	// PSO
-	PSOManager* GetPSO()const { return pso; }
+	PSOManager* GetPSO()const { return pso.get(); }
 
 
 private:
@@ -125,7 +125,7 @@ private:
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc_ = {};
 
 	// PSO
-	PSOManager* pso = nullptr;
+	std::unique_ptr<PSOManager> pso = nullptr;
 
 	// ビューポート
 	D3D12_VIEWPORT viewport_{};

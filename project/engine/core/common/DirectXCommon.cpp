@@ -79,7 +79,7 @@ void DirectXCommon::Initialize() {
 	CreateDepth();
 	InitializeFixFPS();
 
-	pso = new PSOManager();
+	pso = std::make_unique<PSOManager>();
 
 	// PSOクラスを使用
 	pso->Initialize(
@@ -107,7 +107,6 @@ DirectXCommon::~DirectXCommon() {
 		CloseHandle(fenceEvent_);
 		fenceEvent_ = nullptr;
 	}
-	delete pso;
 }
 
 void DirectXCommon::NewFeame() {
