@@ -45,9 +45,12 @@ void Model::Update(WorldTransform worldTransform, Camera* camera) {
 	
 	// ワールドトランスフォーム
 	transform_ = worldTransform;
-	wvpData_->World = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
+	Matrix4x4 worldMat= MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
+
+	wvpData_->World = worldMat;
 	Matrix4x4 worldViewProjectionMatrix = Multiply(wvpData_->World, camera->GetViewProjectionMatrix());
 	wvpData_->WVP = worldViewProjectionMatrix;
+	wvpData_->WorldInverseTranspose = Inverse(Transpose(worldMat));
 
 	cameraData_->worldPosition = camera->GetWorldPosition();
 
