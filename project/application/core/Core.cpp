@@ -42,6 +42,6 @@ void Core::Run() {
 }
 
 void Core::Finalize() {
-	SceneManager::DestroyInstance();
+	SceneManager::GetInstance()->Finalize();
 	Bonjin::Finalize();
 }

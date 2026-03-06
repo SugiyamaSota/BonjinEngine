@@ -22,7 +22,7 @@ public:
     /// <summary>
     /// インスタンスを破棄
     /// </summary>
-    static void DestroyInstance();
+   void Finalize();
 
     /// <summary>
     /// コピーコンストラクタを削除
@@ -78,8 +78,6 @@ public:
 
 private:
     /// --- 変数 ---
-    // インスタンス
-    static TextureManager* instance_;
 
     // ロードされたテクスチャリソース
     std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> textureResources_;

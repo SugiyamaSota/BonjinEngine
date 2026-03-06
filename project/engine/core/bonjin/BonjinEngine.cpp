@@ -30,18 +30,17 @@ void Bonjin::Initialize() {
 	WinApp::GetInstance();
 	Input::GetInstance()->Initialize(WinApp::GetInstance()->GetHInstance(), WinApp::GetInstance()->GetHWND());
 	Input::GetInstance()->SetMouseLock(false);
+	SrvManager::GetInstance()->Initialize();
 	ModelManager::GetInstance();
 	TextureManager::GetInstance();
 	ImGuiManager::GetInstance()->Initialize();
-	ParticleManager::GetInstance()->Initialize();
 	Time::GetInstance();
 }
 
 void Bonjin::Finalize() {
 	Time::DestroyInstance();
-	ParticleManager::GetInstance()->Finalize();
 	ImGuiManager::GetInstance()->Finalize();
-	TextureManager::DestroyInstance();
+	TextureManager::GetInstance()->Finalize();
 	ModelManager::GetInstance()->Finalize();
 	WinApp::GetInstance()->DestroyInstance();
 	LightManager::GetInstance()->Finalize();

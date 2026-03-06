@@ -1,14 +1,9 @@
 #include "SrvManager.h"
 #include<cassert>
 
-SrvManager* SrvManager::instance_ = nullptr;
-
 SrvManager* SrvManager::GetInstance() {
-    if (instance_ == nullptr) {
-        instance_ = new SrvManager();
-        instance_->Initialize();
-    }
-    return instance_;
+    static SrvManager instance;
+    return &instance;
 }
 
 void SrvManager::Initialize() {
