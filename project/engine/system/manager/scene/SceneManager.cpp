@@ -3,32 +3,22 @@
 
 using namespace Bonjin;
 
-// 💡 1. シングルトンインスタンスの実体
-SceneManager* SceneManager::instance = nullptr;
-
-// 💡 2. シングルトン: インスタンスの取得
 SceneManager* SceneManager::GetInstance() {
-	if (instance == nullptr) {
-		instance = new SceneManager();
-	}
-	return instance;
+	static SceneManager instance;
+	return &instance;
 }
 
-void SceneManager::DestroyInstance() {
-	if (instance == nullptr) return;
-
-	for (auto& pair : instance->scenes_) {
-		if (pair.second) {
-			pair.second->Unload();
-		}
+void SceneManager::Finalize() {
+	// 1. 現在のシーンの終了処理を呼ぶ
+	if (currentScene_) {
+		currentScene_->Unload();
+		currentScene_ = nullptr;
 	}
+	// 2. unique_ptrのマップをクリアして、全シーンのインスタンスを確実に破棄
+	scenes_.clear();
 
-	instance->scenes_.clear();
-
-	instance->camera_.reset();
-
-	delete instance;
-	instance = nullptr;
+	// 3. カメラも明示的に破棄
+	camera_.reset();
 }
 
 void SceneManager::Initialize() {

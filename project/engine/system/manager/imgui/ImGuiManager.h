@@ -38,7 +38,8 @@ public:
 	/// </summary>
 	void EndFrame();
 
-	static void DestroyInstance();
+	// リソースの解放
+	void Finalize();
 
 private:
 	// コンストラクタとデストラクタをprivateにする
@@ -49,6 +50,4 @@ private:
 	ImGuiManager(const ImGuiManager&) = delete;
 	ImGuiManager& operator=(const ImGuiManager&) = delete;
 
-	// 静的メンバ変数の追加
-	static ImGuiManager* sInstance;
 };

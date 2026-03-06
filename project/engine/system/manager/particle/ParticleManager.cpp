@@ -1,18 +1,14 @@
 #include "ParticleManager.h"
 
-ParticleManager* ParticleManager::instance_ = nullptr;
+#include "Particle.h"
 
 ParticleManager* ParticleManager::GetInstance() {
-    if (!instance_) { 
-        instance_ = new ParticleManager();
-        instance_->Initialize();
-    }
-    return instance_;
+    static ParticleManager instance;
+    return &instance;
 }
 
 void ParticleManager::Finalize() {
-    delete instance_;
-    instance_ = nullptr;
+    particleGroups_.clear();
 }
 
 void ParticleManager::Initialize() {

@@ -48,7 +48,6 @@ namespace Bonjin
 		WorldTransform terrainWT_;
 		Model terrainModel_;
 
-		ParticleManager* particleMgr_;
 	private:
 		// --- ゲーム固有の関数 ---
 	};

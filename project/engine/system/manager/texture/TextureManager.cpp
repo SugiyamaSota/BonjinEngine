@@ -1,19 +1,13 @@
 #include "TextureManager.h"
 #include"../srv/SrvManager.h"
 
-TextureManager* TextureManager::instance_ = nullptr;
-
 TextureManager* TextureManager::GetInstance() {
-	if (instance_ == nullptr) {
-		instance_ = new TextureManager();
-		instance_->Initialize();
-	}
-	return instance_;
+	static TextureManager instance;
+	return &instance;
 }
 
-void TextureManager::DestroyInstance() {
-	delete instance_;
-	instance_ = nullptr;
+void TextureManager::Finalize() {
+
 }
 
 TextureManager::TextureManager() = default;

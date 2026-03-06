@@ -11,7 +11,7 @@ public:
     void Update();
     void DrawImGui();
 
-    static void DestroyInstance();
+    void Finalize();
 
     // Getter
     ID3D12Resource* GetDirectionalLightResource() { return directionalLightResource_.Get(); }
@@ -34,5 +34,4 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> spotLightResource_;
     SpotLight* spotLightData_ = nullptr;
 
-    static LightManager* instance_;
 };

@@ -12,7 +12,7 @@ namespace Bonjin
     public:
         // シングルトン化 (エンジンの中核なので)
         static SceneManager* GetInstance();
-        static void DestroyInstance();
+        void Finalize();
 
     public:
         //
@@ -27,12 +27,10 @@ namespace Bonjin
         void Draw();
 
     private:
-        static SceneManager* instance;
 
         // シングルトン関連の禁止
         SceneManager() = default;
         ~SceneManager() = default;
-        // ... (コピー禁止など)
 
         // 💡 現在アクティブなシーン
         IScene* currentScene_ = nullptr;

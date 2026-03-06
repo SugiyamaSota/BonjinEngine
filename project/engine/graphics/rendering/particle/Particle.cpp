@@ -21,6 +21,16 @@ Particle::Particle() {
 	activeNum_ = 0;
 }
 
+Particle::~Particle() {
+	if (vertexResource_) vertexResource_->Unmap(0, nullptr);
+	if (materialResource_) materialResource_->Unmap(0, nullptr);
+	if (instancingResource_) instancingResource_->Unmap(0, nullptr);
+	// ComPtr なので Reset しなくてもスコープを抜ければ解放されますが、明示的だと安全
+	vertexResource_.Reset();
+	materialResource_.Reset();
+	instancingResource_.Reset();
+}
+
 void Particle::LoadModel(const std::string& fileName) {
 	// モデルファイル読み込み
 	modelData_ = ModelBuilder::LoadObjFile("resources/models/" + fileName, fileName + ".obj");

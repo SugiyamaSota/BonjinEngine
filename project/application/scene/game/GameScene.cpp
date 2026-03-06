@@ -33,14 +33,12 @@ void GameScene::Initialize(Camera* camera)
 	terrainModel_.LoadModel("terrain");
 	terrainModel_.SetCullMode(D3D12_CULL_MODE_BACK);
 
-	particleMgr_ = ParticleManager::GetInstance();
-	particleMgr_->CreateParticleGroup("Fire", "plane");
-	particleMgr_->Emit("Fire", { 0.f,0.f,0.f }, { 1.0f, 1.0f, 1.0f }, 0.5f, 1.0f, 2.0f);
+	//ParticleManager::GetInstance()->CreateParticleGroup("Fire", "plane");
+	//ParticleManager::GetInstance()->Emit("Fire", { 0.f,0.f,0.f }, { 1.0f, 1.0f, 1.0f }, 0.5f, 1.0f, 2.0f);
 
 }
 
 void GameScene::Unload() {
-	ParticleManager::GetInstance()->Finalize();
 }
 
 void GameScene::Update(float deltaTime) {
@@ -50,7 +48,7 @@ void GameScene::Update(float deltaTime) {
 	model_.Update(WT_, camera_);
 	terrainModel_.Update(terrainWT_, camera_);
 	sprite_.Update();
-	particleMgr_->Update(camera_);
+	//ParticleManager::GetInstance()->Update(camera_);
 
 	// フェーズに応じた処理
 	switch (phase_) {
@@ -79,7 +77,7 @@ void GameScene::Draw() {
 	model_.Draw();
 	terrainModel_.Draw();
 	sprite_.Draw();
-	particleMgr_->Draw();
+	//ParticleManager::GetInstance()->Draw();
 
 	ImGui::Begin("sprite");
 	ImGui::SetNextWindowSize(ImVec2(500, 100), ImGuiCond_FirstUseEver);

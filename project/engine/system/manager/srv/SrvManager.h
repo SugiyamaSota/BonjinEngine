@@ -24,7 +24,6 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(uint32_t index);
 
 private:
-    static SrvManager* instance_;
     DirectXCommon* dxCommon_ = nullptr;
 
     uint32_t useCount_ = 0; // 現在どこまで使っているか
