@@ -33,18 +33,19 @@ void Bonjin::Initialize() {
 	ModelManager::GetInstance();
 	TextureManager::GetInstance();
 	ImGuiManager::GetInstance()->Initialize();
+	ParticleManager::GetInstance()->Initialize();
 	Time::GetInstance();
 }
 
 void Bonjin::Finalize() {
-	// directXcommon、Input、テクスチャのインスタンスを破壊
-	ImGuiManager::DestroyInstance();
+	Time::DestroyInstance();
+	ParticleManager::GetInstance()->Finalize();
+	ImGuiManager::GetInstance()->Finalize();
 	TextureManager::DestroyInstance();
 	ModelManager::GetInstance()->Finalize();
 	WinApp::GetInstance()->DestroyInstance();
-	LightManager::DestroyInstance();
+	LightManager::GetInstance()->Finalize();
 	DirectXCommon::GetInstance()->DestroyInstance();
-	Time::DestroyInstance();
 }
 
 void Bonjin::NewFrame() {

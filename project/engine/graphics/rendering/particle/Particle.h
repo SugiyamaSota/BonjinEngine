@@ -27,6 +27,8 @@ public:
 	//// </summary>
 	Particle();
 
+	~Particle();
+
 	/// <summary>
 	/// モデルをロード
 	/// </summary>

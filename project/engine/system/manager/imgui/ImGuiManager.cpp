@@ -2,32 +2,17 @@
 
 #include"BonjinEngine.h"
 
-// 静的メンバ変数の初期化
-ImGuiManager* ImGuiManager::sInstance = nullptr; // 静的メンバ変数を初期化
-
 ImGuiManager* ImGuiManager::GetInstance() {
-	if (sInstance == nullptr) { // インスタンスがまだ作成されていない場合
-		sInstance = new ImGuiManager(); // 新しいインスタンスを作成
-	}
-	return sInstance; // 既存のインスタンスを返す
+	static ImGuiManager instance;
+	return &instance;
 }
 
 ImGuiManager::ImGuiManager() {
 }
 
-void ImGuiManager::DestroyInstance() {
-	delete sInstance; // ここでデストラクタが呼ばれる
-	sInstance = nullptr;
-}
-
 
 ImGuiManager::~ImGuiManager() {
-#ifdef USE_IMGUI
-	ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
-	// シングルトンインスタンスをnullptrに戻す
-#endif
+
 }
 
 void ImGuiManager::Initialize() {
@@ -59,5 +44,14 @@ void ImGuiManager::EndFrame() {
 #ifdef USE_IMGUI
 	ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), DirectXCommon::GetInstance()->GetCommandList());
+#endif
+}
+
+void ImGuiManager::Finalize() {
+#ifdef USE_IMGUI
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+	// シングルトンインスタンスをnullptrに戻す
 #endif
 }

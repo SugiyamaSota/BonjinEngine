@@ -6,18 +6,10 @@
 #include"math/vector.h"
 #include <cmath>
 
-LightManager* LightManager::instance_ = nullptr;
-
-LightManager* LightManager::GetInstance() {
-	if (!instance_) instance_ = new LightManager();
-	return instance_;
-}
-
-void LightManager::DestroyInstance() {
-	if (instance_) {
-		delete instance_;
-		instance_ = nullptr;
-	}
+LightManager* LightManager::GetInstance() 
+{
+	static LightManager instance;
+	return &instance;
 }
 
 void LightManager::Initialize(ID3D12Device* device) {
@@ -74,4 +66,9 @@ void LightManager::DrawImGui() {
 		ImGui::TreePop();
 	}
 #endif
+}
+
+void LightManager::Finalize() 
+{
+
 }
