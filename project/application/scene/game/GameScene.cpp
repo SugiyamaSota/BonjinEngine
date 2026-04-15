@@ -13,42 +13,12 @@ void GameScene::Initialize(Camera* camera)
 
 	this->camera_ = camera;
 
-	// スプライト
-	sprite_ = Sprite();
-	sprite_.Initialize("uvChecker.png");
-	sprite_.Scale() = { 1.f,1.f };
-	sprite_.Rotate() = { 0.f,0.f };
-	sprite_.Translate() = { 100.f, 100.f };
-	sprite_.Anchor() = { 0.f,0.f };
-	sprite_.Size() = { 320.f, 180.f };
-	sprite_.SetTextureRect(0, 0, 600.f, 600.f);
-
-	//
-	WT_ = InitializeWorldTransform();
-	model_ = Model();
-	model_.CreateSphere(36);
-
-	terrainWT_ = InitializeWorldTransform();
-	terrainModel_ = Model();
-	terrainModel_.LoadModel("terrain");
-	terrainModel_.SetCullMode(D3D12_CULL_MODE_BACK);
-
-	//ParticleManager::GetInstance()->CreateParticleGroup("Fire", "plane");
-	//ParticleManager::GetInstance()->Emit("Fire", { 0.f,0.f,0.f }, { 1.0f, 1.0f, 1.0f }, 0.5f, 1.0f, 2.0f);
-
 }
 
 void GameScene::Unload() {
 }
 
 void GameScene::Update(float deltaTime) {
-
-
-
-	model_.Update(WT_, camera_);
-	terrainModel_.Update(terrainWT_, camera_);
-	sprite_.Update();
-	//ParticleManager::GetInstance()->Update(camera_);
 
 	// フェーズに応じた処理
 	switch (phase_) {
@@ -74,22 +44,11 @@ void GameScene::Update(float deltaTime) {
 
 void GameScene::Draw() {
 
-	model_.Draw();
-	terrainModel_.Draw();
-	sprite_.Draw();
-	//ParticleManager::GetInstance()->Draw();
-
-	ImGui::Begin("sprite");
-	ImGui::SetNextWindowSize(ImVec2(500, 100), ImGuiCond_FirstUseEver);
-	ImGui::DragFloat2("SpritePosition", &sprite_.Translate().x, 1.0f, 0.0f, 9999.9f, "%.1f");
-	ImGui::End();
 }
 
 void GameScene::DrawSceneImGui() {
 #ifdef USE_IMGUI
-	
 
-	model_.DrawImGui();
 	LightManager::GetInstance()->DrawImGui();
 
 #endif

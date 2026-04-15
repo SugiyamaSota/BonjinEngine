@@ -40,13 +40,6 @@ namespace Bonjin
 
 	private:
 		// --- ゲーム固有の変数 ---
-		// スプライト
-		Bonjin::Sprite sprite_;
-		WorldTransform WT_;
-		Model model_;
-
-		WorldTransform terrainWT_;
-		Model terrainModel_;
 
 	private:
 		// --- ゲーム固有の関数 ---
