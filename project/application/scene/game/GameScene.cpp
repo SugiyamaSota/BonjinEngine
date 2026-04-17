@@ -13,20 +13,12 @@ void GameScene::Initialize(Camera* camera)
 
 	this->camera_ = camera;
 
-	testModel_ = std::make_unique<Model>();
-	testModel_->LoadModel("Box","BoxTextured.gltf");
-	testModel_->SetEnableLighting(true);
-	testModel_->SetColor({ 1.0f,1.0f,1.0f,1.0f });
-
-
 }
 
 void GameScene::Unload() {
 }
 
 void GameScene::Update(float deltaTime) {
-
-	testModel_->Update({1.f,1.f,1.f}, camera_);
 
 	// フェーズに応じた処理
 	switch (phase_) {
@@ -51,8 +43,6 @@ void GameScene::Update(float deltaTime) {
 }
 
 void GameScene::Draw() {
-
-	testModel_->Draw();
 
 }
 
