@@ -42,6 +42,28 @@ void LightManager::Initialize(ID3D12Device* device) {
 	spotLightData_->cosAngle = cos(std::numbers::pi_v<float> / 3.f);
 }
 
+void LightManager::Finalize() {
+	if (directionalLightResource_) {
+		directionalLightResource_->Unmap(0, nullptr);
+	}
+	if (pointLightResource_) {
+		pointLightResource_->Unmap(0, nullptr);
+	}
+	if (spotLightResource_) {
+		spotLightResource_->Unmap(0, nullptr);
+	}
+
+	// ComPtrを明示的に解放
+	directionalLightResource_.Reset();
+	pointLightResource_.Reset();
+	spotLightResource_.Reset();
+
+	// メンバポインタの初期化
+	directionalLightData_ = nullptr;
+	pointLightData_ = nullptr;
+	spotLightData_ = nullptr;
+}
+
 void LightManager::Update() {
 	
 }
@@ -66,9 +88,4 @@ void LightManager::DrawImGui() {
 		ImGui::TreePop();
 	}
 #endif
-}
-
-void LightManager::Finalize() 
-{
-
 }
