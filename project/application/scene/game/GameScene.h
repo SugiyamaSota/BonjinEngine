@@ -3,9 +3,6 @@
 
 #include"BonjinEngine.h"
 
-#include"Sprite.h"
-
-#include"../particle/ParticleManager.h"
 
 namespace Bonjin
 {
