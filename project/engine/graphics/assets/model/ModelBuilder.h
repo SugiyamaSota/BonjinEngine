@@ -27,5 +27,7 @@ private:
 	static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
 	static VertexData GetSphereVertex(uint32_t index, uint32_t subdivision);
+
+	static Node ReadNode(aiNode* node);
 };
 

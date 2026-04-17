@@ -80,7 +80,8 @@ void Model::Update(WorldTransform worldTransform, Camera* camera) {
 
 	cameraData_->worldPosition = camera->GetWorldPosition();
 
-
+	wvpData_->WVP = Multiply(Multiply(modelData_->rootNode.localMatrix , worldMat),camera->GetViewProjectionMatrix());
+	wvpData_->World = Multiply(modelData_->rootNode.localMatrix, worldMat);
 
 }
 

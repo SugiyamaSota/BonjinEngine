@@ -10,6 +10,8 @@ ModelData ModelBuilder::LoadModelFile(const std::string& directoryPath, const st
 
 	ModelData modelData;
 
+	modelData.rootNode = ReadNode(scene->mRootNode);
+
 	for (uint32_t meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex) {
 		const aiMesh* mesh = scene->mMeshes[meshIndex];
 		assert(mesh->HasTextureCoords(0));
@@ -111,6 +113,8 @@ ModelData ModelBuilder::CreateSphereModel(uint32_t subdivision) {
 		}
 	}
 
+	
+
 	return modelData;
 }
 
@@ -149,5 +153,37 @@ VertexData ModelBuilder::GetSphereVertex(uint32_t index, uint32_t subdivision) {
 	v.normal = { v.position.x, v.position.y, v.position.z };
 	v.texcoord = { float(lon) / float(subdivision), 1.0f - float(lat) / float(subdivision) };
 	return v;
+}
+
+Node ModelBuilder::ReadNode(aiNode* node) {
+	Node result;
+
+	aiMatrix4x4 aiLocalMatrix = node->mTransformation;
+	aiLocalMatrix.Transpose(); // Assimpは行優先、DirectXは列優先なので転置する
+	result.localMatrix.m[0][0] = aiLocalMatrix[0][0];
+	result.localMatrix.m[0][1] = aiLocalMatrix[0][1];
+	result.localMatrix.m[0][2] = aiLocalMatrix[0][2];
+	result.localMatrix.m[0][3] = aiLocalMatrix[0][3];
+	result.localMatrix.m[1][0] = aiLocalMatrix[1][0];
+	result.localMatrix.m[1][1] = aiLocalMatrix[1][1];
+	result.localMatrix.m[1][2] = aiLocalMatrix[1][2];
+	result.localMatrix.m[1][3] = aiLocalMatrix[1][3];
+	result.localMatrix.m[2][0] = aiLocalMatrix[2][0];
+	result.localMatrix.m[2][1] = aiLocalMatrix[2][1];
+	result.localMatrix.m[2][2] = aiLocalMatrix[2][2];
+	result.localMatrix.m[2][3] = aiLocalMatrix[2][3];
+	result.localMatrix.m[3][0] = aiLocalMatrix[3][0];
+	result.localMatrix.m[3][1] = aiLocalMatrix[3][1];
+	result.localMatrix.m[3][2] = aiLocalMatrix[3][2];
+	result.localMatrix.m[3][3] = aiLocalMatrix[3][3];
+
+	result.name = node->mName.C_Str();
+	result.children.reserve(node->mNumChildren);
+	for (uint32_t i = 0; i < node->mNumChildren; ++i) {
+		result.children.push_back(ReadNode(node->mChildren[i]));
+	}
+
+	return result;
+
 }
 
