@@ -20,11 +20,17 @@ uint32_t SrvManager::Allocate() {
 }
 
 void SrvManager::CreateTextureSrv(uint32_t index, ID3D12Resource* resource) {
+    auto desc = resource->GetDesc(); // リソースの設定を取得
+
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-    srvDesc.Format = resource->GetDesc().Format;
+    srvDesc.Format = desc.Format; // ここでリソースのフォーマットをセット
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MipLevels = resource->GetDesc().MipLevels;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // 2Dテクスチャ
+
+    // ↓ここが重要！リソースが持っているミップマップ数を正しく設定する
+    srvDesc.Texture2D.MipLevels = desc.MipLevels;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
     dxCommon_->GetDevice()->CreateShaderResourceView(
         resource, &srvDesc, GetCPUHandle(index)
