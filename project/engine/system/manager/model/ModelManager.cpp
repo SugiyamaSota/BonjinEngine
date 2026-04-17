@@ -23,7 +23,7 @@ const ModelData& ModelManager::LoadModel(const std::string& directoryPath, const
     }
 
     // 未ロードの場合、新しくロード
-    ModelData loadedData = ModelBuilder::LoadObjFile(directoryPath, filename);
+    ModelData loadedData = ModelBuilder::LoadModelFile(directoryPath, filename);
 
     // キャッシュに保存
     modelDataCache_[key] = std::make_unique<ModelData>(std::move(loadedData));

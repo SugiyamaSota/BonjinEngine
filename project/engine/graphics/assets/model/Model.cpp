@@ -38,9 +38,9 @@ Model::~Model() {
 	cameraData_ = nullptr;
 }
 
-void Model::LoadModel(const std::string& fileName) {
-	const std::string directoryPath = "resources/models/" + fileName;
-	const std::string objFilename = fileName + ".obj";
+void Model::LoadModel(const std::string& directoryName, const std::string& fileName) {
+	const std::string directoryPath = "resources/models/" + directoryName;
+	const std::string objFilename = fileName;
 
 	// ModelManagerから取得
 	modelData_ = &ModelManager::GetInstance()->LoadModel(directoryPath, objFilename);

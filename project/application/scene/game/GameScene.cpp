@@ -14,7 +14,7 @@ void GameScene::Initialize(Camera* camera)
 	this->camera_ = camera;
 
 	testModel_ = std::make_unique<Model>();
-	testModel_->LoadModel("plane");
+	testModel_->LoadModel("plane","plane.obj");
 	testModel_->SetEnableLighting(true);
 	testModel_->SetColor({ 1.0f,1.0f,1.0f,1.0f });
 

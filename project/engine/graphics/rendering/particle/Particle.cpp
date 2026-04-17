@@ -33,7 +33,7 @@ Particle::~Particle() {
 
 void Particle::LoadModel(const std::string& fileName) {
 	// モデルファイル読み込み
-	modelData_ = ModelBuilder::LoadObjFile("resources/models/" + fileName, fileName + ".obj");
+	modelData_ = ModelBuilder::LoadModelFile("resources/models/" + fileName, fileName + ".obj");
 
 	// 頂点用のリソース
 	vertexResource_ = CreateBufferResource(common->GetDevice(), sizeof(VertexData) * modelData_.vertices.size());

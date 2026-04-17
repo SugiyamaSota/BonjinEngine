@@ -11,7 +11,7 @@ public:
 	/// <summary>
 	/// objファイルの読み込み
 	/// </summary>
-	static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
+	static ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename);
 
 	/// <summary>
 	/// 球体のモデルを生成

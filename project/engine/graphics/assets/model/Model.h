@@ -15,7 +15,7 @@ public:
 	/// モデルをロード
 	/// </summary>
 	/// <param name="fileName">モデル名</param>
-	void LoadModel(const std::string& fileName);
+	void LoadModel(const std::string& derectoryName, const std::string& fileName);
 
 	/// <summary>
 	/// 球体モデルを作成
@@ -99,7 +99,7 @@ private:
 
 	// 各モードの変数
 	D3D12_FILL_MODE fillMode_ = D3D12_FILL_MODE_SOLID; // デフォルト設定
-	D3D12_CULL_MODE cullMode_ = D3D12_CULL_MODE_FRONT;   // デフォルト設定
+	D3D12_CULL_MODE cullMode_ = D3D12_CULL_MODE_BACK;   // デフォルト設定
 	BlendMode blendMode_ = BlendMode::kNone;     // デフォルト設定
 
 	//

@@ -12,9 +12,9 @@ void Camera::Initialize(uint32_t clientWidth, uint32_t clientHeight) {
 	direction_ = Direction::kFront;
 
 	if (direction_ == Direction::kFront) {
-		theta_ = DegToRad(180.0f);
-	} else {
 		theta_ = DegToRad(0.0f);
+	} else {
+		theta_ = DegToRad(180.0f);
 	}
 	phi_ = DegToRad(75.0f);
 	targetPosition_ = { 0,0,0 };
