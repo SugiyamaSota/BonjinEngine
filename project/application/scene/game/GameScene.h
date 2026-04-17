@@ -3,9 +3,6 @@
 
 #include"BonjinEngine.h"
 
-#include"Sprite.h"
-
-#include"../particle/ParticleManager.h"
 
 namespace Bonjin
 {
@@ -40,6 +37,8 @@ namespace Bonjin
 
 	private:
 		// --- ゲーム固有の変数 ---
+
+		std::unique_ptr<Model> testModel_;
 
 	private:
 		// --- ゲーム固有の関数 ---

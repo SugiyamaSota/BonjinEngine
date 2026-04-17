@@ -10,6 +10,34 @@ Model::Model() {
 	viewProjectionMatrix_ = MakeIdentity4x4();
 }
 
+Model::~Model() {
+	// 1. MapしたリソースをすべてUnmapする
+	if (vertexResource_) {
+		vertexResource_->Unmap(0, nullptr);
+	}
+	if (materialResource_) {
+		materialResource_->Unmap(0, nullptr);
+	}
+	if (wvpResource_) {
+		wvpResource_->Unmap(0, nullptr);
+	}
+	if (cameraResource_) {
+		cameraResource_->Unmap(0, nullptr);
+	}
+
+	// 2. ComPtrの参照を明示的に外す (オプションですが、確実です)
+	vertexResource_.Reset();
+	materialResource_.Reset();
+	wvpResource_.Reset();
+	cameraResource_.Reset();
+
+	// ポインタのクリア
+	vertexData_ = nullptr;
+	materialData_ = nullptr;
+	wvpData_ = nullptr;
+	cameraData_ = nullptr;
+}
+
 void Model::LoadModel(const std::string& fileName) {
 	const std::string directoryPath = "resources/models/" + fileName;
 	const std::string objFilename = fileName + ".obj";
@@ -27,8 +55,6 @@ void Model::LoadModel(const std::string& fileName) {
 }
 
 void Model::CreateSphere(uint32_t subdivision) {
-	// ModelBuilderを使用して球体データを生成
-	// ※ModelManagerで管理したい場合は ModelManager側に CreateSphereModel を作り、そこからポインタをもらう形が理想的です
 	static ModelData sphereData; // インスタンスが破棄されるまでデータを保持
 	sphereData = ModelBuilder::CreateSphereModel(subdivision);
 	modelData_ = &sphereData;

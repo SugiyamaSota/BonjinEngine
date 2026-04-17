@@ -84,12 +84,14 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\graphics\rendering\particle;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\graphics\rendering\particle;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>
+      <AdditionalLibraryDirectories>$(ProjectDir)externals\assimp\lib\Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"&amp;&amp;copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dxil.dll"</Command>
@@ -108,7 +110,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\graphics\rendering\particle;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\graphics\rendering\particle;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
@@ -116,6 +118,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(ProjectDir)externals\assimp\lib\Release</AdditionalLibraryDirectories>
+      <AdditionalDependencies>assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"&amp;&amp;copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dxil.dll"</Command>
@@ -136,7 +140,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\graphics\rendering\particle;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\graphics\rendering\particle;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -163,7 +167,6 @@
     <ClCompile Include="engine\system\manager\scene\SceneManager.cpp" />
     <ClCompile Include="engine\system\manager\texture\TextureManager.cpp" />
     <ClCompile Include="engine\core\common\DirectXCommon.cpp" />
-    <ClCompile Include="engine\graphics\rendering\draw\Grid.cpp" />
     <ClCompile Include="engine\system\utility\function\function.cpp" />
     <ClCompile Include="engine\system\platform\input\Input.cpp" />
     <ClCompile Include="engine\graphics\rendering\pso\graphicsPipelineStateBuilder\GraphicsPipelineStateBuilder.cpp" />
@@ -225,7 +228,6 @@
     <ClInclude Include="engine\system\manager\scene\SceneManager.h" />
     <ClInclude Include="engine\system\manager\texture\TextureManager.h" />
     <ClInclude Include="engine\core\common\DirectXCommon.h" />
-    <ClInclude Include="engine\graphics\rendering\draw\Grid.h" />
     <ClInclude Include="engine\system\utility\function\function.h" />
     <ClInclude Include="engine\system\platform\input\Input.h" />
     <ClInclude Include="engine\graphics\rendering\pso\graphicsPipelineStateBuilder\GraphicsPipelineStateBuilder.h" />

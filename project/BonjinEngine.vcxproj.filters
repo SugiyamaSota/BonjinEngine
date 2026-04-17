@@ -150,9 +150,6 @@
     <ClCompile Include="engine\graphics\rendering\color\Color.cpp">
       <Filter>engine\color</Filter>
     </ClCompile>
-    <ClCompile Include="engine\graphics\rendering\draw\Grid.cpp">
-      <Filter>engine\draw\grid</Filter>
-    </ClCompile>
     <ClCompile Include="engine\graphics\rendering\pso\PSOManager.cpp">
       <Filter>engine\pso</Filter>
     </ClCompile>
@@ -286,9 +283,6 @@
     </ClInclude>
     <ClInclude Include="engine\graphics\rendering\color\Color.h">
       <Filter>engine\color</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\graphics\rendering\draw\Grid.h">
-      <Filter>engine\draw\grid</Filter>
     </ClInclude>
     <ClInclude Include="engine\graphics\rendering\pso\PSOManager.h">
       <Filter>engine\pso</Filter>

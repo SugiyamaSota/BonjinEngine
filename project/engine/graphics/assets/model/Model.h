@@ -9,6 +9,8 @@ public:
 	/// </summary>
 	Model();
 
+	~Model();
+
 	/// <summary>
 	/// モデルをロード
 	/// </summary>
