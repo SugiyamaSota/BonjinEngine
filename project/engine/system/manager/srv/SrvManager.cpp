@@ -25,12 +25,19 @@ void SrvManager::CreateTextureSrv(uint32_t index, ID3D12Resource* resource) {
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = desc.Format; // ここでリソースのフォーマットをセット
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // 2Dテクスチャ
 
-    // ↓ここが重要！リソースが持っているミップマップ数を正しく設定する
-    srvDesc.Texture2D.MipLevels = desc.MipLevels;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+    if (desc.DepthOrArraySize == 6) {
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+        srvDesc.TextureCube.MostDetailedMip = 0;
+        srvDesc.TextureCube.MipLevels = UINT_MAX;
+        srvDesc.TextureCube.ResourceMinLODClamp = 0.f;
+    } else {
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // 2Dテクスチャ
+        srvDesc.Texture2D.MipLevels = desc.MipLevels;
+        srvDesc.Texture2D.MostDetailedMip = 0;
+        srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+    }
+   
 
     dxCommon_->GetDevice()->CreateShaderResourceView(
         resource, &srvDesc, GetCPUHandle(index)

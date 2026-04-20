@@ -12,7 +12,10 @@ TextureManager* TextureManager::GetInstance() {
 }
 
 void TextureManager::Finalize() {
-
+	textureResources_.clear();
+	pendingUploadResources_.clear();
+	loadedTextures_.clear();
+	metadatas_.clear();
 }
 
 TextureManager::TextureManager() = default;

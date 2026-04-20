@@ -13,6 +13,7 @@ void GameScene::Initialize(Camera* camera)
 
 	this->camera_ = camera;
 
+	TextureManager::GetInstance()->LoadTexture("resources/textures/rostock_laage_airport_4k.dds");
 }
 
 void GameScene::Unload() {
