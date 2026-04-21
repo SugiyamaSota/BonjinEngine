@@ -76,7 +76,7 @@ void Model::CreateCube() {
 	SetupResources();
 
 	// デフォルトのテクスチャをロード
-	textureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/rostock_laage_airport_4k.dds");
+	textureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/skyBox.dds");
 	common->WaitAndResetCommandList();
 	TextureManager::GetInstance()->ReleaseIntermediateResources();
 }
