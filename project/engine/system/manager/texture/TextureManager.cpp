@@ -1,13 +1,21 @@
 #include "TextureManager.h"
 #include"../srv/SrvManager.h"
 
+bool EndsWith(const std::string& str, const std::string& suffix) {
+	if (str.size() < suffix.size()) return false;
+	return str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
 TextureManager* TextureManager::GetInstance() {
 	static TextureManager instance;
 	return &instance;
 }
 
 void TextureManager::Finalize() {
-
+	textureResources_.clear();
+	pendingUploadResources_.clear();
+	loadedTextures_.clear();
+	metadatas_.clear();
 }
 
 TextureManager::TextureManager() = default;
@@ -61,7 +69,7 @@ void TextureManager::ReleaseIntermediateResources() {
 }
 
 // GetGPUHandle の引数を int に変更
-D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetGPUHandle(int textureIndex) const{
+D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetGPUHandle(int textureIndex) const {
 	return SrvManager::GetInstance()->GetGPUHandle(static_cast<uint32_t>(textureIndex));
 }
 
@@ -72,21 +80,41 @@ const DirectX::TexMetadata& TextureManager::GetMetadata(int textureIndex) const 
 }
 
 DirectX::ScratchImage TextureManager::LoadTextureInternal(const std::string& filePath) {
-	// ... (変更なし) ...
-	DirectX::ScratchImage image = {};
-	std::wstring filePathW = ConvertString(filePath);
-	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+	DirectX::ScratchImage image{};
+	std::wstring filePathW = std::wstring(filePath.begin(), filePath.end());
+	HRESULT hr;
+
+	// 拡張子で分岐
+	if (EndsWith(filePath, ".dds")) {
+		// DDSファイルの読み込み
+		hr = DirectX::LoadFromDDSFile(filePathW.c_str(), DirectX::DDS_FLAGS_NONE, nullptr, image);
+	} else {
+		// WIC形式（png, jpgなど）の読み込み
+		hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+	}
+
 	assert(SUCCEEDED(hr));
 
-	DirectX::ScratchImage mipImages = {};
-	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
-	assert(SUCCEEDED(hr));
+	// ミップマップの生成（DDSにミップマップが含まれていない場合などのための共通処理）
+	// 資料の2枚目に「ミップマップ生成」がある場合はここに追加
+	DirectX::ScratchImage mipChain{};
+	if (DirectX::IsCompressed(image.GetMetadata().format)) {
+		// 圧縮フォーマットならそのまま
+		return image;
+	} else {
+		hr = DirectX::GenerateMipMaps(
+			image.GetImages(), image.GetImageCount(), image.GetMetadata(),
+			DirectX::TEX_FILTER_DEFAULT, 0, mipChain);
+		if (SUCCEEDED(hr)) {
+			return mipChain;
+		}
+	}
 
-	return mipImages;
+	return image;
 }
 
 Microsoft::WRL::ComPtr<ID3D12Resource> TextureManager::CreateTextureResourceInternal(ID3D12Device* device, const DirectX::TexMetadata& metadata) {
-	// ... (変更なし) ...
+	
 	D3D12_RESOURCE_DESC resourceDesc = {};
 	resourceDesc.Width = UINT(metadata.width);
 	resourceDesc.Height = UINT(metadata.height);

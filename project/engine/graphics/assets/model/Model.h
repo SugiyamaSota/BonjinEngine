@@ -23,6 +23,8 @@ public:
 	/// <param name="subdivision">分割数</param>
 	void CreateSphere(uint32_t subdivision);
 
+	void CreateCube();
+
 	/// <summary>
 	/// 更新処理
 	/// </summary>

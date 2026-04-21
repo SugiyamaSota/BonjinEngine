@@ -15,6 +15,7 @@ enum class PrimitiveType {
 	kModel,   // モデル
 	kGrid,    // グリッド
 	kParticle,
+	kSkyBox,
 	kCount,
 };
 

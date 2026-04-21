@@ -37,6 +37,7 @@ namespace Bonjin
 
 	private:
 		// --- ゲーム固有の変数 ---
+		std::unique_ptr<Model> model_;
 
 	private:
 		// --- ゲーム固有の関数 ---

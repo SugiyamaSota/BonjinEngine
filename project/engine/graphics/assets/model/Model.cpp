@@ -67,6 +67,20 @@ void Model::CreateSphere(uint32_t subdivision) {
 	TextureManager::GetInstance()->ReleaseIntermediateResources();
 }
 
+void Model::CreateCube() {
+	static ModelData cubeData; // 静的変数でデータを保持
+	cubeData = ModelBuilder::CreateCubeModel();
+	modelData_ = &cubeData;
+
+	// GPUリソースのセットアップ
+	SetupResources();
+
+	// デフォルトのテクスチャをロード
+	textureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/rostock_laage_airport_4k.dds");
+	common->WaitAndResetCommandList();
+	TextureManager::GetInstance()->ReleaseIntermediateResources();
+}
+
 void Model::Update(WorldTransform worldTransform, Camera* camera) {
 	
 	// ワールドトランスフォーム
@@ -98,14 +112,14 @@ void Model::Draw() {
 	ID3D12PipelineState* pso =
 		common->GetPSO()->GetPipelineState(
 			device,
-			PrimitiveType::kModel,
+			PrimitiveType::kSkyBox,
 			currentBlendMode,
 			currentFillMode,
 			currentCullMode
 		);
 
 	// PSOの設定
-	common->GetCommandList()->SetGraphicsRootSignature(common->GetPSO()->GetRootSignature(PrimitiveType::kModel));
+	common->GetCommandList()->SetGraphicsRootSignature(common->GetPSO()->GetRootSignature(PrimitiveType::kSkyBox));
 	common->GetCommandList()->SetPipelineState(pso);
 
 	//　モデルの描画

@@ -20,6 +20,8 @@ public:
 	/// <returns></returns>
 	static ModelData CreateSphereModel(uint32_t subdivision);
 
+	static ModelData CreateCubeModel();
+
 private:
 	/// <summary>
 	/// mtlファイルの読み込み

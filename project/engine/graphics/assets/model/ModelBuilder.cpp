@@ -118,6 +118,61 @@ ModelData ModelBuilder::CreateSphereModel(uint32_t subdivision) {
 	return modelData;
 }
 
+ModelData ModelBuilder::CreateCubeModel() {
+	ModelData modelData;
+
+	auto addFaceDirect = [&](std::vector<Vector4> p, std::vector<int> indices) {
+		for (int index : indices) {
+			VertexData v;
+			v.position = p[index];
+			// Skyboxではnormalもtexcoordも使わないので適当に埋める
+			v.normal = { 0, 0, 0 };
+			v.texcoord = { 0, 0 };
+			modelData.vertices.push_back(v);
+		}
+		};
+
+	// --- 各面のデータ定義 (資料の座標と順序に準拠) ---
+
+	// 右面 (x = 1.0f)
+	addFaceDirect(
+		{ {1,1,1,1}, {1,1,-1,1}, {1,-1,1,1}, {1,-1,-1,1} },
+		{ 0,1,2, 2,1,3 } // 内側を向く順序
+	);
+
+	// 左面 (x = -1.0f)
+	addFaceDirect(
+		{ {-1,1,-1,1}, {-1,1,1,1}, {-1,-1,-1,1}, {-1,-1,1,1} },
+		{ 0,1,2, 2,1,3 }
+	);
+
+	// 前面 (z = 1.0f)
+	addFaceDirect(
+		{ {-1,1,1,1}, {1,1,1,1}, {-1,-1,1,1}, {1,-1,1,1} },
+		{ 0,1,2, 2,1,3 }
+	);
+
+	// 背面 (z = -1.0f)
+	addFaceDirect(
+		{ {1,1,-1,1}, {-1,1,-1,1}, {1,-1,-1,1}, {-1,-1,-1,1} },
+		{ 0,1,2, 2,1,3 }
+	);
+
+	// 上面 (y = 1.0f)
+	addFaceDirect(
+		{ {-1,1,-1,1}, {1,1,-1,1}, {-1,1,1,1}, {1,1,1,1} },
+		{ 0,1,2, 2,1,3 }
+	);
+
+	// 下面 (y = -1.0f)
+	addFaceDirect(
+		{ {-1,-1,1,1}, {1,-1,1,1}, {-1,-1,-1,1}, {1,-1,-1,1} },
+		{ 0,1,2, 2,1,3 }
+	);
+
+	return modelData;
+}
+
 MaterialData ModelBuilder::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
 	MaterialData materialData;
 	std::string line;
