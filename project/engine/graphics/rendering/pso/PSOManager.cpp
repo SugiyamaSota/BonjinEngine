@@ -11,6 +11,8 @@ static const wchar_t* kShaderPaths[static_cast<size_t>(PrimitiveType::kCount)]
     { L"resources/shader/Grid.VS.hlsl", L"resources/shader/Grid.PS.hlsl" },
     // kParticle
     { L"resources/shader/Particle.VS.hlsl", L"resources/shader/Particle.PS.hlsl" },
+    // kSkyBox
+   { L"resources/shader/SkyBox.VS.hlsl", L"resources/shader/SkyBox.PS.hlsl" },
 };
 
 // ⭐ シェーダープロファイルの定数定義 [ShaderStage]
@@ -173,6 +175,9 @@ void PSOManager::CreateRootSignature(ID3D12Device* device)
     }
 
     rootSignatures_[(size_t)PrimitiveType::kParticle] = particleRootSigBuilder.Build(device);
+
+	// スカイボックスはモデルと同じルートシグネチャを使用
+    rootSignatures_[(size_t)PrimitiveType::kSkyBox] = rootSignatures_[(size_t)PrimitiveType::kModel];
 }
 
 void PSOManager::CompileAllShaders() {
@@ -239,6 +244,9 @@ void PSOManager::CreateInputLayout()
 
     inputLayoutDescs_[(size_t)PrimitiveType::kParticle].pInputElementDescs = particleInputElementDescs_.data();
     inputLayoutDescs_[(size_t)PrimitiveType::kParticle].NumElements = kParticleInputElements;
+
+    // スカイボックス
+    inputLayoutDescs_[(size_t)PrimitiveType::kSkyBox] = inputLayoutDescs_[(size_t)PrimitiveType::kModel];
 }
 
 void PSOManager::CreateDepthStencil() 
@@ -257,6 +265,10 @@ void PSOManager::CreateDepthStencil()
     depthStencilDescs_[(size_t)PrimitiveType::kParticle].DepthEnable = true;
     depthStencilDescs_[(size_t)PrimitiveType::kParticle].DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
     depthStencilDescs_[(size_t)PrimitiveType::kParticle].DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
+    depthStencilDescs_[(size_t)PrimitiveType::kSkyBox].DepthEnable = true;
+    depthStencilDescs_[(size_t)PrimitiveType::kSkyBox].DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+    depthStencilDescs_[(size_t)PrimitiveType::kSkyBox].DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 }
 
 ID3D12PipelineState* PSOManager::GetPipelineState(
@@ -348,7 +360,10 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOManager::CreatePSOInternal(
         psoBuilder.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE);
         // グリッド用の深度/ステンシル設定（深度書き込みなしなど）は、すでに currentDepthStencilDesc で設定済み
         break;
+    case PrimitiveType::kSkyBox:
+        psoBuilder.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
 
+        break;
     case PrimitiveType::kCount:
         assert(false && "Invalid PrimitiveType used for PSO creation.");
         return nullptr;

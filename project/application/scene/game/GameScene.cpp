@@ -13,13 +13,17 @@ void GameScene::Initialize(Camera* camera)
 
 	this->camera_ = camera;
 
-	TextureManager::GetInstance()->LoadTexture("resources/textures/rostock_laage_airport_4k.dds");
+	model_ = std::make_unique<Model>();
+	model_->CreateCube();
+	model_->SetCullMode(D3D12_CULL_MODE_NONE);
 }
 
 void GameScene::Unload() {
 }
 
 void GameScene::Update(float deltaTime) {
+
+	model_->Update(InitializeWorldTransform(),camera_);
 
 	// フェーズに応じた処理
 	switch (phase_) {
@@ -44,6 +48,8 @@ void GameScene::Update(float deltaTime) {
 }
 
 void GameScene::Draw() {
+
+	model_->Draw();
 
 }
 
