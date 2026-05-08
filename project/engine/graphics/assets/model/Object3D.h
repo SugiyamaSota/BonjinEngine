@@ -1,15 +1,20 @@
 #pragma once
 #include"ModelBuilder.h"
 
-class Model {
+enum class ModelType {
+	kNormal, // 汎用モデル
+	kSkyBox  // スカイボックス
+};
+
+class Object3D {
 public:
 	/// --- 汎用関数 ---
 	/// <summary>
 	///  コンストラクタ
 	/// </summary>
-	Model();
+	Object3D();
 
-	~Model();
+	~Object3D();
 
 	/// <summary>
 	/// モデルをロード
@@ -37,29 +42,21 @@ public:
 	/// </summary>
 	void Draw();
 
+	/// <summary>
+	/// ImGui描画処理
+	/// </summary>
 	void DrawImGui();
 
 	/// --- 設定関数 ---
-	/// <summary>
-	/// ライティングの有無
-	/// </summary>
-	/// <param name="enableLighting">フラグ</param>
 	void SetEnableLighting(bool enableLighting) { materialData_->enableLighting = enableLighting; }
-
-	/// <summary>
-	/// 色と透明度
-	/// </summary>
-	/// <param name="color">設定したい色と透明度</param>
 	void SetColor(Vector4 color) { materialData_->color = color; }
-
-
 	void SetFillMode(D3D12_FILL_MODE fillMode) { fillMode_ = fillMode; }
 	void SetCullMode(D3D12_CULL_MODE cullMode) { cullMode_ = cullMode; }
 	void SetBlendMode(BlendMode blendMode) { blendMode_ = blendMode; }
+	void SetPrimitiveType(PrimitiveType primitiveType) { primitiveType_ = primitiveType; }
 
 	/// --- 取得関数 ---
 	float GetAlpha() { return materialData_->color.w; }
-
 
 private:
 	/// --- 変数 ---
@@ -79,7 +76,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource_ = nullptr;
 	TransformationMatrix* wvpData_ = nullptr;
 
-	// カメラresource
+	// カメラリソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource_ = nullptr;
 	CameraForGPU* cameraData_ = nullptr;
 
@@ -96,14 +93,16 @@ private:
 	// テクスチャハンドル
 	int textureHandle_ = 0;
 
-	// dxcommonのインスタンス
-	DirectXCommon* common = nullptr;
+	// 各インスタンス
+	ID3D12Device* device_ = nullptr;
+	DirectXCommon* common_ = nullptr;
 
 	// 各モードの変数
-	D3D12_FILL_MODE fillMode_ = D3D12_FILL_MODE_SOLID; // デフォルト設定
-	D3D12_CULL_MODE cullMode_ = D3D12_CULL_MODE_BACK;   // デフォルト設定
-	BlendMode blendMode_ = BlendMode::kNone;     // デフォルト設定
+	D3D12_FILL_MODE fillMode_ = D3D12_FILL_MODE_SOLID;
+	D3D12_CULL_MODE cullMode_ = D3D12_CULL_MODE_BACK;
+	BlendMode blendMode_ = BlendMode::kNone;
+	PrimitiveType primitiveType_ = PrimitiveType::kModel;
 
-	//
+	// リソースのセットアップ関数
 	void SetupResources();
 };

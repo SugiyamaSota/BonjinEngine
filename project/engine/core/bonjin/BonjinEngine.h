@@ -8,7 +8,6 @@
 #include"math/Vector.h"
 #include"math/Matrix.h"
 #include"math/Convert.h"
-#include"Model.h"
 #include"sprite/sprite.h"
 #include"color/Color.h"
 #include"windows/WinApp.h"

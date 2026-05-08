@@ -174,7 +174,7 @@
     <ClCompile Include="application\scene\title\TitleScene.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="engine\graphics\assets\model\Model.cpp">
+    <ClCompile Include="engine\graphics\assets\model\Object3D.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="engine\graphics\assets\model\ModelBuilder.cpp">
@@ -311,7 +311,7 @@
     <ClInclude Include="application\scene\title\TitleScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="engine\graphics\assets\model\Model.h">
+    <ClInclude Include="engine\graphics\assets\model\Object3D.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\graphics\assets\model\ModelBuilder.h">

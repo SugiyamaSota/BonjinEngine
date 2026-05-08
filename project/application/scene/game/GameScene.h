@@ -1,7 +1,7 @@
 #pragma once
 #include "../interface/BaseScene.h" // ISceneをインクルード
 
-#include"BonjinEngine.h"
+#include "Object3D.h"
 
 
 namespace Bonjin
@@ -37,6 +37,9 @@ namespace Bonjin
 
 	private:
 		// --- ゲーム固有の変数 ---
+		std::unique_ptr<Object3D> testModel_ = nullptr;
+
+		std::unique_ptr<Object3D> testSkyBox_ = nullptr;
 
 	private:
 		// --- ゲーム固有の関数 ---

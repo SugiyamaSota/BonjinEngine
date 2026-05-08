@@ -1,17 +1,18 @@
-#include "Model.h"
+#include "Object3D.h"
 
 #include"ModelManager.h"
 
-Model::Model() {
-	common = DirectXCommon::GetInstance();
+Object3D::Object3D() {
+	common_ = DirectXCommon::GetInstance();
+	device_ = common_->GetDevice();
+
 	transform_ = InitializeWorldTransform();
 	viewMatrix_ = MakeIdentity4x4();
 	projectionMatrix_ = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);
 	viewProjectionMatrix_ = MakeIdentity4x4();
 }
 
-Model::~Model() {
-	// 1. MapしたリソースをすべてUnmapする
+Object3D::~Object3D() {
 	if (vertexResource_) {
 		vertexResource_->Unmap(0, nullptr);
 	}
@@ -38,7 +39,7 @@ Model::~Model() {
 	cameraData_ = nullptr;
 }
 
-void Model::LoadModel(const std::string& directoryName, const std::string& fileName) {
+void Object3D::LoadModel(const std::string& directoryName, const std::string& fileName) {
 	const std::string directoryPath = "resources/models/" + directoryName;
 	const std::string objFilename = fileName;
 
@@ -50,11 +51,11 @@ void Model::LoadModel(const std::string& directoryName, const std::string& fileN
 
 	// テクスチャのロード (ファイルモデル特有)
 	textureHandle_ = TextureManager::GetInstance()->LoadTexture(modelData_->material.textureFilepath);
-	common->WaitAndResetCommandList();
+	common_->WaitAndResetCommandList();
 	TextureManager::GetInstance()->ReleaseIntermediateResources();
 }
 
-void Model::CreateSphere(uint32_t subdivision) {
+void Object3D::CreateSphere(uint32_t subdivision) {
 	static ModelData sphereData; // インスタンスが破棄されるまでデータを保持
 	sphereData = ModelBuilder::CreateSphereModel(subdivision);
 	modelData_ = &sphereData;
@@ -63,11 +64,11 @@ void Model::CreateSphere(uint32_t subdivision) {
 	SetupResources();
 
 	textureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/uvChecker.png");
-	common->WaitAndResetCommandList();
+	common_->WaitAndResetCommandList();
 	TextureManager::GetInstance()->ReleaseIntermediateResources();
 }
 
-void Model::CreateCube() {
+void Object3D::CreateCube() {
 	static ModelData cubeData; // 静的変数でデータを保持
 	cubeData = ModelBuilder::CreateCubeModel();
 	modelData_ = &cubeData;
@@ -77,78 +78,73 @@ void Model::CreateCube() {
 
 	// デフォルトのテクスチャをロード
 	textureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/skyBox.dds");
-	common->WaitAndResetCommandList();
+	common_->WaitAndResetCommandList();
 	TextureManager::GetInstance()->ReleaseIntermediateResources();
 }
 
-void Model::Update(WorldTransform worldTransform, Camera* camera) {
-	
-	// ワールドトランスフォーム
+void Object3D::Update(WorldTransform worldTransform, Camera* camera) {
+	// 基本となるワールド行列の作成
 	transform_ = worldTransform;
-	Matrix4x4 worldMat= MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
 
+	// スカイボックスの場合は、カメラの位置に追従
+	if (primitiveType_ == PrimitiveType::kSkyBox) {
+		transform_.translate = camera->GetWorldPosition();
+	}
+
+	Matrix4x4 worldMat = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
+
+	// WVP行列の計算
 	wvpData_->World = worldMat;
-	Matrix4x4 worldViewProjectionMatrix = Multiply(wvpData_->World, camera->GetViewProjectionMatrix());
-	wvpData_->WVP = worldViewProjectionMatrix;
+	wvpData_->WVP = Multiply(worldMat, camera->GetViewProjectionMatrix());
+
+	// 法線変換用行列
 	wvpData_->WorldInverseTranspose = Inverse(Transpose(worldMat));
 
+	// シェーダーに渡すカメラ座標
 	cameraData_->worldPosition = camera->GetWorldPosition();
-
-	wvpData_->WVP = Multiply(Multiply(modelData_->rootNode.localMatrix , worldMat),camera->GetViewProjectionMatrix());
-	wvpData_->World = Multiply(modelData_->rootNode.localMatrix, worldMat);
-
 }
-
-void Model::Draw() {
-	// 描画に必要な設定を定義 (モデルの標準設定)
-	const D3D12_FILL_MODE currentFillMode = fillMode_;
-	const D3D12_CULL_MODE currentCullMode = cullMode_;
-	const BlendMode currentBlendMode = blendMode_;
-
-	// PSOを遅延生成/取得するためにデバイスが必要
-	ID3D12Device* device = common->GetDevice();
+void Object3D::Draw() {
 
 	// PSOManagerの新しいGetPipelineState関数を呼び出し
 	ID3D12PipelineState* pso =
-		common->GetPSO()->GetPipelineState(
-			device,
-			PrimitiveType::kSkyBox,
-			currentBlendMode,
-			currentFillMode,
-			currentCullMode
+		common_->GetPSO()->GetPipelineState(
+			device_,
+			primitiveType_,
+			blendMode_,
+			fillMode_,
+			cullMode_
 		);
 
 	// PSOの設定
-	common->GetCommandList()->SetGraphicsRootSignature(common->GetPSO()->GetRootSignature(PrimitiveType::kSkyBox));
-	common->GetCommandList()->SetPipelineState(pso);
+	common_->GetCommandList()->SetGraphicsRootSignature(common_->GetPSO()->GetRootSignature(primitiveType_));
+	common_->GetCommandList()->SetPipelineState(pso);
 
 	//　モデルの描画
 	// VBV
-	common->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
+	common_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
 	// 形状を設定
-	common->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	common_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// マテリアルCBufferの場所を設定
-	common->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+	common_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
 	// wvp用のCBufferの場所を設定
-	common->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource_->GetGPUVirtualAddress());
+	common_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource_->GetGPUVirtualAddress());
 	// SRV用のdescriptionTavleの先頭を設定
-	common->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetGPUHandle(textureHandle_));
+	common_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetGPUHandle(textureHandle_));
 	// ディレクショナルライト
-	common->GetCommandList()->SetGraphicsRootConstantBufferView(3, LightManager::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
+	common_->GetCommandList()->SetGraphicsRootConstantBufferView(3, LightManager::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
 	// ポイントライト
-	common->GetCommandList()->SetGraphicsRootConstantBufferView(5, LightManager::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
+	common_->GetCommandList()->SetGraphicsRootConstantBufferView(5, LightManager::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
 	// スポットライト
-	common->GetCommandList()->SetGraphicsRootConstantBufferView(6, LightManager::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
-
+	common_->GetCommandList()->SetGraphicsRootConstantBufferView(6, LightManager::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
 	if (cameraResource_) {
-		common->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource_->GetGPUVirtualAddress());
+		common_->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource_->GetGPUVirtualAddress());
 	}
 
 	// 描画
-	common->GetCommandList()->DrawInstanced(UINT(modelData_->vertices.size()), 1, 0, 0);
+	common_->GetCommandList()->DrawInstanced(UINT(modelData_->vertices.size()), 1, 0, 0);
 }
 
-void Model::DrawImGui() {
+void Object3D::DrawImGui() {
 #ifdef USE_IMGUI
 	if (ImGui::BeginTabBar("ModelDebug")) {
 
@@ -166,9 +162,9 @@ void Model::DrawImGui() {
 #endif
 }
 
-void Model::SetupResources() {
+void Object3D::SetupResources() {
 	// 頂点用のリソース
-	vertexResource_ = CreateBufferResource(common->GetDevice(), sizeof(VertexData) * modelData_->vertices.size());
+	vertexResource_ = CreateBufferResource(common_->GetDevice(), sizeof(VertexData) * modelData_->vertices.size());
 	vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
 	vertexBufferView_.SizeInBytes = UINT(sizeof(VertexData) * modelData_->vertices.size());
 	vertexBufferView_.StrideInBytes = sizeof(VertexData);
@@ -176,7 +172,7 @@ void Model::SetupResources() {
 	std::memcpy(vertexData_, modelData_->vertices.data(), sizeof(VertexData) * modelData_->vertices.size());
 
 	// マテリアル用のリソース
-	materialResource_ = CreateBufferResource(common->GetDevice(), sizeof(Material));
+	materialResource_ = CreateBufferResource(common_->GetDevice(), sizeof(Material));
 	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 	materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	materialData_->enableLighting = true;
@@ -185,14 +181,14 @@ void Model::SetupResources() {
 	materialData_->shininess = 70.f;
 
 	// WVP用のリソース
-	wvpResource_ = CreateBufferResource(common->GetDevice(), sizeof(TransformationMatrix));
+	wvpResource_ = CreateBufferResource(common_->GetDevice(), sizeof(TransformationMatrix));
 	wvpResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
 	wvpData_->WVP = MakeIdentity4x4();
 	wvpData_->World = MakeIdentity4x4();
 	wvpData_->WorldInverseTranspose = MakeIdentity4x4();
 
 	// カメラ
-	cameraResource_ = CreateBufferResource(common->GetDevice(), sizeof(CameraForGPU));
+	cameraResource_ = CreateBufferResource(common_->GetDevice(), sizeof(CameraForGPU));
 	cameraResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
 	cameraData_->worldPosition = Vector3(0.f, 0.f, 0.f);
 }
