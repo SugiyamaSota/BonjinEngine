@@ -9,7 +9,7 @@ float DegToRad(float deg) {
 
 void Camera::Initialize(uint32_t clientWidth, uint32_t clientHeight) {
 	radius_ = 50.0f;
-	direction_ = Direction::kFront;
+	direction_ = Direction::kBack;
 
 	if (direction_ == Direction::kFront) {
 		theta_ = DegToRad(0.0f);

@@ -13,12 +13,23 @@ void GameScene::Initialize(Camera* camera)
 
 	this->camera_ = camera;
 
+	testModel_ = std::make_unique<Object3D>();
+	testModel_->CreateSphere(12);
+
+	testSkyBox_ = std::make_unique<Object3D>();
+	testSkyBox_->CreateCube();
+	testSkyBox_->SetPrimitiveType(PrimitiveType::kSkyBox);
+
 }
 
 void GameScene::Unload() {
 }
 
 void GameScene::Update(float deltaTime) {
+
+	testModel_->Update(InitializeWorldTransform(), camera_);
+
+	testSkyBox_->Update(InitializeWorldTransform(), camera_);
 
 	// フェーズに応じた処理
 	switch (phase_) {
@@ -43,6 +54,10 @@ void GameScene::Update(float deltaTime) {
 }
 
 void GameScene::Draw() {
+
+	testModel_->Draw();
+
+	testSkyBox_->Draw();
 
 }
 

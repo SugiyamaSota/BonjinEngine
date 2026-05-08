@@ -162,7 +162,7 @@
     <ClCompile Include="engine\core\bonjin\BonjinEngine.cpp" />
     <ClCompile Include="engine\graphics\camera\Camera.cpp" />
     <ClCompile Include="engine\audio\AudioPlayer.cpp" />
-    <ClCompile Include="engine\graphics\assets\model\Model.cpp" />
+    <ClCompile Include="engine\graphics\assets\model\Object3D.cpp" />
     <ClCompile Include="engine\interface\IScene.cpp" />
     <ClCompile Include="engine\system\manager\scene\SceneManager.cpp" />
     <ClCompile Include="engine\system\manager\texture\TextureManager.cpp" />
@@ -224,7 +224,7 @@
     <ClInclude Include="engine\core\bonjin\BonjinEngine.h" />
     <ClInclude Include="engine\graphics\camera\Camera.h" />
     <ClInclude Include="engine\audio\AudioPlayer.h" />
-    <ClInclude Include="engine\graphics\assets\model\Model.h" />
+    <ClInclude Include="engine\graphics\assets\model\Object3D.h" />
     <ClInclude Include="engine\system\manager\scene\SceneManager.h" />
     <ClInclude Include="engine\system\manager\texture\TextureManager.h" />
     <ClInclude Include="engine\core\common\DirectXCommon.h" />
