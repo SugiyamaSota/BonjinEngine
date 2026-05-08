@@ -63,7 +63,7 @@ void Object3D::CreateSphere(uint32_t subdivision) {
 	// リソースのセットアップ
 	SetupResources();
 
-	textureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/uvChecker.png");
+	textureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/default.png");
 	common_->WaitAndResetCommandList();
 	TextureManager::GetInstance()->ReleaseIntermediateResources();
 }
