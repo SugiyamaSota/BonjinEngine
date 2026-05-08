@@ -14,6 +14,8 @@ Texture2D<float32_t4> gTexture : register(t0);
 
 SamplerState gSampler : register(s0);
 
+TextureCube<float32_t4> gEnvironmentMap : register(t1);
+
 struct PixelShaderOutput
 {
     float32_t4 color : SV_TARGET0;
@@ -38,7 +40,6 @@ PixelShaderOutput main(VertexShaderOutput input)
     float32_t3 halfVector_Point = normalize(pointLightDirection + toEye);
     float NDotH_Point = dot(normalize(input.normal), halfVector_Point);
     float specularPow_Point = pow(saturate(NDotH_Point), gMaterial.shininess);
-    
     
     // スポットライト
     float32_t3 spotLightDirectionOnSurface = normalize(input.worldPosition - gSpotLight.position);
@@ -85,6 +86,13 @@ PixelShaderOutput main(VertexShaderOutput input)
 
         // 最終的な色
         output.color.rgb = diffuse_Directional + specular_Directional + diffuse_Point + specular_Point + diffuse_Spot + specular_Spot;
+        
+        // 環境マップによる反射
+        float32_t3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
+        float32_t3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
+        float32_t4 environmentColor = gEnvironmentMap.Sample(gSampler, reflectedVector);
+
+        output.color.rgb += environmentColor.rgb;
         output.color.a = gMaterial.color.a * textureColor.a;
     }
     else
