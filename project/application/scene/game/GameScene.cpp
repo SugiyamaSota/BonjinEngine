@@ -20,6 +20,14 @@ void GameScene::Initialize(Camera* camera)
 	testSkyBox_->CreateCube();
 	testSkyBox_->SetPrimitiveType(PrimitiveType::kSkyBox);
 
+	pm = ParticleManager::GetInstance();
+	pm->Initialize();
+
+	// 「炎」と「火花」など、見た目（モデルやテクスチャ）ごとにグループを作る
+	pm->CreateParticleGroup("hit", "plane");
+
+	ParticleManager::GetInstance()->Emit("hit", {0.f,0.f,0.f}, 5);
+
 }
 
 void GameScene::Unload() {
@@ -30,6 +38,12 @@ void GameScene::Update(float deltaTime) {
 	testModel_->Update(InitializeWorldTransform(), camera_);
 
 	testSkyBox_->Update(InitializeWorldTransform(), camera_);
+
+	if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
+		ParticleManager::GetInstance()->Emit("hit", { 0.f,0.f,0.f }, 5);
+	}
+
+	pm->Update(camera_);
 
 	// フェーズに応じた処理
 	switch (phase_) {
@@ -57,8 +71,9 @@ void GameScene::Draw() {
 
 	testModel_->Draw();
 
-	testSkyBox_->Draw();
+	//testSkyBox_->Draw();
 
+	//pm->Draw();
 }
 
 void GameScene::DrawSceneImGui() {

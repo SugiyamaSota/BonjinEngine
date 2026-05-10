@@ -84,7 +84,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\graphics\rendering\particle;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,7 +110,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\graphics\rendering\particle;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
@@ -140,7 +140,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\graphics\rendering\particle;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -208,7 +208,7 @@
     <ClCompile Include="engine\system\utility\time\Time.cpp" />
     <ClCompile Include="application\scene\title\TitleScene.cpp" />
     <ClCompile Include="engine\graphics\assets\model\ModelBuilder.cpp" />
-    <ClCompile Include="engine\graphics\rendering\particle\Particle.cpp" />
+    <ClCompile Include="engine\graphics\assets\model\Particle.cpp" />
     <ClCompile Include="engine\system\utility\random\RandomEngine.cpp" />
     <ClCompile Include="engine\system\manager\srv\SrvManager.cpp" />
     <ClCompile Include="engine\system\manager\particle\ParticleManager.cpp" />
@@ -254,7 +254,7 @@
     <ClInclude Include="engine\system\utility\time\Time.h" />
     <ClInclude Include="application\scene\title\TitleScene.h" />
     <ClInclude Include="engine\graphics\assets\model\ModelBuilder.h" />
-    <ClInclude Include="engine\graphics\rendering\particle\Particle.h" />
+    <ClInclude Include="engine\graphics\assets\model\Particle.h" />
     <ClInclude Include="engine\system\utility\random\RandomEngine.h" />
     <ClInclude Include="engine\system\manager\light\LightManager.h" />
     <ClInclude Include="engine\system\manager\srv\SrvManager.h" />

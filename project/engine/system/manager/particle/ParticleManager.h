@@ -26,7 +26,7 @@ public:
     void Finalize();
 
     // エミット（発生）
-    void Emit(const std::string& name, Vector3 position, Vector3 range, float duration, float minLifetime, float maxLifetime);
+    void Emit(const std::string& name, const Vector3& position, uint32_t count);
 
 private:
     ParticleManager() = default;

@@ -173,6 +173,31 @@ ModelData ModelBuilder::CreateCubeModel() {
 	return modelData;
 }
 
+ModelData ModelBuilder::CreatePlaneModel() {
+	ModelData modelData;
+
+	// 左下、左上、右下、右上の4頂点
+	// Zは0で固定（XY平面）
+	std::vector<VertexData> vertices = {
+		{ {-0.5f, -0.5f, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, -1.0f} }, // 左下
+		{ {-0.5f,  0.5f, 0.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, -1.0f} }, // 左上
+		{ { 0.5f, -0.5f, 0.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, -1.0f} }, // 右下
+		{ { 0.5f,  0.5f, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, -1.0f} }, // 右上
+	};
+
+	// 三角形1 (左下、左上、右下)
+	modelData.vertices.push_back(vertices[0]);
+	modelData.vertices.push_back(vertices[1]);
+	modelData.vertices.push_back(vertices[2]);
+
+	// 三角形2 (右下、左上、右上)
+	modelData.vertices.push_back(vertices[2]);
+	modelData.vertices.push_back(vertices[1]);
+	modelData.vertices.push_back(vertices[3]);
+
+	return modelData;
+}
+
 MaterialData ModelBuilder::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
 	MaterialData materialData;
 	std::string line;
