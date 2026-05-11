@@ -8,10 +8,18 @@
 class ModelBuilder
 {
 public:
+	enum class ModelType {
+		kSphere,
+		kCube,
+		kPlane
+	};
+
 	/// <summary>
 	/// objファイルの読み込み
 	/// </summary>
 	static ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename);
+
+	static ModelData CreateModel(ModelType type);
 
 	static ModelData CreateSphereModel(uint32_t subdivision);
 

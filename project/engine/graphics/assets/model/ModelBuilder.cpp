@@ -54,6 +54,20 @@ ModelData ModelBuilder::LoadModelFile(const std::string& directoryPath, const st
 	return modelData;
 }
 
+ModelData ModelBuilder::CreateModel(ModelType type) {
+	switch (type) {
+	case ModelType::kSphere:
+		return CreateSphereModel(16); // 分割数はデフォルト値を指定
+	case ModelType::kCube:
+		return CreateCubeModel();
+	case ModelType::kPlane:
+		return CreatePlaneModel();
+	default:
+		assert(false && "未定義のモデルタイプです");
+		return ModelData();
+	}
+}
+
 ModelData ModelBuilder::CreateSphereModel(uint32_t subdivision) {
 	ModelData modelData;
 	const float kPi = 3.1415926535f;
