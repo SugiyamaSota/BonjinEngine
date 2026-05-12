@@ -14,11 +14,20 @@ void GameScene::Initialize(Camera* camera)
 	this->camera_ = camera;
 
 	testModel_ = std::make_unique<Object3D>();
-	testModel_->CreateSphere(12);
+	testModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+	//testModel_->LoadModel("teapot", "teapot.obj");
 
 	testSkyBox_ = std::make_unique<Object3D>();
-	testSkyBox_->CreateCube();
+	testSkyBox_->CreateModel(ModelBuilder::ModelType::kCube, "resources/textures/skyBox.dds");
 	testSkyBox_->SetPrimitiveType(PrimitiveType::kSkyBox);
+
+	pm = ParticleManager::GetInstance();
+	pm->Initialize();
+
+	// 「炎」と「火花」など、見た目（モデルやテクスチャ）ごとにグループを作る
+	pm->CreateParticleGroup("hit", "plane");
+
+	ParticleManager::GetInstance()->Emit("hit", {0.f,0.f,0.f}, 5);
 
 }
 
@@ -30,6 +39,12 @@ void GameScene::Update(float deltaTime) {
 	testModel_->Update(InitializeWorldTransform(), camera_);
 
 	testSkyBox_->Update(InitializeWorldTransform(), camera_);
+
+	if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
+		ParticleManager::GetInstance()->Emit("hit", { 0.f,0.f,0.f }, 5);
+	}
+
+	pm->Update(camera_);
 
 	// フェーズに応じた処理
 	switch (phase_) {
@@ -55,10 +70,11 @@ void GameScene::Update(float deltaTime) {
 
 void GameScene::Draw() {
 
-	testModel_->Draw();
+	/*testModel_->Draw();
 
-	testSkyBox_->Draw();
+	testSkyBox_->Draw();*/
 
+	pm->Draw();
 }
 
 void GameScene::DrawSceneImGui() {

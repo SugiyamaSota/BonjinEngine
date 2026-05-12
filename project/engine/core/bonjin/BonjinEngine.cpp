@@ -40,6 +40,7 @@ void Bonjin::Initialize() {
 void Bonjin::Finalize() {
 	Time::DestroyInstance();
 	ImGuiManager::GetInstance()->Finalize();
+	ParticleManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
 	ModelManager::GetInstance()->Finalize();
 	WinApp::GetInstance()->DestroyInstance();

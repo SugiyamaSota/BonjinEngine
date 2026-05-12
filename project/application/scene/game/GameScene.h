@@ -41,6 +41,8 @@ namespace Bonjin
 
 		std::unique_ptr<Object3D> testSkyBox_ = nullptr;
 
+		ParticleManager* pm = nullptr;
+
 	private:
 		// --- ゲーム固有の関数 ---
 	};

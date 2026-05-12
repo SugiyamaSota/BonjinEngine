@@ -9,13 +9,20 @@
 #include<cassert>
 #include<random>
 #include<array>
+#include <functional>
+
+// 挙動を定義する関数の型: 引数に ParticleData の参照を受け取る
+struct ParticleData;
+using ParticleUpdateFunc = std::function<void(ParticleData&, float deltaTime)>;
 
 struct ParticleData {
 	WorldTransform transform;
 	float lifeTime;
 	float currentTime;
 	Vector3 velocity;
+	Vector3 acceleration;
 	Vector4 color;
+	ParticleUpdateFunc updateFunc;
 };
 
 class Particle
@@ -55,11 +62,7 @@ public:
 	/// <param name="numParticles">生成するパーティクル数 (kNumInstance_ 以下)</param>
 	/// <param name="minLifetime">最小生存時間（秒）</param>
 	/// <param name="maxLifetime">最大生存時間（秒）</param>
-	void Emit(Vector3 position, Vector3 range, float duration, float minLifetime, float maxLifetime);
-
-	void Begin();
-
-	void End();
+	void Emit(const Vector3& position, const Vector3& velocity, const Vector4& color, float lifetime, ParticleUpdateFunc func);
 
 	/// --- 設定関数 ---
 	/// <summary>
@@ -82,10 +85,10 @@ public:
 private:
 	/// --- 変数 ---
 	// モデルデータ
-	ModelData modelData_;
+	const ModelData* modelData_ = nullptr;
 
 	// 全部で出せる数
-	static const uint32_t kNumInstance_ = 10;
+	static const uint32_t kNumInstance_ = 1000;
 	// 実際に描画するインスタンス数
 	uint32_t activeNum_ = 0;
 
@@ -99,15 +102,6 @@ private:
 	float maxLifetime_ = 0.0f;    // 個々の最大生存時間
 	Vector3 emitPosition_;        // エミット中心座標
 	Vector3 emitRange_;           // エミット範囲
-
-	// ImGui用変数
-	float minLifetimeDebug_ = 0.0f;    // 個々の最小生存時間
-	float maxLifetimeDebug_ = 0.0f;    // 個々の最大生存時間
-	Vector3 emitPositionDebug_;        // エミット中心座標
-	Vector3 emitRangeDebug_;           // エミット範囲
-
-	// 個々のパーティクルを初期化/再生成するヘルパー関数
-	void InitializeParticle(uint32_t index);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE srvhandleCPU_;
 	D3D12_GPU_DESCRIPTOR_HANDLE srvhandleGPU_;

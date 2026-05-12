@@ -54,6 +54,20 @@ ModelData ModelBuilder::LoadModelFile(const std::string& directoryPath, const st
 	return modelData;
 }
 
+ModelData ModelBuilder::CreateModel(ModelType type) {
+	switch (type) {
+	case ModelType::kSphere:
+		return CreateSphereModel(16); // 分割数はデフォルト値を指定
+	case ModelType::kCube:
+		return CreateCubeModel();
+	case ModelType::kPlane:
+		return CreatePlaneModel();
+	default:
+		assert(false && "未定義のモデルタイプです");
+		return ModelData();
+	}
+}
+
 ModelData ModelBuilder::CreateSphereModel(uint32_t subdivision) {
 	ModelData modelData;
 	const float kPi = 3.1415926535f;
@@ -169,6 +183,31 @@ ModelData ModelBuilder::CreateCubeModel() {
 		{ {-1,-1,1,1}, {1,-1,1,1}, {-1,-1,-1,1}, {1,-1,-1,1} },
 		{ 0,1,2, 2,1,3 }
 	);
+
+	return modelData;
+}
+
+ModelData ModelBuilder::CreatePlaneModel() {
+	ModelData modelData;
+
+	// 左下、左上、右下、右上の4頂点
+	// Zは0で固定（XY平面）
+	std::vector<VertexData> vertices = {
+		{ {-0.5f, -0.5f, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, -1.0f} }, // 左下
+		{ {-0.5f,  0.5f, 0.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, -1.0f} }, // 左上
+		{ { 0.5f, -0.5f, 0.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, -1.0f} }, // 右下
+		{ { 0.5f,  0.5f, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, -1.0f} }, // 右上
+	};
+
+	// 三角形1 (左下、左上、右下)
+	modelData.vertices.push_back(vertices[0]);
+	modelData.vertices.push_back(vertices[1]);
+	modelData.vertices.push_back(vertices[2]);
+
+	// 三角形2 (右下、左上、右上)
+	modelData.vertices.push_back(vertices[2]);
+	modelData.vertices.push_back(vertices[1]);
+	modelData.vertices.push_back(vertices[3]);
 
 	return modelData;
 }
