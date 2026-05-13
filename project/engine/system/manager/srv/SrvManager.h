@@ -2,6 +2,12 @@
 #include "DirectXCommon.h"
 #include <vector>
 
+enum class SrvType {
+    Texture2D,
+    TextureCube,
+    StructuredBuffer
+};
+
 class SrvManager {
 public:
     static SrvManager* GetInstance();
@@ -10,11 +16,7 @@ public:
     // 空いているSRVのインデックスを確保
     uint32_t Allocate();
 
-    // 指定したインデックスにテクスチャSRVを作成
-    void CreateTextureSrv(uint32_t index, ID3D12Resource* resource);
-
-    // 指定したインデックスに構造化バッファSRVを作成 (Particle用)
-    void CreateStructuredBufferSrv(uint32_t index, ID3D12Resource* resource, uint32_t numElements, uint32_t structureByteStride);
+    void CreateSrv(uint32_t index, ID3D12Resource* resource, SrvType type, uint32_t numElements = 0, uint32_t stride = 0);
 
     // 描画前のセット処理
     void PreDraw();
