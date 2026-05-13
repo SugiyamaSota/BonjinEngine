@@ -58,24 +58,31 @@ void PSOManager::CreateRootSignature(ID3D12Device* device)
     RootSignatureBuilder rootSigBuilder;
     rootSigBuilder.SetFlags(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
-    D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
-    descriptorRange[0].BaseShaderRegister = 0;
-    descriptorRange[0].NumDescriptors = 2;
-    descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    D3D12_DESCRIPTOR_RANGE descriptorRangeT0[1] = {};
+    descriptorRangeT0[0].BaseShaderRegister = 0;
+    descriptorRangeT0[0].NumDescriptors = 1;
+    descriptorRangeT0[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    descriptorRangeT0[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    D3D12_ROOT_PARAMETER rootParameters[7] = {};
+    D3D12_DESCRIPTOR_RANGE descriptorRangeT1[1] = {};
+    descriptorRangeT1[0].BaseShaderRegister = 1;
+    descriptorRangeT1[0].NumDescriptors = 1;
+    descriptorRangeT1[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    descriptorRangeT1[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    D3D12_ROOT_PARAMETER rootParameters[8] = {};
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[0].Descriptor.ShaderRegister = 0;
+
     rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
     rootParameters[1].Descriptor.ShaderRegister = 0;
 
     rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
-    rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+    rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRangeT0;
+    rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeT0);
 
     rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // ディレクショナルライト
     rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
@@ -89,6 +96,12 @@ void PSOManager::CreateRootSignature(ID3D12Device* device)
     rootParameters[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // スポット
     rootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[6].Descriptor.ShaderRegister = 4;
+
+
+    rootParameters[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootParameters[7].DescriptorTable.pDescriptorRanges = descriptorRangeT1; // ここで T1 を指定
+    rootParameters[7].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeT1);
 
 
     for (int i = 0; i < _countof(rootParameters); ++i) {
@@ -148,8 +161,8 @@ void PSOManager::CreateRootSignature(ID3D12Device* device)
     // Root Parameter 2: Texture SRV Table (t0 for PS)
     particleRootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     particleRootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    particleRootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange; // ★ テクスチャ用の Range を参照 (t0 for PS)
-    particleRootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+    particleRootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRangeT0; // ★ テクスチャ用の Range を参照 (t0 for PS)
+    particleRootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeT0);
 
     // Root Parameter 3: Light CBV (b1)
     particleRootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
@@ -176,8 +189,62 @@ void PSOManager::CreateRootSignature(ID3D12Device* device)
 
     rootSignatures_[(size_t)PrimitiveType::kParticle] = particleRootSigBuilder.Build(device);
 
-	// スカイボックスはモデルと同じルートシグネチャを使用
-    rootSignatures_[(size_t)PrimitiveType::kSkyBox] = rootSignatures_[(size_t)PrimitiveType::kModel];
+    // スカイボックス
+    RootSignatureBuilder skyBoxRootSigBuilder;
+    skyBoxRootSigBuilder.SetFlags(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+    D3D12_DESCRIPTOR_RANGE skyBoxDescriptorRange[1] = {};
+    skyBoxDescriptorRange[0].BaseShaderRegister = 0;
+    skyBoxDescriptorRange[0].NumDescriptors = 2;
+    skyBoxDescriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    skyBoxDescriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    D3D12_ROOT_PARAMETER skyBoxRootParameters[7] = {};
+    skyBoxRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    skyBoxRootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    skyBoxRootParameters[0].Descriptor.ShaderRegister = 0;
+    skyBoxRootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    skyBoxRootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    skyBoxRootParameters[1].Descriptor.ShaderRegister = 0;
+
+    skyBoxRootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    skyBoxRootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    skyBoxRootParameters[2].DescriptorTable.pDescriptorRanges = skyBoxDescriptorRange;
+    skyBoxRootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(skyBoxDescriptorRange);
+
+    skyBoxRootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // ディレクショナルライト
+    skyBoxRootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    skyBoxRootParameters[3].Descriptor.ShaderRegister = 1;
+    skyBoxRootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // カメラ
+    skyBoxRootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    skyBoxRootParameters[4].Descriptor.ShaderRegister = 2;
+    skyBoxRootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // ポイントライト
+    skyBoxRootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    skyBoxRootParameters[5].Descriptor.ShaderRegister = 3;
+    skyBoxRootParameters[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // スポット
+    skyBoxRootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    skyBoxRootParameters[6].Descriptor.ShaderRegister = 4;
+
+
+    for (int i = 0; i < _countof(skyBoxRootParameters); ++i) {
+        skyBoxRootSigBuilder.AddRootParameter(skyBoxRootParameters[i]);
+    }
+
+    D3D12_STATIC_SAMPLER_DESC skyBoxStaticSamplers[1] = {};
+    skyBoxStaticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+    skyBoxStaticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    skyBoxStaticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    skyBoxStaticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    skyBoxStaticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    skyBoxStaticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
+    skyBoxStaticSamplers[0].ShaderRegister = 0;
+    skyBoxStaticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    for (int i = 0; i < _countof(skyBoxStaticSamplers); ++i) {
+        skyBoxRootSigBuilder.AddStaticSampler(skyBoxStaticSamplers[i]);
+    }
+
+    rootSignatures_[(size_t)PrimitiveType::kSkyBox] = skyBoxRootSigBuilder.Build(device);
 }
 
 void PSOManager::CompileAllShaders() {
