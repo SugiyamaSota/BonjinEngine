@@ -45,6 +45,7 @@ protected:
 	Material* materialData_ = nullptr;
 
 	int textureHandle_ = 0;
+	int envTextureHandle_ = 0;
 
 	// 各モードの変数
 	D3D12_FILL_MODE fillMode_ = D3D12_FILL_MODE_SOLID;

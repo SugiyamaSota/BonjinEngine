@@ -70,6 +70,10 @@ void Object3D::Draw() {
     commandList->SetGraphicsRootConstantBufferView(5, LightManager::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
     commandList->SetGraphicsRootConstantBufferView(6, LightManager::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
 
+	if (primitiveType_ == PrimitiveType::kModel) {
+        commandList->SetGraphicsRootDescriptorTable(7, TextureManager::GetInstance()->GetGPUHandle(envTextureHandle_));
+    }
+
     commandList->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
 }
 
