@@ -44,7 +44,12 @@ int TextureManager::LoadTexture(const std::string& filePath) {
 
 	// SrvManagerからインデックスを取得してSRV作成
 	uint32_t srvIndex = SrvManager::GetInstance()->Allocate();
-	SrvManager::GetInstance()->CreateTextureSrv(srvIndex, textureResource.Get());
+
+	// リソースの desc を見て自動判別、または明示的に指定
+	auto resDesc = textureResource->GetDesc();
+	SrvType type = (resDesc.DepthOrArraySize == 6) ? SrvType::TextureCube : SrvType::Texture2D;
+
+	SrvManager::GetInstance()->CreateSrv(srvIndex, textureResource.Get(), type);
 
 	int index = (int)textureResources_.size();
 	textureResources_.push_back(textureResource);

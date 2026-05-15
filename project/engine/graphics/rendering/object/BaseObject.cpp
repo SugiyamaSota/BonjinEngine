@@ -5,6 +5,8 @@
 BaseObject::BaseObject() {
     common_ = DirectXCommon::GetInstance();
     device_ = common_->GetDevice();
+
+	envTextureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/skyBox.dds");
 }
 
 void BaseObject::ReleaseResources() {

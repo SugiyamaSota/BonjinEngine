@@ -13,9 +13,11 @@ void GameScene::Initialize(Camera* camera)
 
 	this->camera_ = camera;
 
+
 	testModel_ = std::make_unique<Object3D>();
 	testModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
 	//testModel_->LoadModel("teapot", "teapot.obj");
+
 
 	testSkyBox_ = std::make_unique<Object3D>();
 	testSkyBox_->CreateModel(ModelBuilder::ModelType::kCube, "resources/textures/skyBox.dds");
@@ -70,11 +72,11 @@ void GameScene::Update(float deltaTime) {
 
 void GameScene::Draw() {
 
-	/*testModel_->Draw();
+	testModel_->Draw();
 
-	testSkyBox_->Draw();*/
+	//testSkyBox_->Draw();
 
-	pm->Draw();
+	//pm->Draw();
 }
 
 void GameScene::DrawSceneImGui() {
