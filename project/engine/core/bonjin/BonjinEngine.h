@@ -12,7 +12,6 @@
 #include"color/Color.h"
 #include"windows/WinApp.h"
 #include"time/Time.h"
-#include"Particle.h"
 #include"pso/PSOManager.h"
 
 #include"ImGuiManager.h"

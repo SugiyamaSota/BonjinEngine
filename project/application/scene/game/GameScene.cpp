@@ -74,9 +74,9 @@ void GameScene::Draw() {
 
 	testModel_->Draw();
 
-	//testSkyBox_->Draw();
+	testSkyBox_->Draw();
 
-	//pm->Draw();
+	pm->Draw();
 }
 
 void GameScene::DrawSceneImGui() {

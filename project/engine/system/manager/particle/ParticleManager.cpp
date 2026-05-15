@@ -20,7 +20,7 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 	if (particleGroups_.contains(name)) return;
 
 	auto newGroup = std::make_unique<Particle>();
-	newGroup->LoadModel(modelFileName); // ここで内部的にSRV確保を行うよう修正
+	newGroup->LoadModel(modelFileName,modelFileName+".obj"); // ここで内部的にSRV確保を行うよう修正
 	particleGroups_[name] = std::move(newGroup);
 }
 
