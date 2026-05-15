@@ -17,6 +17,16 @@ struct ParticleData {
 	ParticleUpdateFunc updateFunc;
 };
 
+struct ParticleConfig {
+	Vector3 position;
+	Vector3 rotate;
+	Vector3 velocity;
+	Vector3 scale = { 1.0f, 1.0f, 1.0f }; // デフォルト値を設定
+	Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float lifeTime = 1.0f;
+	ParticleUpdateFunc updateFunc = nullptr;
+};
+
 // BaseObject を継承
 class Particle : public BaseObject {
 public:
@@ -26,7 +36,7 @@ public:
 	void Update(Camera* camera);
 	void Draw() override; // BaseObjectの純粋仮想関数を実装
 
-	void Emit(const Vector3& position, const Vector3& velocity, const Vector4& color, float lifetime, ParticleUpdateFunc func);
+	void Emit(const ParticleConfig& config);
 
 	void DrawImGui();
 

@@ -16,11 +16,14 @@ void ParticleManager::Initialize() {
 	dxCommon_ = DirectXCommon::GetInstance();
 }
 
-void ParticleManager::CreateParticleGroup(const std::string& name, const std::string& modelFileName) {
+// ParticleManager.cpp に実装を追加
+void ParticleManager::CreateParticleGroup(const std::string& name, ModelBuilder::ModelType type, const std::string& textureFilepath) {
 	if (particleGroups_.contains(name)) return;
 
 	auto newGroup = std::make_unique<Particle>();
-	newGroup->LoadModel(modelFileName,modelFileName+".obj"); // ここで内部的にSRV確保を行うよう修正
+	// Particleクラスに追加したCreateModelを呼び出す
+	newGroup->CreateModel(type, textureFilepath);
+
 	particleGroups_[name] = std::move(newGroup);
 }
 
@@ -42,30 +45,8 @@ void ParticleManager::Draw() {
 	}
 }
 
-void ParticleManager::Emit(const std::string& name, const Vector3& position, uint32_t count) {
-
-	static std::random_device seed_gen;
-	static std::mt19937 engine(seed_gen());
-
-	// -0.5f ～ 0.5f の間でランダムな数値を出す
-	std::uniform_real_distribution<float> dist(-0.5f, 0.5f);
-
+void ParticleManager::Emit(const std::string& name, const ParticleConfig& config) {
 	if (particleGroups_.contains(name)) {
-		// 例: 1回のEmitで複数のパーティクルをランダムな方向に飛ばすロジック
-		for (uint32_t i = 0; i < count; ++i) {
-			Vector3 velocity = {
-			0,0,0
-			};
-			Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-			float lifetime = 1.0f;
-
-			auto gravityBehavior = [](ParticleData& p, float dt) {
-				//p.velocity.y -= 0.01f; // 重力を加える
-				//p.transform.translate = Add(p.transform.translate, p.velocity);
-				};
-
-			// Particleクラス側の「新しいEmit」を呼ぶ
-			particleGroups_[name]->Emit(position, velocity, { 1,1,1,1 }, 1.0f, gravityBehavior);
-		}
+		particleGroups_[name]->Emit(config);
 	}
 }

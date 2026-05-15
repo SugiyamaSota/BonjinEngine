@@ -27,9 +27,23 @@ void GameScene::Initialize(Camera* camera)
 	pm->Initialize();
 
 	// 「炎」と「火花」など、見た目（モデルやテクスチャ）ごとにグループを作る
-	pm->CreateParticleGroup("hit", "plane");
+	pm->CreateParticleGroup("ringGroup", ModelBuilder::ModelType::kRing, "resources/textures/gradationLine.png");
 
-	ParticleManager::GetInstance()->Emit("hit", {0.f,0.f,0.f}, 5);
+
+	ringEffect.position = { 0.0f, 0.0f, 0.0f };
+	ringEffect.rotate = { 0.0f, 0.0f, 0.0f };
+	ringEffect.velocity = { 0.0f, 0.0f, 0.0f };
+	ringEffect.scale = { 1.0f, 1.0f, 1.0f }; // 大きなリングにする
+	ringEffect.color = { 1.0f, 1.0f, 1.0f, 1.0f }; // オレンジ色
+	ringEffect.lifeTime = 2.0f;
+
+	auto ringUpdate = [](ParticleData& data, float deltaTime) {
+		data.transform.rotate.z += deltaTime; // 回転速度を追
+		};
+
+	ringEffect.updateFunc = ringUpdate;
+
+	ParticleManager::GetInstance()->Emit("ringGroup", ringEffect);
 
 }
 
@@ -43,7 +57,7 @@ void GameScene::Update(float deltaTime) {
 	testSkyBox_->Update(InitializeWorldTransform(), camera_);
 
 	if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
-		ParticleManager::GetInstance()->Emit("hit", { 0.f,0.f,0.f }, 5);
+		ParticleManager::GetInstance()->Emit("ringGroup", ringEffect);
 	}
 
 	pm->Update(camera_);
@@ -72,9 +86,9 @@ void GameScene::Update(float deltaTime) {
 
 void GameScene::Draw() {
 
-	testModel_->Draw();
+	//testModel_->Draw();
 
-	testSkyBox_->Draw();
+	//testSkyBox_->Draw();
 
 	pm->Draw();
 }

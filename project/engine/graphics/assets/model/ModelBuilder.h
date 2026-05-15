@@ -11,7 +11,8 @@ public:
 	enum class ModelType {
 		kSphere,
 		kCube,
-		kPlane
+		kPlane,
+		kRing
 	};
 
 	/// <summary>
@@ -26,6 +27,8 @@ public:
 	static ModelData CreateCubeModel();
 
 	static ModelData CreatePlaneModel();
+
+	static ModelData CreateRingModel(uint32_t subdivision = 32, float innerRadius = 0.2f, float outerRadius = 1.0f);
 
 private:
 	/// <summary>

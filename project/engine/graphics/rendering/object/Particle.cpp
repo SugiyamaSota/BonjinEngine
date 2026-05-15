@@ -3,6 +3,7 @@
 #include<numbers>
 
 #include "TextureManager.h"
+#include "SrvManager.h"
 
 
 Particle::Particle() :BaseObject() {
@@ -17,6 +18,8 @@ Particle::Particle() :BaseObject() {
 		particles_[index].lifeTime = 0.0f;
 		particles_[index].currentTime = 0.0f;
 	}
+
+	cullMode_ = D3D12_CULL_MODE_NONE;
 }
 
 Particle::~Particle() {
@@ -119,25 +122,20 @@ void Particle::Draw() {
 	common_->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), kNumInstance_, 0, 0);
 }
 
-void Particle::Emit(const Vector3& position, const Vector3& velocity, const Vector4& color, float lifetime, ParticleUpdateFunc func) {
-
-	std::uniform_real_distribution<float> distRot(0.0f, std::numbers::pi_v<float> *2.0f);
-
+void Particle::Emit(const ParticleConfig& config) {
 	for (uint32_t index = 0; index < kNumInstance_; ++index) {
-		// 寿命が0（非アクティブ）な枠を探す
 		if (particles_[index].lifeTime <= 0.0f) {
-			// パラメータをセット
-			particles_[index].transform.translate = position;
-			particles_[index].transform.rotate.z = distRot(randomEngine_);
-			particles_[index].velocity = velocity;
-			particles_[index].color = color;
-			particles_[index].lifeTime = lifetime;
+			// config 構造体から値をセット
+			particles_[index].transform.translate = config.position;
+			particles_[index].transform.rotate = config.rotate;
+			particles_[index].velocity = config.velocity;
+			particles_[index].color = config.color;
+			particles_[index].lifeTime = config.lifeTime;
 			particles_[index].currentTime = 0.0f;
-			particles_[index].transform.scale = { 0.05f, 2.f, 0.05f }; // 基本サイズ
-			//particles_[index].transform.scale = { 0.01f, 0.01f, 0.01f }; // 基本サイズ
-			particles_[index].updateFunc = func;
+			particles_[index].transform.scale = config.scale; // ここで外からのサイズを適用
+			particles_[index].updateFunc = config.updateFunc;
 
-			return; // 1つ生成したら終了
+			return;
 		}
 	}
 }

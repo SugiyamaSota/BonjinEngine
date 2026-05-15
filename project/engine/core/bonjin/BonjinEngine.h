@@ -18,7 +18,6 @@
 #include"TextureManager.h"
 #include"ModelManager.h"
 #include"LightManager.h"
-#include"ParticleManager.h"
 
 /// <summary>
 /// リソースリークチェッカーの構造体

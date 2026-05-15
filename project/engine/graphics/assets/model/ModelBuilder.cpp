@@ -62,6 +62,8 @@ ModelData ModelBuilder::CreateModel(ModelType type) {
 		return CreateCubeModel();
 	case ModelType::kPlane:
 		return CreatePlaneModel();
+	case ModelType::kRing: // 追加
+		return CreateRingModel();
 	default:
 		assert(false && "未定義のモデルタイプです");
 		return ModelData();
@@ -208,6 +210,66 @@ ModelData ModelBuilder::CreatePlaneModel() {
 	modelData.vertices.push_back(vertices[2]);
 	modelData.vertices.push_back(vertices[1]);
 	modelData.vertices.push_back(vertices[3]);
+
+	return modelData;
+}
+
+ModelData ModelBuilder::CreateRingModel(uint32_t subdivision, float innerRadius, float outerRadius) {
+	ModelData modelData;
+	const float kPi = 3.1415926535f;
+	// スライド：2.0f * pi / 分割数
+	float radianPerDivide = 2.0f * kPi / float(subdivision);
+
+	for (uint32_t index = 0; index < subdivision; ++index) {
+		// スライド通りの計算式
+		float sin = std::sin(float(index) * radianPerDivide);
+		float cos = std::cos(float(index) * radianPerDivide);
+		float sinNext = std::sin(float(index + 1) * radianPerDivide);
+		float cosNext = std::cos(float(index + 1) * radianPerDivide);
+
+		// スライドの u (回転方向) を計算
+		float u = float(index) / float(subdivision);
+		float uNext = float(index + 1) / float(subdivision);
+
+		// --- 頂点データの構築 (スライドの①〜④に準拠) ---
+		// ※テクスチャをV方向にするため、第2引数に 0.0f(外側) と 1.0f(内側) を設定
+
+		// ① 外側・現在
+		VertexData v1;
+		v1.position = { -sin * outerRadius, cos * outerRadius, 0.0f, 1.0f };
+		v1.texcoord = { u, 0.0f };
+		v1.normal = { 0.0f, 0.0f, -1.0f };
+
+		// ② 外側・次
+		VertexData v2;
+		v2.position = { -sinNext * outerRadius, cosNext * outerRadius, 0.0f, 1.0f };
+		v2.texcoord = { uNext, 0.0f };
+		v2.normal = { 0.0f, 0.0f, -1.0f };
+
+		// ③ 内側・現在
+		VertexData v3;
+		v3.position = { -sin * innerRadius, cos * innerRadius, 0.0f, 1.0f };
+		v3.texcoord = { u, 1.0f }; // 内側をV=1.0にする
+		v3.normal = { 0.0f, 0.0f, -1.0f };
+
+		// ④ 内側・次
+		VertexData v4;
+		v4.position = { -sinNext * innerRadius, cosNext * innerRadius, 0.0f, 1.0f };
+		v4.texcoord = { uNext, 1.0f };
+		v4.normal = { 0.0f, 0.0f, -1.0f };
+
+		// --- 三角形の構築 (時計回り) ---
+
+		// 三角形1: ① -> ② -> ③
+		modelData.vertices.push_back(v1);
+		modelData.vertices.push_back(v2);
+		modelData.vertices.push_back(v3);
+
+		// 三角形2: ③ -> ② -> ④
+		modelData.vertices.push_back(v3);
+		modelData.vertices.push_back(v2);
+		modelData.vertices.push_back(v4);
+	}
 
 	return modelData;
 }
