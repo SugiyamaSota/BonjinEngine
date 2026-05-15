@@ -132,6 +132,11 @@ void PSOManager::CreateRootSignature(ID3D12Device* device)
     particleInstanceDescriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     particleInstanceDescriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
+    D3D12_DESCRIPTOR_RANGE particleTextureDescriptorRange[1] = {};
+    particleTextureDescriptorRange[0].BaseShaderRegister = 1; // PSの t0
+    particleTextureDescriptorRange[0].NumDescriptors = 1;
+    particleTextureDescriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    particleTextureDescriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
     D3D12_ROOT_PARAMETER particleRootParameters[4] = {};
 
@@ -148,8 +153,8 @@ void PSOManager::CreateRootSignature(ID3D12Device* device)
     // Root Parameter 2: Texture SRV Table (t0 for PS)
     particleRootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     particleRootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    particleRootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange; // ★ テクスチャ用の Range を参照 (t0 for PS)
-    particleRootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+    particleRootParameters[2].DescriptorTable.pDescriptorRanges = particleTextureDescriptorRange; // ★ テクスチャ用の Range を参照 (t0 for PS)
+    particleRootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(particleTextureDescriptorRange);
 
     // Root Parameter 3: Light CBV (b1)
     particleRootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;

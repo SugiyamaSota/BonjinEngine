@@ -134,6 +134,8 @@ private:
 	// テクスチャハンドル
 	int textureHandle_ = 0;
 
+	int srvIndex_ = 0;
+
 	// dxcommonのインスタンス
 	DirectXCommon* common = nullptr;
 

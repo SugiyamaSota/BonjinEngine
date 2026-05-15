@@ -4,7 +4,7 @@ ConstantBuffer<Material> gMaterial : register(b0);
 
 ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
 
-Texture2D<float32_t4> gTexture : register(t0);
+Texture2D<float32_t4> gTexture : register(t1);
 
 SamplerState gSampler : register(s0);
 
@@ -21,7 +21,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     
     float32_t4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
 
-    output.color = input.color;
+    output.color = input.color*textureColor;
     
     if (output.color.a == 0.0)
     {

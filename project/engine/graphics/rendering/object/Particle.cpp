@@ -73,17 +73,19 @@ void Particle::LoadModel(const std::string& fileName) {
 	common->WaitAndResetCommandList();
 	TextureManager::GetInstance()->ReleaseIntermediateResources();
 
+	srvIndex_ = SrvManager::GetInstance()->Allocate();
 
-	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-	srvDesc.Buffer.FirstElement = 0;
-	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-	srvDesc.Buffer.NumElements = kNumInstance_;
-	srvDesc.Buffer.StructureByteStride = sizeof(ParticleForGPU);
-	srvhandleCPU_ = GetCPUDescriptorHandle(DirectXCommon::GetInstance()->GetSRVDescriptorHeap(), DirectXCommon::GetInstance()->GetSRVSize(), 3);
-	srvhandleGPU_ = GetGPUDescriptorHandle(DirectXCommon::GetInstance()->GetSRVDescriptorHeap(), DirectXCommon::GetInstance()->GetSRVSize(), 3);
-	common->GetDevice()->CreateShaderResourceView(instancingResource_.Get(), &srvDesc, srvhandleCPU_);
+	// ⭐ 修正：SrvManager を使って SRV を作成
+	SrvManager::GetInstance()->CreateSrv(
+		srvIndex_,
+		instancingResource_.Get(),
+		SrvType::StructuredBuffer,
+		kNumInstance_,
+		sizeof(ParticleForGPU)
+	);
+
+	// インデックスからハンドルを保持（Drawで使用）
+	srvhandleGPU_ = SrvManager::GetInstance()->GetGPUHandle(srvIndex_);
 }
 
 void Particle::Update(Camera* camera) {
@@ -196,7 +198,7 @@ void Particle::Emit(const Vector3& position, const Vector3& velocity, const Vect
 			particles_[index].lifeTime = lifetime;
 			particles_[index].currentTime = 0.0f;
 			particles_[index].transform.scale = { 0.05f, 2.f, 0.05f }; // 基本サイズ
-			particles_[index].transform.scale = { 1.f, 1.f, 1.f }; // 基本サイズ
+			//particles_[index].transform.scale = { 1.f, 1.f, 1.f }; // 基本サイズ
 			particles_[index].updateFunc = func;
 
 			return; // 1つ生成したら終了
