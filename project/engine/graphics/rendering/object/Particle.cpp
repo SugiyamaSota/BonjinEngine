@@ -2,8 +2,11 @@
 
 #include<numbers>
 
-Particle::Particle() {
-	common = DirectXCommon::GetInstance();
+#include "TextureManager.h"
+#include "SrvManager.h"
+
+
+Particle::Particle() :BaseObject() {
 
 	// 乱数エンジンの初期化
 	std::random_device seed_gen;
@@ -15,75 +18,20 @@ Particle::Particle() {
 		particles_[index].lifeTime = 0.0f;
 		particles_[index].currentTime = 0.0f;
 	}
-	viewMatrix_ = MakeIdentity4x4();
-	projectionMatrix_ = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);
-	viewProjectionMatrix_ = MakeIdentity4x4();
-	activeNum_ = 0;
+
+	cullMode_ = D3D12_CULL_MODE_NONE;
 }
 
 Particle::~Particle() {
-	if (vertexResource_) vertexResource_->Unmap(0, nullptr);
-	if (materialResource_) materialResource_->Unmap(0, nullptr);
-	if (instancingResource_) instancingResource_->Unmap(0, nullptr);
-	// ComPtr なので Reset しなくてもスコープを抜ければ解放されますが、明示的だと安全
-	vertexResource_.Reset();
-	materialResource_.Reset();
-	instancingResource_.Reset();
+	// 1. 基底クラスの共通リソース（頂点・マテリアル）を解放
+	BaseObject::ReleaseResources();
 
-	vertexData_ = nullptr;
-	materialData_ = nullptr;
-	instancingData_ = nullptr;
-}
-
-void Particle::LoadModel(const std::string& fileName) {
-	const std::string directoryPath = "resources/models/" + fileName;
-	const std::string objFilename = fileName+".obj";
-
-	// ModelManagerから取得
-	modelData_ = &ModelManager::GetInstance()->LoadModel(directoryPath, objFilename);
-
-	// 頂点用のリソース
-	vertexResource_ = CreateBufferResource(common->GetDevice(), sizeof(VertexData) * modelData_->vertices.size());
-	vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
-	vertexBufferView_.SizeInBytes = UINT(sizeof(VertexData) * modelData_->vertices.size());
-	vertexBufferView_.StrideInBytes = sizeof(VertexData);
-	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
-	std::memcpy(vertexData_, modelData_->vertices.data(), sizeof(VertexData) * modelData_->vertices.size());
-
-	// マテリアル用のリソース
-	materialResource_ = CreateBufferResource(common->GetDevice(), sizeof(Material));
-	materialData_ = nullptr;
-	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
-	materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	materialData_->enableLighting = false;
-	materialData_->uvTransform = MakeIdentity4x4();
-
-	// WVP用のリソース
-	instancingResource_ = CreateBufferResource(common->GetDevice(), sizeof(ParticleForGPU) * kNumInstance_);
-	instancingResource_->Map(0, nullptr, reinterpret_cast<void**>(&instancingData_));
-
-	for (uint32_t index = 0; index < kNumInstance_; ++index)
-	{
-		instancingData_[index].WVP = MakeIdentity4x4();
-		instancingData_[index].World = MakeIdentity4x4();
+	// 2. Particle 固有のリソースを解放
+	if (instancingResource_) {
+		instancingResource_->Unmap(0, nullptr);
+		instancingResource_.Reset();
 	}
-
-	// テクスチャ
-	textureHandle_ = TextureManager::GetInstance()->LoadTexture(modelData_->material.textureFilepath);
-	common->WaitAndResetCommandList();
-	TextureManager::GetInstance()->ReleaseIntermediateResources();
-
-
-	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-	srvDesc.Buffer.FirstElement = 0;
-	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-	srvDesc.Buffer.NumElements = kNumInstance_;
-	srvDesc.Buffer.StructureByteStride = sizeof(ParticleForGPU);
-	srvhandleCPU_ = GetCPUDescriptorHandle(DirectXCommon::GetInstance()->GetSRVDescriptorHeap(), DirectXCommon::GetInstance()->GetSRVSize(), 3);
-	srvhandleGPU_ = GetGPUDescriptorHandle(DirectXCommon::GetInstance()->GetSRVDescriptorHeap(), DirectXCommon::GetInstance()->GetSRVSize(), 3);
-	common->GetDevice()->CreateShaderResourceView(instancingResource_.Get(), &srvDesc, srvhandleCPU_);
+	instancingData_ = nullptr;
 }
 
 void Particle::Update(Camera* camera) {
@@ -117,10 +65,6 @@ void Particle::Update(Camera* camera) {
 		} else {
 			particles_[index].transform.translate = Add(particles_[index].transform.translate, particles_[index].velocity);
 		}
-
-		// 1. 移動：速度を座標に加算
-		particles_[index].transform.translate = Add(particles_[index].transform.translate, particles_[index].velocity);
-
 		// 2. アルファ値の計算（1.0 -> 0.0）
 		float elapsedRatio = particles_[index].currentTime / particles_[index].lifeTime;
 		particles_[index].color.w = 1.0f - elapsedRatio;
@@ -146,13 +90,10 @@ void Particle::Update(Camera* camera) {
 }
 
 void Particle::Draw() {
-	// PSOを遅延生成/取得するためにデバイスが必要
-	ID3D12Device* device = common->GetDevice();
-
 	// PSOManagerの新しいGetPipelineState関数を呼び出し
 	ID3D12PipelineState* pso =
-		common->GetPSO()->GetPipelineState(
-			device,
+		common_->GetPSO()->GetPipelineState(
+			device_,
 			PrimitiveType::kParticle,
 			BlendMode::kAdd,
 			D3D12_FILL_MODE_SOLID,
@@ -160,46 +101,41 @@ void Particle::Draw() {
 		);
 
 	// PSOの設定
-	common->GetCommandList()->SetGraphicsRootSignature(common->GetPSO()->GetRootSignature(PrimitiveType::kParticle));
-	common->GetCommandList()->SetPipelineState(pso);
+	common_->GetCommandList()->SetGraphicsRootSignature(common_->GetPSO()->GetRootSignature(PrimitiveType::kParticle));
+	common_->GetCommandList()->SetPipelineState(pso);
 
 	//　モデルの描画
 	// VBV
-	common->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
+	common_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
 	// 形状を設定
-	common->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	common_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// マテリアルCBufferの場所を設定
-	common->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+	common_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
 
-	common->GetCommandList()->SetGraphicsRootDescriptorTable(1, srvhandleGPU_);
+	common_->GetCommandList()->SetGraphicsRootDescriptorTable(1, srvhandleGPU_);
 
 	// SRV用のdescriptionTavleの先頭を設定
-	common->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetGPUHandle(textureHandle_));
+	common_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetGPUHandle(textureHandle_));
 	// 光
-	common->GetCommandList()->SetGraphicsRootConstantBufferView(3, LightManager::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
+	common_->GetCommandList()->SetGraphicsRootConstantBufferView(3, LightManager::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
 	// 描画
-	common->GetCommandList()->DrawInstanced(UINT(modelData_->vertices.size()), kNumInstance_, 0, 0);
+	common_->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), kNumInstance_, 0, 0);
 }
 
-void Particle::Emit(const Vector3& position, const Vector3& velocity, const Vector4& color, float lifetime, ParticleUpdateFunc func) {
-
-	std::uniform_real_distribution<float> distRot(0.0f, std::numbers::pi_v<float> *2.0f);
-
+void Particle::Emit(const ParticleConfig& config) {
 	for (uint32_t index = 0; index < kNumInstance_; ++index) {
-		// 寿命が0（非アクティブ）な枠を探す
 		if (particles_[index].lifeTime <= 0.0f) {
-			// パラメータをセット
-			particles_[index].transform.translate = position;
-			particles_[index].transform.rotate.z = distRot(randomEngine_);
-			particles_[index].velocity = velocity;
-			particles_[index].color = color;
-			particles_[index].lifeTime = lifetime;
+			// config 構造体から値をセット
+			particles_[index].transform.translate = config.position;
+			particles_[index].transform.rotate = config.rotate;
+			particles_[index].velocity = config.velocity;
+			particles_[index].color = config.color;
+			particles_[index].lifeTime = config.lifeTime;
 			particles_[index].currentTime = 0.0f;
-			particles_[index].transform.scale = { 0.05f, 2.f, 0.05f }; // 基本サイズ
-			particles_[index].transform.scale = { 1.f, 1.f, 1.f }; // 基本サイズ
-			particles_[index].updateFunc = func;
+			particles_[index].transform.scale = config.scale; // ここで外からのサイズを適用
+			particles_[index].updateFunc = config.updateFunc;
 
-			return; // 1つ生成したら終了
+			return;
 		}
 	}
 }
@@ -209,4 +145,26 @@ void Particle::DrawImGui()
 
 
 
+}
+
+void Particle::SetupResources() {
+	// インスタンシング用リソースの生成
+	instancingResource_ = CreateBufferResource(device_, sizeof(ParticleForGPU) * kNumInstance_);
+	instancingResource_->Map(0, nullptr, reinterpret_cast<void**>(&instancingData_));
+
+	for (uint32_t index = 0; index < kNumInstance_; ++index) {
+		instancingData_[index].WVP = MakeIdentity4x4();
+		instancingData_[index].World = MakeIdentity4x4();
+	}
+
+	// SRVの作成
+	srvIndex_ = SrvManager::GetInstance()->Allocate();
+	SrvManager::GetInstance()->CreateSrv(
+		srvIndex_,
+		instancingResource_.Get(),
+		SrvType::StructuredBuffer,
+		kNumInstance_,
+		sizeof(ParticleForGPU)
+	);
+	srvhandleGPU_ = SrvManager::GetInstance()->GetGPUHandle(srvIndex_);
 }

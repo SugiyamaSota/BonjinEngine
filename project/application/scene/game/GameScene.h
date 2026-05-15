@@ -3,6 +3,7 @@
 
 #include "Object3D.h"
 
+#include"ParticleManager.h"
 
 namespace Bonjin
 {
@@ -42,6 +43,7 @@ namespace Bonjin
 		std::unique_ptr<Object3D> testSkyBox_ = nullptr;
 
 		ParticleManager* pm = nullptr;
+		ParticleConfig ringEffect;
 
 	private:
 		// --- ゲーム固有の関数 ---

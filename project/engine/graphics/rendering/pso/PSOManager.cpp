@@ -145,6 +145,11 @@ void PSOManager::CreateRootSignature(ID3D12Device* device)
     particleInstanceDescriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     particleInstanceDescriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
+    D3D12_DESCRIPTOR_RANGE particleTextureDescriptorRange[1] = {};
+    particleTextureDescriptorRange[0].BaseShaderRegister = 1; // PSの t0
+    particleTextureDescriptorRange[0].NumDescriptors = 1;
+    particleTextureDescriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    particleTextureDescriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
     D3D12_ROOT_PARAMETER particleRootParameters[4] = {};
 
@@ -161,8 +166,8 @@ void PSOManager::CreateRootSignature(ID3D12Device* device)
     // Root Parameter 2: Texture SRV Table (t0 for PS)
     particleRootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     particleRootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    particleRootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRangeT0; // ★ テクスチャ用の Range を参照 (t0 for PS)
-    particleRootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeT0);
+    particleRootParameters[2].DescriptorTable.pDescriptorRanges = particleTextureDescriptorRange; // ★ テクスチャ用の Range を参照 (t0 for PS)
+    particleRootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(particleTextureDescriptorRange);
 
     // Root Parameter 3: Light CBV (b1)
     particleRootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
@@ -176,7 +181,7 @@ void PSOManager::CreateRootSignature(ID3D12Device* device)
     D3D12_STATIC_SAMPLER_DESC particleStaticSamplers[1] = {};
     particleStaticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
     particleStaticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    particleStaticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    particleStaticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
     particleStaticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
     particleStaticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
     particleStaticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;

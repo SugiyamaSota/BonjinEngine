@@ -12,14 +12,12 @@
 #include"color/Color.h"
 #include"windows/WinApp.h"
 #include"time/Time.h"
-#include"Particle.h"
 #include"pso/PSOManager.h"
 
 #include"ImGuiManager.h"
 #include"TextureManager.h"
 #include"ModelManager.h"
 #include"LightManager.h"
-#include"ParticleManager.h"
 
 /// <summary>
 /// リソースリークチェッカーの構造体

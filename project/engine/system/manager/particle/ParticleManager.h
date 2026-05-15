@@ -4,8 +4,7 @@
 #include <memory>
 #include "../camera/Camera.h"
 #include "../srv/SrvManager.h"
-
-class Particle;
+#include "Particle.h"
 
 class ParticleManager {
 public:
@@ -15,7 +14,7 @@ public:
     void Initialize();
 
     // パーティクルグループの作成
-    void CreateParticleGroup(const std::string& name, const std::string& modelFileName);
+    void CreateParticleGroup(const std::string& name, ModelBuilder::ModelType type, const std::string& textureFilepath);
 
     // 更新処理：全グループをループ処理
     void Update(Camera* camera);
@@ -26,7 +25,7 @@ public:
     void Finalize();
 
     // エミット（発生）
-    void Emit(const std::string& name, const Vector3& position, uint32_t count);
+    void Emit(const std::string& name, const ParticleConfig& config);
 
 private:
     ParticleManager() = default;
