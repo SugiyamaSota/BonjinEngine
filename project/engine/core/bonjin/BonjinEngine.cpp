@@ -59,7 +59,11 @@ void Bonjin::NewFrame() {
 }
 
 void Bonjin::PreDraw() {
-	DirectXCommon::GetInstance()->NewFeame();
+	DirectXCommon::GetInstance()->PreDraw();
+}
+
+void Bonjin::PostDraw() {
+	DirectXCommon::GetInstance()->PostDraw();
 }
 
 void Bonjin::EndFrame() {

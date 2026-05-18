@@ -55,6 +55,11 @@ namespace Bonjin {
 	void PreDraw();
 
 	/// <summary>
+	/// 描画後に呼び出し
+	/// </summary>
+	void PostDraw();
+
+	/// <summary>
 	/// 最後のフレームに呼び出し
 	/// </summary>
 	void EndFrame();

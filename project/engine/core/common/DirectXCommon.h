@@ -30,7 +30,9 @@ public:
 	void Initialize();
 
 	// フレーム開始
-	void NewFeame();
+	void PreDraw();
+
+	void PostDraw();
 
 	// フレーム最後
 	void EndFrame();

@@ -26,6 +26,8 @@ namespace Bonjin
         // 💡 エンジンのループから呼ばれる描画関数
         void Draw();
 
+		void DrawImGui();
+
     private:
 
         // シングルトン関連の禁止

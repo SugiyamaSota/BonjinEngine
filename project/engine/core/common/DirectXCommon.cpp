@@ -109,14 +109,12 @@ DirectXCommon::~DirectXCommon() {
 	}
 }
 
-void DirectXCommon::NewFeame() {
+void DirectXCommon::PreDraw() {
 	//これから書き込むバックバッファのインデックスを取得
 	UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
 	//描画先のRTVとDSVを設定
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
 	commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, &dsvHandle);
-	//commandList_->SetGraphicsRootSignature(pso->GetDefaultRootSignature());
-	//commandList_->SetPipelineState(pso->GetDefaultPipelineState());//PSOを設定 
 
 	//TransitionBarrierの設定
 	//今回のバリアはTransition
@@ -146,6 +144,10 @@ void DirectXCommon::NewFeame() {
 
 	//光
 	//commandList_->SetGraphicsRootConstantBufferView(3, directionalLightResource_.Get()->GetGPUVirtualAddress());
+}
+
+void DirectXCommon::PostDraw() {
+	
 }
 
 void DirectXCommon::EndFrame() 

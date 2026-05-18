@@ -37,6 +37,10 @@ void Core::Run() {
 		// 描画処理
 		SceneManager::GetInstance()->Draw();
 
+		PostDraw();
+
+		SceneManager::GetInstance()->DrawImGui();
+
 		EndFrame();
 	}
 }
