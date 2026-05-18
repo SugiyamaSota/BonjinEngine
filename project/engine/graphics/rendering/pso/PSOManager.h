@@ -16,6 +16,7 @@ enum class PrimitiveType {
 	kGrid,    // グリッド
 	kParticle,
 	kSkyBox,
+	kCopyImage,
 	kCount,
 };
 
@@ -100,6 +101,12 @@ private:
 		D3D12_INPUT_ELEMENT_DESC,
 		kParticleInputElements
 	> particleInputElementDescs_;
+
+	static const size_t kCopyImageInputElements = 0;
+	std::array<
+		D3D12_INPUT_ELEMENT_DESC,
+		kCopyImageInputElements
+	> copyImageInputElementDescs_;
 
 	// 形状ごとのインプットレイアウトディスク
 	std::array<

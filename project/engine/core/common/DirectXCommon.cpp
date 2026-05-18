@@ -6,6 +6,7 @@
 #include"function/function.h"
 #include"windows/WinApp.h"
 #include"ImGuiManager.h"
+#include "SrvManager.h"
 
 DirectXCommon* DirectXCommon::instance_ = nullptr;
 
@@ -79,6 +80,29 @@ void DirectXCommon::Initialize() {
 	CreateDepth();
 	InitializeFixFPS();
 
+	const Vector4 kRenderTargetClearValue{ 1.f,0.f,0.f,1.f };
+	renderTextureResource_ = CreateRenderTextureResource(
+		WinApp::GetInstance()->GetClientWidth(),
+		WinApp::GetInstance()->GetClientHeight(),
+		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+		kRenderTargetClearValue
+	);
+	rtvHandles_[2] = GetCPUDescriptorHandle(rtvDescriptorHeap_.Get(), descriptorSizeRTV_, 2);
+
+	device_->CreateRenderTargetView(renderTextureResource_.Get(), &rtvDesc_, rtvHandles_[2]);
+
+	SrvManager* srvManager = SrvManager::GetInstance();
+	renderTextureSrvIndex_ = srvManager->Allocate();
+
+	// 4. CreateSrvを呼び出してSRVを生成
+	// (第4、第5引数はTexture2Dの場合デフォルト値(0)で問題ありません)
+	srvManager->CreateSrv(
+		renderTextureSrvIndex_,
+		renderTextureResource_.Get(),
+		SrvType::Texture2D
+	);
+
+
 	pso = std::make_unique<PSOManager>();
 
 	// PSOクラスを使用
@@ -109,56 +133,108 @@ DirectXCommon::~DirectXCommon() {
 	}
 }
 
-void DirectXCommon::NewFeame() {
-	//これから書き込むバックバッファのインデックスを取得
-	UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
-	//描画先のRTVとDSVを設定
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
-	commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, &dsvHandle);
-	//commandList_->SetGraphicsRootSignature(pso->GetDefaultRootSignature());
-	//commandList_->SetPipelineState(pso->GetDefaultPipelineState());//PSOを設定 
-
-	//TransitionBarrierの設定
-	//今回のバリアはTransition
+void DirectXCommon::PreDraw() {
+	// 1. まず RenderTexture の状態を RENDER_TARGET に遷移させる
 	barrier_.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	//Noneにしておく
 	barrier_.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	//バリアを張る対象のリソース。現在のバックバッファに対して行う
-	barrier_.Transition.pResource = swapChainResources_[backBufferIndex].Get();
-	//遷移前(現在)のResourceState
-	barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	//遷移後のResourceState
+	barrier_.Transition.pResource = renderTextureResource_.Get();
+	barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
 	barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	//TransitionBarrierを張る
 	commandList_->ResourceBarrier(1, &barrier_);
 
+	// 2. バリア完了後に、描画ターゲット（RenderTexture）と深度バッファをセット
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
+	commandList_->OMSetRenderTargets(1, &rtvHandles_[2], false, &dsvHandle);
+
+	// 3. ディスクリプタヒープの設定
 	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
 	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
 
-	//指定した色で画面全体をクリアする
-	float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };//蒼っぽい色。RGBAの順番
-	commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex], clearColor, 0, nullptr);
-	//指定した深度で画面全体をクリアする
+	// 4. クリア処理
+	float clearColor[] = { 1.f, 0.f, 0.f, 1.0f }; // RenderTextureを赤でクリア
+	commandList_->ClearRenderTargetView(rtvHandles_[2], clearColor, 0, nullptr);
 	commandList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-	commandList_->RSSetViewports(1, &viewport_);//Viewportを設定
-	commandList_->RSSetScissorRects(1, &scissorRect_);//Scirssorを設定
+	// ビューポートとシザーの設定
+	commandList_->RSSetViewports(1, &viewport_);
+	commandList_->RSSetScissorRects(1, &scissorRect_);
+}
 
-	//光
-	//commandList_->SetGraphicsRootConstantBufferView(3, directionalLightResource_.Get()->GetGPUVirtualAddress());
+void DirectXCommon::PostDraw() {
+	UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
+
+	// -------------------------------------------------------------------------
+	// ★修正: 描画先を切り替える「前」に、すべてのリソースバリアを完了させる
+	// -------------------------------------------------------------------------
+
+	// A) RenderTexture を 描画ターゲット から シェーダー読み込み用(SRV) に
+	D3D12_RESOURCE_BARRIER rtBarrier{};
+	rtBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	rtBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	rtBarrier.Transition.pResource = renderTextureResource_.Get();
+	rtBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	rtBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+	// B) バックバッファを 画面表示用(PRESENT) から 描画ターゲット に
+	D3D12_RESOURCE_BARRIER bbBarrier{};
+	bbBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	bbBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	bbBarrier.Transition.pResource = swapChainResources_[backBufferIndex].Get();
+	bbBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	bbBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+	D3D12_RESOURCE_BARRIER barriers[] = { rtBarrier, bbBarrier };
+	commandList_->ResourceBarrier(_countof(barriers), barriers);
+
+	// -------------------------------------------------------------------------
+	// ★修正: バリア完了後に、初めてバックバッファをターゲットとしてバインドする
+	// -------------------------------------------------------------------------
+	// フルスクリーンコピーの際は深度テストを行わない（または常に通過する）ため、DSVは nullptr で運用するのが安全です
+	commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, nullptr);
+
+	// バックバッファをクリア（紺色）
+	float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
+	commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex], clearColor, 0, nullptr);
+
+	// ビューポートとシザー矩形を設定
+	commandList_->RSSetViewports(1, &viewport_);
+	commandList_->RSSetScissorRects(1, &scissorRect_);
+
+	// SrvManagerのディスクリプタヒープをセット
+	SrvManager::GetInstance()->PreDraw();
+
+	// RenderTextureの内容をバックバッファにフルスクリーンコピー描画
+	commandList_->SetGraphicsRootSignature(pso->GetRootSignature(PrimitiveType::kCopyImage));
+	commandList_->SetPipelineState(pso->GetPipelineState(
+		device_.Get(), PrimitiveType::kCopyImage, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE
+	));
+	commandList_->SetGraphicsRootDescriptorTable(0, SrvManager::GetInstance()->GetGPUHandle(renderTextureSrvIndex_));
+
+	commandList_->DrawInstanced(3, 1, 0, 0); // フルスクリーン三角形で描画
 }
 
 void DirectXCommon::EndFrame() 
 {	
 
-	//画面に描く処理はすべて終わり、画面に映すので、状態を遷移
-	//今回はRenderTargetからPresentにする
+	UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
+
+	// 状態を遷移（バックバッファをPRESENTに戻す）
+	barrier_.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier_.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier_.Transition.pResource = swapChainResources_[backBufferIndex].Get(); // ★ここを明示
 	barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-	//TransitionBarrierを張る
 	commandList_->ResourceBarrier(1, &barrier_);
 
-	//コマンドリストの内容を確定させる。すべのコマンドを積んでからcloseする
+	// -------------------------------------------------------------------------
+	// ★追加：RenderTexture の状態を次のフレームのために COMMON（または RENDER_TARGET用）に戻しておく
+	// -------------------------------------------------------------------------
+	barrier_.Transition.pResource = renderTextureResource_.Get();
+	barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
+	commandList_->ResourceBarrier(1, &barrier_);
+
+	// コマンドリストの内容を確定させる（既存の処理）
 	HRESULT hr = commandList_->Close();
 	assert(SUCCEEDED(hr));
 	//GPUにコマンドリストの実行を行わせる
@@ -343,7 +419,7 @@ void DirectXCommon::CreateSwapChain() {
 	descriptorSizeRTV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	descriptorSizeDSV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 	//RTVの設定
-	rtvDescriptorHeap_ = CreateDescriptorHeap(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
+	rtvDescriptorHeap_ = CreateDescriptorHeap(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 3, false);
 	rtvDesc_.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;//出力結果をSRGBに変換
 	rtvDesc_.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;//2dテクスチャとして書き込む
 	//ディスクリプらの先頭を取得する
@@ -416,5 +492,41 @@ void DirectXCommon::UpdateFixFPS()
 	}
 
 	reference_ = std::chrono::steady_clock::now();
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateRenderTextureResource(uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor) {
+	//生成するResourceの設定
+	D3D12_RESOURCE_DESC resourceDesc = {};
+	resourceDesc.Width = width;
+	resourceDesc.Height = height;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.Format = format;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	//利用するHeapの設定
+	D3D12_HEAP_PROPERTIES heapProperties = {};
+	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+	D3D12_CLEAR_VALUE clearValue = {};
+	clearValue.Format = format;
+	clearValue.Color[0] = clearColor.x;
+	clearValue.Color[1] = clearColor.y;
+	clearValue.Color[2] = clearColor.z;
+	clearValue.Color[3] = clearColor.w;
+
+	//Resourceの生成
+	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+	HRESULT hr = device_->CreateCommittedResource(
+		&heapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_COMMON,
+		&clearValue,
+		IID_PPV_ARGS(&resource));
+	assert(SUCCEEDED(hr));
+
+	return resource;
 }
 

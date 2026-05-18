@@ -70,7 +70,13 @@ void SceneManager::Draw() {
 
 	currentScene_->Draw();
 
-	currentScene_->DrawImGui();
+}
+
+void SceneManager::DrawImGui() {
+	if (currentScene_ == nullptr) {
+		return;
+	}
+	currentScene_->DrawSceneImGui();
 }
 
 void SceneManager::ChangeScene(SceneType nextSceneType) {

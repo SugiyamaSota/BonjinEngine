@@ -30,7 +30,9 @@ public:
 	void Initialize();
 
 	// フレーム開始
-	void NewFeame();
+	void PreDraw();
+
+	void PostDraw();
 
 	// フレーム最後
 	void EndFrame();
@@ -105,7 +107,7 @@ private:
 	// ディスクリプタヒープ
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap_ = nullptr;
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_{};
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[2];
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[3];
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_ = nullptr;
 
 	// ディスクリプタサイズ
@@ -149,4 +151,10 @@ private:
 	void UpdateFixFPS();    // FPS固定更新
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height);
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource_ = nullptr;
+	uint32_t renderTextureSrvIndex_ = 0;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor);
+
 };
