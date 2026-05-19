@@ -13,37 +13,28 @@ void GameScene::Initialize(Camera* camera)
 
 	this->camera_ = camera;
 
+	mapChipField_ = std::make_unique<MapChipField>();
+	mapChipField_->LoadmapChipCsv("resources/maps/tutorial.csv");
 
-	testModel_ = std::make_unique<Object3D>();
-	testModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/uvChecker.png");
-	//testModel_->LoadModel("teapot", "teapot.obj");
-
-
-	testSkyBox_ = std::make_unique<Object3D>();
-	testSkyBox_->CreateModel(ModelBuilder::ModelType::kCube, "resources/textures/skyBox.dds");
-	testSkyBox_->SetPrimitiveType(PrimitiveType::kSkyBox);
-
-	pm = ParticleManager::GetInstance();
-	pm->Initialize();
-
-	// 「炎」と「火花」など、見た目（モデルやテクスチャ）ごとにグループを作る
-	pm->CreateParticleGroup("ringGroup", ModelBuilder::ModelType::kRing, "resources/textures/gradationLine.png");
+	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
+		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
+			blockModel_[i][j] = std::make_unique<Object3D>();
+			blockModel_[i][j]->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+			blockWorldTransform_[i][j].rotate = { 0,0,0 };
+			blockWorldTransform_[i][j].scale = { 1,1,1 };
+			blockWorldTransform_[i][j].translate = { 0,0,0 };
+		}
+	}
 
 
-	ringEffect.position = { 0.0f, 0.0f, 0.0f };
-	ringEffect.rotate = { 0.0f, 0.0f, 0.0f };
-	ringEffect.velocity = { 0.0f, 0.0f, 0.0f };
-	ringEffect.scale = { 1.0f, 1.0f, 1.0f }; // 大きなリングにする
-	ringEffect.color = { 1.0f, 1.0f, 1.0f, 1.0f }; // オレンジ色
-	ringEffect.lifeTime = 2.0f;
+	GenerateBlocksAndGoal();
 
-	auto ringUpdate = [](ParticleData& data, float deltaTime) {
-		data.transform.rotate.z += deltaTime; // 回転速度を追
-		};
-
-	ringEffect.updateFunc = ringUpdate;
-
-	ParticleManager::GetInstance()->Emit("ringGroup", ringEffect);
+	playerModel_ = std::make_unique<Object3D>();
+	playerModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+	player_ = std::make_unique<Player>();
+	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(2, 1);
+	player_->Initialize(playerModel_.get(), camera_, playerPosition);
+	player_->SetMapChipField(mapChipField_.get());
 
 }
 
@@ -52,15 +43,15 @@ void GameScene::Unload() {
 
 void GameScene::Update(float deltaTime) {
 
-	testModel_->Update(InitializeWorldTransform(), camera_);
+	player_->Update();
 
-	testSkyBox_->Update(InitializeWorldTransform(), camera_);
-
-	if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
-		ParticleManager::GetInstance()->Emit("ringGroup", ringEffect);
+	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
+		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
+			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
+				blockModel_[i][j]->Update(blockWorldTransform_[i][j], camera_);
+			}
+		}
 	}
-
-	pm->Update(camera_);
 
 	// フェーズに応じた処理
 	switch (phase_) {
@@ -86,11 +77,16 @@ void GameScene::Update(float deltaTime) {
 
 void GameScene::Draw() {
 
-	//testModel_->Draw();
+	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
+		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
+			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
+				blockModel_[i][j]->Draw();
+			}
+		}
+	}
 
-	//testSkyBox_->Draw();
-
-	pm->Draw();
+	player_->Draw();
+	
 }
 
 void GameScene::DrawSceneImGui() {
@@ -103,4 +99,28 @@ void GameScene::DrawSceneImGui() {
 
 SceneType GameScene::GetNextScene() const {
 	return nextSceneType_;
+}
+
+void GameScene::GenerateBlocksAndGoal() {
+	uint32_t numBlockVirtical = mapChipField_->GetNumBlockVirtical();
+	uint32_t numBlockHorizontal = mapChipField_->GetNumBlockHorizontal();
+
+	const float kBlockWidth = 2.0f;
+	const float kBlockHeight = 2.0f;
+
+	for (uint32_t i = 0; i < numBlockVirtical; ++i) {
+		for (uint32_t j = 0; j < numBlockHorizontal; ++j) {
+			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
+				blockWorldTransform_[i][j].rotate = { 0,0,0 };
+				blockWorldTransform_[i][j].scale = { 1,1,1 };
+				blockWorldTransform_[i][j].translate = mapChipField_->GetMapChipPositionByIndex(j, i);
+			} else
+				if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kGoal) {
+					goalWorldTransform_.rotate = { 0,0,0 };
+					goalWorldTransform_.scale = { 1,1,1 };
+					goalWorldTransform_.translate = mapChipField_->GetMapChipPositionByIndex(j, i);
+					//goalPosition = goalWorldTransform_.translate;
+				}
+		}
+	}
 }

@@ -1,9 +1,12 @@
 #pragma once
 #include "../interface/BaseScene.h" // ISceneをインクルード
 
-#include "Object3D.h"
+#include<memory>
 
-#include"ParticleManager.h"
+#include "gameObject/player/Player.h"
+#include "mapchip/MapChipField.h"
+
+#include "Object3D.h"
 
 namespace Bonjin
 {
@@ -37,15 +40,26 @@ namespace Bonjin
 		}
 
 	private:
+
 		// --- ゲーム固有の変数 ---
-		std::unique_ptr<Object3D> testModel_ = nullptr;
+		std::unique_ptr<Player> player_ = nullptr;
+		std::unique_ptr<Object3D> playerModel_ = nullptr;
 
-		std::unique_ptr<Object3D> testSkyBox_ = nullptr;
+		std::unique_ptr<MapChipField> mapChipField_ = nullptr;	
+		static const uint32_t kNumBlockVirtical = 10;
+		static const uint32_t kNumBlockHorizontal = 60;
+		std::unique_ptr<Object3D> blockModel_[kNumBlockVirtical][kNumBlockHorizontal] = { nullptr };
+		WorldTransform blockWorldTransform_[kNumBlockVirtical][kNumBlockHorizontal];
 
-		ParticleManager* pm = nullptr;
-		ParticleConfig ringEffect;
+		std::unique_ptr<Object3D> goalModel_ = nullptr;
+		WorldTransform goalWorldTransform_;
 
 	private:
 		// --- ゲーム固有の関数 ---
+		/// <summary>
+		/// ブロックとゴール生成
+		/// </summary>
+		void GenerateBlocksAndGoal();
+
 	};
 }
