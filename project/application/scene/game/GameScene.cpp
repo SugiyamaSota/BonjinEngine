@@ -29,7 +29,6 @@ void GameScene::Initialize(Camera* camera)
 	// 「炎」と「火花」など、見た目（モデルやテクスチャ）ごとにグループを作る
 	pm->CreateParticleGroup("ringGroup", ModelBuilder::ModelType::kRing, "resources/textures/gradationLine.png");
 
-
 	ringEffect.position = { 0.0f, 0.0f, 0.0f };
 	ringEffect.rotate = { 0.0f, 0.0f, 0.0f };
 	ringEffect.velocity = { 0.0f, 0.0f, 0.0f };

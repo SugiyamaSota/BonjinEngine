@@ -14,7 +14,7 @@ static const wchar_t* kShaderPaths[static_cast<size_t>(PrimitiveType::kCount)]
 	// kSkyBox
    { L"resources/shader/SkyBox.VS.hlsl", L"resources/shader/SkyBox.PS.hlsl" },
    //
-	{ L"resources/shader/CopyImage.VS.hlsl", L"resources/shader/CopyImage.PS.hlsl" },
+	{ L"resources/shader/FullScreen.VS.hlsl", L"resources/shader/FullScreen.PS.hlsl" },
 };
 
 // ⭐ シェーダープロファイルの定数定義 [ShaderStage]
