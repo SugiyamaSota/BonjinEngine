@@ -9,6 +9,9 @@
 #include"pso/PSOManager.h"
 #include"math/Struct.h"
 
+#include "rendetTexture/RenderTexture.h"
+#include "depthStencil/DepthStencil.h"
+
 class DirectXCommon {
 public:
 	/// --- インスタンス関連 ---
@@ -75,7 +78,7 @@ public:
 	uint64_t GetNextFenceValue() const { return fenceValue_ + 1; }
 
 	// 深度
-	ID3D12DescriptorHeap* GetDSVDescriptorHeap() { return dsvDescriptorHeap_.Get(); }
+	ID3D12DescriptorHeap* GetDSVDescriptorHeap() { return depthStencil_->GetDescriptorHeap(); }
 
 	// PSO
 	PSOManager* GetPSO()const { return pso.get(); }
@@ -120,12 +123,6 @@ private:
 	uint64_t fenceValue_ = 0;
 	HANDLE fenceEvent_;
 
-	// 深度
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap_;
-	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource_ = nullptr;
-	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc_ = {};
-	D3D12_DEPTH_STENCIL_DESC depthStencilDesc_ = {};
-
 	// PSO
 	std::unique_ptr<PSOManager> pso = nullptr;
 
@@ -146,15 +143,11 @@ private:
 	void CreateCommand();   // コマンド関連
 	void CreateSwapChain(); // スワップチェーン
 	void CreateFence();     // フェンス
-	void CreateDepth();     // 深度
 	void InitializeFixFPS();// FPS固定初期化
 	void UpdateFixFPS();    // FPS固定更新
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height);
+	std::unique_ptr<RenderTexture> renderTexture_ = nullptr;
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource_ = nullptr;
-	uint32_t renderTextureSrvIndex_ = 0;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor);
+	std::unique_ptr<DepthStencil> depthStencil_ = nullptr;
 
 };

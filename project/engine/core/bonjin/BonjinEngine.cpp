@@ -53,8 +53,6 @@ void Bonjin::Finalize() {
 void Bonjin::NewFrame() {
 	Time::GetInstance()->Update();
 	Input::GetInstance()->Update();
-	ID3D12DescriptorHeap* descriptorHeaps[] = { DirectXCommon::GetInstance()->GetSRVDescriptorHeap() };
-	DirectXCommon::GetInstance()->GetCommandList()->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 	ImGuiManager::GetInstance()->NewFrame();
 }
 

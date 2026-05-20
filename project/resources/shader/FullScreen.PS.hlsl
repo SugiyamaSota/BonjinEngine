@@ -12,7 +12,27 @@ PixelShaderOutPut main(VertexShaderOutPut input)
 {
     PixelShaderOutPut output;
     output.color = gTexture.Sample(gSampler, input.texcoord);
-    float32_t value = dot(output.color.rgb, float32_t3(0.2125f, 0.7154f, 0.0721f));
-    output.color.rgb = float32_t3(value, value, value);
+    
+    bool isGray = true;
+    bool isVignette = true;
+    
+    if (isGray)
+    {
+        float32_t value = dot(output.color.rgb, float32_t3(0.2125f, 0.7154f, 0.0721f));
+        output.color.rgb = float32_t3(value, value, value);
+    }
+    
+    if(isVignette)
+    {
+    // 中心になるほど明るくなるようにする
+        float32_t2 correct = input.texcoord * (1.f - input.texcoord.yx);
+    // scaleで調整
+        float vignette = correct.x * correct.y * 16.f;
+    // とりあえず0.8乗
+        vignette = saturate(pow(vignette, 0.8f));
+    // 出力に乗算
+        output.color.rgb *= vignette;
+    }
+    
     return output;
 }
