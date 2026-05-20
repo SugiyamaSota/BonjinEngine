@@ -9,6 +9,8 @@
 #include"pso/PSOManager.h"
 #include"math/Struct.h"
 
+#include "rendetTexture/RenderTexture.h"
+
 class DirectXCommon {
 public:
 	/// --- インスタンス関連 ---
@@ -152,9 +154,6 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height);
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource_ = nullptr;
-	uint32_t renderTextureSrvIndex_ = 0;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor);
+	std::unique_ptr<RenderTexture> renderTexture_ = nullptr;
 
 };

@@ -84,7 +84,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine\graphics\rendering\object;$(ProjectDir)engine\system\manager\srv</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine\graphics\rendering\object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,7 +110,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine\graphics\rendering\object;$(ProjectDir)engine\system\manager\srv</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine\graphics\rendering\object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
@@ -140,7 +140,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine\graphics\rendering\object;$(ProjectDir)engine\system\manager\srv</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/assets/model;$(ProjectDir)engine\graphics/rendering;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine\graphics\rendering\object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -156,6 +156,7 @@
   <ItemGroup>
     <ClCompile Include="application\scene\game\GameScene.cpp" />
     <ClCompile Include="application\core\Core.cpp" />
+    <ClCompile Include="engine\core\common\rendetTexture\RenderTexture.cpp" />
     <ClCompile Include="engine\graphics\rendering\object\BaseObject.cpp" />
     <ClCompile Include="engine\system\manager\imgui\ImGuiManager.cpp" />
     <ClCompile Include="engine\system\manager\model\ModelManager.cpp" />
@@ -216,6 +217,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\core\Core.h" />
+    <ClInclude Include="engine\core\common\rendetTexture\RenderTexture.h" />
     <ClInclude Include="engine\graphics\rendering\object\BaseObject.h" />
     <ClInclude Include="engine\interface\BaseScene.h" />
     <ClInclude Include="engine\interface\IScene.h" />
