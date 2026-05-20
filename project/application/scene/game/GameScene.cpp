@@ -85,7 +85,7 @@ void GameScene::Update(float deltaTime) {
 
 void GameScene::Draw() {
 
-	//testModel_->Draw();
+	testModel_->Draw();
 
 	//testSkyBox_->Draw();
 

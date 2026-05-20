@@ -84,4 +84,6 @@ void BaseObject::CreateMaterialResource() {
     materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     materialData_->enableLighting = true;
     materialData_->uvTransform = MakeIdentity4x4();
+    materialData_->enableEnvironmentMap = 1;       // デフォルトON
+    materialData_->environmentCoefficient = 0.5f;
 }
