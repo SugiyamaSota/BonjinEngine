@@ -85,7 +85,7 @@ void GameScene::Update(float deltaTime) {
 
 void GameScene::Draw() {
 
-	//testModel_->Draw();
+	testModel_->Draw();
 
 	//testSkyBox_->Draw();
 
@@ -96,6 +96,8 @@ void GameScene::DrawSceneImGui() {
 #ifdef USE_IMGUI
 
 	LightManager::GetInstance()->DrawImGui();
+
+	testModel_->DrawImGui("TestModel");
 
 #endif
 }
