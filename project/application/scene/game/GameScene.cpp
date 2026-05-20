@@ -94,6 +94,8 @@ void GameScene::DrawSceneImGui() {
 
 	LightManager::GetInstance()->DrawImGui();
 
+	testModel_->DrawImGui("TestModel");
+
 #endif
 }
 

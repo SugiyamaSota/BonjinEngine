@@ -26,14 +26,19 @@ struct VertexData {
 };
 
 struct Material {
-	Vector4 color;          // 16バイト
-	int32_t enableLighting; // 4バイト
-	int32_t enableSpecular;
-	float padding[2];       // 12バイト (uvTransformを16バイト境界に合わせる)
-	Matrix4x4 uvTransform;  // 64バイト
-	float shininess;        // 4バイト
-	float padding2[3];      // 12バイト (構造体サイズを16の倍数にする)
-}; 
+	Vector4 color;                   // 16バイト (0～15) [ぴったり]
+
+	int32_t enableLighting;          // 4バイト  (16～19)
+	int32_t enableSpecular;          // 4バイト  (20～23)
+	float padding1[2];               // 8バイト  (24～31) ➔ 次の行列を16アライメントへ
+
+	Matrix4x4 uvTransform;           // 64バイト (32～95) [ぴったり]
+
+	float shininess;                 // 4バイト  (96～99)
+	int32_t enableEnvironmentMap;    // 4バイト  (100～103)
+	float environmentCoefficient;    // 4バイト  (104～107)
+	float padding2;                  // 4バイト  (108～111) ➔ ここまでの4つで合計16バイト
+}; // 構造体全体のサイズ：112バイト (16の倍数)
 
 struct TransformationMatrix {
 	Matrix4x4 WVP;

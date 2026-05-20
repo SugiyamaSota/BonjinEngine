@@ -43,6 +43,8 @@ struct Material
     int32_t enableSpecular;
     float32_t4x4 uvTransform;
     float32_t shininess;
+    uint32_t enableEnvironmentMap;
+    float32_t environmentCoefficient;
 };
 
 struct Camera
