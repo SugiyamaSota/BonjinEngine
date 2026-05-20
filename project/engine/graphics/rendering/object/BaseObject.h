@@ -14,6 +14,8 @@ public:
 	// 共通の描画インターフェース
 	virtual void Draw() = 0;
 
+	virtual void DrawImGui(const std::string& label);
+
 	// 共通のセッター
 	void SetFillMode(D3D12_FILL_MODE fillMode) { fillMode_ = fillMode; }
 	void SetCullMode(D3D12_CULL_MODE cullMode) { cullMode_ = cullMode; }

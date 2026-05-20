@@ -77,20 +77,50 @@ void Object3D::Draw() {
     commandList->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
 }
 
-void Object3D::DrawImGui() {
+void Object3D::DrawImGui(const std::string& label) {
 #ifdef USE_IMGUI
-	if (ImGui::BeginTabBar("ModelDebug")) {
+    if (!materialData_) return;
 
-		// --- マテリアルタブ ---
-		if (ImGui::BeginTabItem("Material")) {
-			ImGui::ColorEdit4("Base Color", &materialData_->color.x);
-			ImGui::DragFloat("Shininess", &materialData_->shininess, 0.1f, 0.1f, 100.0f);
-			ImGui::Checkbox("Enable Lighting", reinterpret_cast<bool*>(&materialData_->enableLighting));
-			ImGui::Checkbox("Enable Specular", reinterpret_cast<bool*>(&materialData_->enableSpecular));
-			ImGui::EndTabItem();
-		}
+    // 一度基底のノードを展開するために、TreeNodeの状態を確認しながら開く形にします。
+    if (ImGui::TreeNode(label.c_str())) {
+        // 親ノードはすでに開いているので、中身を直接記述していきます
 
-		ImGui::EndTabBar();
-	}
+        // 💡 共通項目の描画（二重ノードにならないよう、BaseObject側の関数内 TreeNode と並列にします）
+        if (ImGui::TreeNode("Base Material")) {
+            ImGui::ColorEdit4("Color", &materialData_->color.x);
+
+            bool enableLight = (materialData_->enableLighting != 0);
+            if (ImGui::Checkbox("Enable Lighting", &enableLight)) { materialData_->enableLighting = enableLight ? 1 : 0; }
+
+            ImGui::Separator();
+
+            bool enableEnv = (materialData_->enableEnvironmentMap != 0);
+            if (ImGui::Checkbox("Enable EnvMap", &enableEnv)) { materialData_->enableEnvironmentMap = enableEnv ? 1 : 0; }
+
+            if (enableEnv) {
+                ImGui::SliderFloat("EnvMap Coefficient", &materialData_->environmentCoefficient, 0.0f, 1.0f);
+            }
+            ImGui::TreePop();
+        }
+
+        // 💡 ここから Object3D 特有の拡張項目
+        if (ImGui::TreeNode("Object3D Specular")) {
+            // 鏡面反射のON/OFF
+            bool enableSpecular = (materialData_->enableSpecular != 0);
+            if (ImGui::Checkbox("Enable Specular", &enableSpecular)) {
+                materialData_->enableSpecular = enableSpecular ? 1 : 0;
+            }
+
+            // 鏡面反射の輝度（シャイニネス）
+            if (enableSpecular) {
+                ImGui::DragFloat("Shininess", &materialData_->shininess, 0.1f, 0.1f, 100.0f);
+            }
+
+            ImGui::TreePop();
+        }
+
+        // 親ノード（label）を閉じる
+        ImGui::TreePop();
+    }
 #endif
 }

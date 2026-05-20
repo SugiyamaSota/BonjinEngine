@@ -87,3 +87,41 @@ void BaseObject::CreateMaterialResource() {
     materialData_->enableEnvironmentMap = 1;       // デフォルトON
     materialData_->environmentCoefficient = 0.5f;
 }
+
+void BaseObject::DrawImGui(const std::string& label) {
+#ifdef USE_IMGUI
+    if (!materialData_) return;
+
+    // オブジェクトごとに一意の折りたたみノードを作成
+    if (ImGui::TreeNode(label.c_str())) {
+
+        if (ImGui::TreeNode("Base Material")) {
+            // カラー編集
+            ImGui::ColorEdit4("Color", &materialData_->color.x);
+
+            // ライティングON/OFF (int32_t を bool に安全にキャスト変換して操作)
+            bool enableLight = (materialData_->enableLighting != 0);
+            if (ImGui::Checkbox("Enable Lighting", &enableLight)) {
+                materialData_->enableLighting = enableLight ? 1 : 0;
+            }
+
+            ImGui::Separator();
+
+            // 環境マッピングON/OFF
+            bool enableEnv = (materialData_->enableEnvironmentMap != 0);
+            if (ImGui::Checkbox("Enable EnvMap", &enableEnv)) {
+                materialData_->enableEnvironmentMap = enableEnv ? 1 : 0;
+            }
+
+            // 環境マッピングの影響度 (0.0 ～ 1.0)
+            if (enableEnv) {
+                ImGui::SliderFloat("EnvMap Coefficient", &materialData_->environmentCoefficient, 0.0f, 1.0f);
+            }
+
+            ImGui::TreePop();
+        }
+
+        // ラベル用のTreeNodeをポップする（派生クラス側でさらに追加できるように、ここではまだ親ノードを閉じないアプローチにするため、この関数の末尾ではなく、Object3D側で最後に一括 Pop させます）
+    }
+#endif
+}

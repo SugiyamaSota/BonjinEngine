@@ -15,7 +15,7 @@ public:
     /// <summary>
     /// デバッグ描画処理関数
     /// </summary>
-    void DrawImGui();
+    void DrawImGui(const std::string& label) override;
 
 private:
 
