@@ -3,7 +3,7 @@
 #include <d3d12.h>
 #include <stdint.h>
 
-struct Vector4;
+#include "math/Struct.h"
 
 class RenderTexture
 {
@@ -14,12 +14,18 @@ public:
 	~RenderTexture() = default;
 
 	/// <summary>
-	/// バリア遷移関数
+	/// バリア遷移構造体生成
 	/// </summary>
 	/// <param name="commandList">コマンドリスト</param>
 	/// <param name="beforeState">遷移前のリソース状態</param>
 	/// <param name="afterState">遷移後のリソース状態</param>
-	void Transition(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState);
+	D3D12_RESOURCE_BARRIER CreateTransitionBarrier(D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState);
+
+	/// <summary>
+	/// 画面クリア
+	/// </summary>
+	/// <param name="commandList">コマンドリスト</param>
+	void ClearView(ID3D12GraphicsCommandList* commandList);
 
 	// ゲッター
 	ID3D12Resource* GetResource() { return renderTextureResource_.Get(); }
@@ -29,6 +35,7 @@ public:
 
 private:
 
+	Vector4 clearColor_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource_ = nullptr;
 	uint32_t renderTextureSrvIndex_ = 0;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_{};

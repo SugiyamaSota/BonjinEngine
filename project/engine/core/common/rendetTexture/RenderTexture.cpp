@@ -2,12 +2,15 @@
 #include <cassert>
 #include "windows/WinApp.h"
 #include "SrvManager.h"
-#include "math/Struct.h"
 
 RenderTexture::RenderTexture(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle)
 	: rtvHandle_(rtvHandle)
 {
-	const Vector4 kRenderTargetClearValue{ 1.f, 0.f, 0.f, 1.f };
+
+	// 赤でクリア
+	clearColor_ = { 1.0f, 0.0f, 0.0f, 1.0f };
+
+	const Vector4& clearColorValue = clearColor_;
 
 	// 1. リソース生成
 	renderTextureResource_ = CreateRenderTextureResource(
@@ -15,7 +18,7 @@ RenderTexture::RenderTexture(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE r
 		WinApp::GetInstance()->GetClientWidth(),
 		WinApp::GetInstance()->GetClientHeight(),
 		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
-		kRenderTargetClearValue
+		clearColorValue
 	);
 
 	// 2. SRVの割り当てと生成
@@ -30,7 +33,7 @@ RenderTexture::RenderTexture(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE r
 	device->CreateRenderTargetView(renderTextureResource_.Get(), &rtvDesc, rtvHandle_);
 }
 
-void RenderTexture::Transition(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState) {
+D3D12_RESOURCE_BARRIER RenderTexture::CreateTransitionBarrier(D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState) {
 	D3D12_RESOURCE_BARRIER barrier{};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -38,7 +41,17 @@ void RenderTexture::Transition(ID3D12GraphicsCommandList* commandList, D3D12_RES
 	barrier.Transition.StateBefore = beforeState;
 	barrier.Transition.StateAfter = afterState;
 
-	commandList->ResourceBarrier(1, &barrier);
+	return barrier;
+}
+
+void RenderTexture::ClearView(ID3D12GraphicsCommandList* commandList)
+{
+	float clearColor[] = {
+		clearColor_.x, clearColor_.y, clearColor_.z, clearColor_.w
+	};
+
+	// 自身の保持しているRTVハンドルを使ってクリア
+	commandList->ClearRenderTargetView(rtvHandle_, clearColor, 0, nullptr);
 }
 
 Microsoft::WRL::ComPtr<ID3D12Resource> RenderTexture::CreateRenderTextureResource(

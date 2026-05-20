@@ -117,14 +117,12 @@ DirectXCommon::~DirectXCommon() {
 	}
 }
 
-void DirectXCommon::PreDraw() {
+void DirectXCommon::PreDraw() 
+{
+
 	// 1. まず RenderTexture の状態を RENDER_TARGET に遷移させる
-	barrier_.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier_.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier_.Transition.pResource = renderTexture_->GetResource();
-	barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
-	barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	commandList_->ResourceBarrier(1, &barrier_);
+	D3D12_RESOURCE_BARRIER rtBarrier = renderTexture_->CreateTransitionBarrier(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	commandList_->ResourceBarrier(1, &rtBarrier);
 
 	// 2. バリア完了後に、描画ターゲット（RenderTexture）と深度バッファをセット
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
@@ -134,30 +132,24 @@ void DirectXCommon::PreDraw() {
 	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
 	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
 
-	// 4. クリア処理
-	float clearColor[] = { 1.f, 0.f, 0.f, 1.0f }; // RenderTextureを赤でクリア
-	commandList_->ClearRenderTargetView(rtvHandles_[2], clearColor, 0, nullptr);
+	// 4. RenderTextureをクリア
+	renderTexture_->ClearView(commandList_.Get());
+
+	// 5. 深度バッファをクリア
 	commandList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// ビューポートとシザーの設定
 	commandList_->RSSetViewports(1, &viewport_);
 	commandList_->RSSetScissorRects(1, &scissorRect_);
+
 }
 
-void DirectXCommon::PostDraw() {
+void DirectXCommon::PostDraw()
+{
 	UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
 
-	// -------------------------------------------------------------------------
-	// ★修正: 描画先を切り替える「前」に、すべてのリソースバリアを完了させる
-	// -------------------------------------------------------------------------
-
 	// A) RenderTexture を 描画ターゲット から シェーダー読み込み用(SRV) に
-	D3D12_RESOURCE_BARRIER rtBarrier{};
-	rtBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	rtBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	rtBarrier.Transition.pResource = renderTexture_->GetResource();
-	rtBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	rtBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	D3D12_RESOURCE_BARRIER rtBarrier = renderTexture_->CreateTransitionBarrier(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	// B) バックバッファを 画面表示用(PRESENT) から 描画ターゲット に
 	D3D12_RESOURCE_BARRIER bbBarrier{};
