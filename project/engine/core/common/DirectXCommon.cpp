@@ -157,6 +157,8 @@ void DirectXCommon::PostDraw()
 	));
 	commandList_->SetGraphicsRootDescriptorTable(0, SrvManager::GetInstance()->GetGPUHandle(renderTexture_->GetSrvIndex()));
 
+	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	commandList_->DrawInstanced(3, 1, 0, 0); // フルスクリーン三角形で描画
 }
 
