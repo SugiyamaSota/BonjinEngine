@@ -14,6 +14,7 @@ namespace Bonjin
 		kTitle,
 		kGame,
 		kResult,
+		kTest,
 		kExit // ゲーム終了を意味する特別なシーン
 	};
 
