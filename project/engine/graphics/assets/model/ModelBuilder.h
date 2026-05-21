@@ -11,6 +11,7 @@ public:
 	enum class ModelType {
 		kSphere,
 		kCube,
+		kSkyBox,
 		kPlane,
 		kRing
 	};
@@ -21,6 +22,9 @@ public:
 	static ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename);
 
 	static ModelData CreateModel(ModelType type);
+	
+
+private:
 
 	static ModelData CreateSphereModel(uint32_t subdivision);
 
@@ -30,7 +34,8 @@ public:
 
 	static ModelData CreateRingModel(uint32_t subdivision = 32, float innerRadius = 0.2f, float outerRadius = 1.0f);
 
-private:
+	static ModelData CreateSkyBoxModel();
+
 	/// <summary>
 	/// mtlファイルの読み込み
 	/// </summary>

@@ -60,6 +60,8 @@ ModelData ModelBuilder::CreateModel(ModelType type) {
 		return CreateSphereModel(16); // 分割数はデフォルト値を指定
 	case ModelType::kCube:
 		return CreateCubeModel();
+	case ModelType::kSkyBox:
+		return CreateSkyBoxModel();
 	case ModelType::kPlane:
 		return CreatePlaneModel();
 	case ModelType::kRing: // 追加
@@ -153,40 +155,110 @@ ModelData ModelBuilder::CreateCubeModel() {
 	// 右面 (x = 1.0f)
 	addFaceDirect(
 		{ {1,1,1,1}, {1,1,-1,1}, {1,-1,1,1}, {1,-1,-1,1} },
-		{ 0,1,2, 2,1,3 } // 内側を向く順序
+		{ 0, 2, 1,  1, 2, 3 }
 	);
 
 	// 左面 (x = -1.0f)
 	addFaceDirect(
 		{ {-1,1,-1,1}, {-1,1,1,1}, {-1,-1,-1,1}, {-1,-1,1,1} },
-		{ 0,1,2, 2,1,3 }
+		{ 0, 2, 1,  1, 2, 3 }
 	);
 
 	// 前面 (z = 1.0f)
 	addFaceDirect(
 		{ {-1,1,1,1}, {1,1,1,1}, {-1,-1,1,1}, {1,-1,1,1} },
-		{ 0,1,2, 2,1,3 }
+		{ 0, 2, 1,  1, 2, 3 }
 	);
 
 	// 背面 (z = -1.0f)
 	addFaceDirect(
 		{ {1,1,-1,1}, {-1,1,-1,1}, {1,-1,-1,1}, {-1,-1,-1,1} },
-		{ 0,1,2, 2,1,3 }
+		{ 0, 2, 1,  1, 2, 3 }
 	);
 
 	// 上面 (y = 1.0f)
 	addFaceDirect(
 		{ {-1,1,-1,1}, {1,1,-1,1}, {-1,1,1,1}, {1,1,1,1} },
-		{ 0,1,2, 2,1,3 }
+		{ 0, 2, 1,  1, 2, 3 }
 	);
 
 	// 下面 (y = -1.0f)
 	addFaceDirect(
 		{ {-1,-1,1,1}, {1,-1,1,1}, {-1,-1,-1,1}, {1,-1,-1,1} },
-		{ 0,1,2, 2,1,3 }
+		{ 0, 2, 1,  1, 2, 3 }
 	);
 
 	return modelData;
+}
+
+ModelData ModelBuilder::CreateSkyBoxModel() {
+	ModelData modelData; auto addFaceDirect = [&](std::vector<Vector4> p, std::vector<int> indices) {
+
+		for (int index : indices) {
+
+			VertexData v;
+
+			v.position = p[index];
+
+			// Skyboxではnormalもtexcoordも使わないので適当に埋める
+
+			v.normal = { 0, 0, 0 };
+
+			v.texcoord = { 0, 0 };
+
+			modelData.vertices.push_back(v);
+
+		}
+
+		};// --- 各面のデータ定義 (資料の座標と順序に準拠) ---// 右面 (x = 1.0f)
+
+	addFaceDirect(
+
+		{ {1,1,1,1}, {1,1,-1,1}, {1,-1,1,1}, {1,-1,-1,1} },
+
+		{ 0,1,2, 2,1,3 } // 内側を向く順序
+
+	);// 左面 (x = -1.0f)
+
+	addFaceDirect(
+
+		{ {-1,1,-1,1}, {-1,1,1,1}, {-1,-1,-1,1}, {-1,-1,1,1} },
+
+		{ 0,1,2, 2,1,3 }
+
+	);// 前面 (z = 1.0f)
+
+	addFaceDirect(
+
+		{ {-1,1,1,1}, {1,1,1,1}, {-1,-1,1,1}, {1,-1,1,1} },
+
+		{ 0,1,2, 2,1,3 }
+
+	);// 背面 (z = -1.0f)
+
+	addFaceDirect(
+
+		{ {1,1,-1,1}, {-1,1,-1,1}, {1,-1,-1,1}, {-1,-1,-1,1} },
+
+		{ 0,1,2, 2,1,3 }
+
+	);// 上面 (y = 1.0f)
+
+	addFaceDirect(
+
+		{ {-1,1,-1,1}, {1,1,-1,1}, {-1,1,1,1}, {1,1,1,1} },
+
+		{ 0,1,2, 2,1,3 }
+
+	);// 下面 (y = -1.0f)
+
+	addFaceDirect(
+
+		{ {-1,-1,1,1}, {1,-1,1,1}, {-1,-1,-1,1}, {1,-1,-1,1} },
+
+		{ 0,1,2, 2,1,3 }
+
+	); return modelData;
 }
 
 ModelData ModelBuilder::CreatePlaneModel() {
