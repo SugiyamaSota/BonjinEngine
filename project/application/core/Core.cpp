@@ -3,6 +3,7 @@
 #include "SceneManager.h"
 #include "TitleScene.h"
 #include "GameScene.h"
+#include "TestScene.h"
 
 using namespace Bonjin;
 
@@ -15,8 +16,11 @@ void Core::Initialize() {
 	// シーンマネージャーのセットアップ
 	auto sceneManager = SceneManager::GetInstance();
 	sceneManager->Initialize();
+	sceneManager->AddScene(SceneType::kTest, std::make_unique<TestScene>());
 	sceneManager->AddScene(SceneType::kGame, std::make_unique<GameScene>());
 	sceneManager->AddScene(SceneType::kTitle, std::make_unique<TitleScene>());
+
+	sceneManager->ChangeScene(SceneType::kTest);
 }
 
 void Core::Run() {

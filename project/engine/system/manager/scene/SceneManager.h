@@ -28,6 +28,9 @@ namespace Bonjin
 
 		void DrawImGui();
 
+        // 💡 シーン切り替えロジック
+        void ChangeScene(SceneType nextSceneType);
+
     private:
 
         // シングルトン関連の禁止
@@ -38,9 +41,6 @@ namespace Bonjin
         IScene* currentScene_ = nullptr;
         // 💡 登録されたすべてのシーンを保持するマップ
         std::map<SceneType, std::unique_ptr<IScene>> scenes_;
-
-        // 💡 シーン切り替えロジック
-        void ChangeScene(SceneType nextSceneType);
 
         std::unique_ptr<Camera> camera_ = nullptr;
 
