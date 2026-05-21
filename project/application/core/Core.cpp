@@ -20,7 +20,7 @@ void Core::Initialize() {
 	sceneManager->AddScene(SceneType::kGame, std::make_unique<GameScene>());
 	sceneManager->AddScene(SceneType::kTitle, std::make_unique<TitleScene>());
 
-	sceneManager->ChangeScene(SceneType::kTest);
+	sceneManager->ChangeScene(SceneType::kGame);
 }
 
 void Core::Run() {

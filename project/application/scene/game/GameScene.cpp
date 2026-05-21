@@ -19,7 +19,8 @@ void GameScene::Initialize(Camera* camera)
 	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
 		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
 			blockModel_[i][j] = std::make_unique<Object3D>();
-			blockModel_[i][j]->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+			blockModel_[i][j]->CreateModel(ModelBuilder::ModelType::kCube, "resources/textures/default.png");
+			blockModel_[i][j]->SetCullMode(D3D12_CULL_MODE_FRONT);
 			blockWorldTransform_[i][j].rotate = { 0,0,0 };
 			blockWorldTransform_[i][j].scale = { 1,1,1 };
 			blockWorldTransform_[i][j].translate = { 0,0,0 };
