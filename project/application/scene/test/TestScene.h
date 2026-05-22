@@ -38,9 +38,14 @@ namespace Bonjin
 
 	private:
 		// --- ゲーム固有の変数 ---
+		// テストモデルspher
 		std::unique_ptr<Object3D> testModel_ = nullptr;
 
+		// 
 		std::unique_ptr<Object3D> testSkyBox_ = nullptr;
+
+		// テストモデルcube
+		std::unique_ptr<Object3D> testCube_ = nullptr;
 
 		ParticleManager* pm = nullptr;
 		ParticleConfig ringEffect;

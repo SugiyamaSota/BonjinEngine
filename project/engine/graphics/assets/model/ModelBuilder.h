@@ -13,7 +13,8 @@ public:
 		kCube,
 		kSkyBox,
 		kPlane,
-		kRing
+		kRing,
+		kCylinder
 	};
 
 	/// <summary>
@@ -35,6 +36,8 @@ private:
 	static ModelData CreateRingModel(uint32_t subdivision = 32, float innerRadius = 0.2f, float outerRadius = 1.0f);
 
 	static ModelData CreateSkyBoxModel();
+
+	static ModelData CreateCylinderModel();
 
 	/// <summary>
 	/// mtlファイルの読み込み
