@@ -155,6 +155,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="application\scene\game\gameObject\anchor\anchor.cpp" />
+    <ClCompile Include="application\scene\game\gameObject\enemy\Debris.cpp" />
+    <ClCompile Include="application\scene\game\gameObject\enemy\Enemy.cpp" />
     <ClCompile Include="application\scene\game\gameObject\player\Player.cpp" />
     <ClCompile Include="application\scene\game\GameScene.cpp" />
     <ClCompile Include="application\core\Core.cpp" />
@@ -224,6 +226,8 @@
   <ItemGroup>
     <ClInclude Include="application\core\Core.h" />
     <ClInclude Include="application\scene\game\gameObject\anchor\anchor.h" />
+    <ClInclude Include="application\scene\game\gameObject\enemy\Debris.h" />
+    <ClInclude Include="application\scene\game\gameObject\enemy\Enemy.h" />
     <ClInclude Include="application\scene\game\gameObject\player\Player.h" />
     <ClInclude Include="application\scene\game\logic\Collision.h" />
     <ClInclude Include="application\scene\game\logic\Data.h" />

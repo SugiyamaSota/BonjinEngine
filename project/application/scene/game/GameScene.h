@@ -4,6 +4,7 @@
 #include<memory>
 
 #include "gameObject/player/Player.h"
+#include "gameObject/enemy/Enemy.h"
 #include "mapchip/MapChipField.h"
 
 #include "Object3D.h"
@@ -44,6 +45,8 @@ namespace Bonjin
 		// --- ゲーム固有の変数 ---
 		std::unique_ptr<Player> player_ = nullptr;
 		std::unique_ptr<Object3D> playerModel_ = nullptr;
+
+		std::unique_ptr<Enemy> enemy_;
 
 		std::unique_ptr<MapChipField> mapChipField_ = nullptr;	
 		static const uint32_t kNumBlockVirtical = 10;
