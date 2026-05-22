@@ -8,6 +8,7 @@ Anchor::Anchor(const Vector3& position, const Vector3& velocity, MapChipField* m
 	model_ = new Object3D();
 	model_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
 	model_->SetColor({ 0, 0, 1, 1 });
+	model_->SetEnableEnableEnvironmentMap(false);
 	worldTransform_ = InitializeWorldTransform();
 	worldTransform_.scale = { 1.0f,1.0f,1.0f };
 	if (velocity_.x != 0.0f || velocity_.y != 0.0f) {

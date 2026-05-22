@@ -32,6 +32,7 @@ void GameScene::Initialize(Camera* camera)
 
 	playerModel_ = std::make_unique<Object3D>();
 	playerModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+	playerModel_->SetEnableEnableEnvironmentMap(false);
 	player_ = std::make_unique<Player>();
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(2, 1);
 	player_->Initialize(playerModel_.get(), camera_, playerPosition);
