@@ -49,10 +49,12 @@ namespace Bonjin
 		std::list<std::unique_ptr<Enemy>> enemies_;
 		std::list<std::unique_ptr<Object3D>> enemyModels_;
 
+		std::unique_ptr<MapChipField> mapChipField_ = nullptr;	
+		static const uint32_t kNumBlockVirtical = 10;
+		static const uint32_t kNumBlockHorizontal = 60;
+		std::unique_ptr<Object3D> blockModel_[kNumBlockVirtical][kNumBlockHorizontal] = { nullptr };
+		WorldTransform blockWorldTransform_[kNumBlockVirtical][kNumBlockHorizontal];
 
-		std::unique_ptr<MapChipField> mapChipField_ = nullptr;
-		std::unique_ptr<Object3D> blockModel_ = nullptr;
-		std::vector<WorldTransform> blockWorldTransforms_;
 		std::unique_ptr<Object3D> goalModel_ = nullptr;
 		WorldTransform goalWorldTransform_;
 

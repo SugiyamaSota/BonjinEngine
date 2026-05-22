@@ -5,21 +5,29 @@
 #include "Struct.h"
 #include"../logic/Data.h"
 
-enum class MapChipType
-{
+enum class MapChipType {
 	kBlank, // 空白
 	kBlock, // ブロック
 	kEnemy, // 敵
 	kGoal,  // ゴール
 };
 
-struct MapChipData 
-{
+struct MapChipData {
 	std::vector<std::vector<MapChipType>> data;
 };
 
-class MapChipField 
-{
+class MapChipField {
+private:
+	static inline const float kBlockWidth = 2.0f;
+	static inline const float kBlockHeight = 2.0f;
+
+	static inline const uint32_t kNumBlockVirtical = 10;
+	static inline const uint32_t kNumBlockHorizontal = 60;
+
+	MapChipData mapChipData_;
+
+
+
 public:
 	
 
@@ -39,16 +47,8 @@ public:
 	//ゲッター
 	MapChipType GetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex);
 	Vector3 GetMapChipPositionByIndex(uint32_t xIndex, uint32_t yIndex);
-	uint32_t GetNumBlockVertical() const { return numBlockVertical_; };
-	uint32_t GetNumBlockHorizontal() const { return numBlockHorizontal_; };
+	uint32_t GetNumBlockVirtical() { return kNumBlockVirtical; };
+	uint32_t GetNumBlockHorizontal() { return kNumBlockHorizontal; };
 	IndexSet GetMapChipIndexSetByPosition(const Vector3& position);
 	Rect GetRectByIndex(uint32_t xIndex, uint32_t yIndex);
-private:
-	static inline const float kBlockWidth = 2.0f;
-	static inline const float kBlockHeight = 2.0f;
-
-	uint32_t numBlockVertical_ = 0;
-	uint32_t numBlockHorizontal_ = 0;
-
-	MapChipData mapChipData_;
 };
