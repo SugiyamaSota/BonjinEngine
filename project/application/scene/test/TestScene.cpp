@@ -17,8 +17,11 @@ void TestScene::Initialize(Camera* camera)
 
 
 	testSkyBox_ = std::make_unique<Object3D>();
-	testSkyBox_->CreateModel(ModelBuilder::ModelType::kCube, "resources/textures/skyBox.dds");
+	testSkyBox_->CreateModel(ModelBuilder::ModelType::kSkyBox, "resources/textures/skyBox.dds");
 	testSkyBox_->SetPrimitiveType(PrimitiveType::kSkyBox);
+
+	testCube_ = std::make_unique<Object3D>();
+	testCube_->CreateModel(ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
 
 	pm = ParticleManager::GetInstance();
 	pm->Initialize();
@@ -51,6 +54,8 @@ void TestScene::Update(float deltaTime) {
 	testModel_->Update(InitializeWorldTransform(), camera_);
 
 	testSkyBox_->Update(InitializeWorldTransform(), camera_);
+
+	testCube_->Update(InitializeWorldTransform(), camera_);
 
 	if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
 		ParticleManager::GetInstance()->Emit("ringGroup", ringEffect);
@@ -85,6 +90,8 @@ void TestScene::Draw() {
 	testModel_->Draw();
 
 	testSkyBox_->Draw();
+
+	testCube_->Draw();
 
 	pm->Draw();
 }
