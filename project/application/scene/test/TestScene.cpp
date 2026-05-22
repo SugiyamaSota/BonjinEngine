@@ -22,6 +22,7 @@ void TestScene::Initialize(Camera* camera)
 
 	testCube_ = std::make_unique<Object3D>();
 	testCube_->CreateModel(ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
+	testCube_->SetEnableEnableEnvironmentMap(false);
 
 	pm = ParticleManager::GetInstance();
 	pm->Initialize();
