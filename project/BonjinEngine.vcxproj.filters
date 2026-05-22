@@ -174,13 +174,7 @@
     <ClCompile Include="application\scene\title\TitleScene.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="engine\graphics\rendering\object\Object3D.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="engine\graphics\assets\model\ModelBuilder.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\graphics\rendering\object\Particle.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="engine\system\utility\random\RandomEngine.cpp">
@@ -213,9 +207,6 @@
     <ClCompile Include="engine\system\manager\particle\ParticleManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="engine\graphics\rendering\object\BaseObject.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="engine\core\common\rendetTexture\RenderTexture.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -223,6 +214,15 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="application\scene\test\TestScene.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\graphics\3d\object\BaseObject.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\graphics\3d\object\Object3D.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\graphics\3d\object\Particle.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -323,13 +323,7 @@
     <ClInclude Include="application\scene\title\TitleScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="engine\graphics\rendering\object\Object3D.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="engine\graphics\assets\model\ModelBuilder.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\graphics\rendering\object\Particle.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\system\utility\random\RandomEngine.h">
@@ -362,9 +356,6 @@
     <ClInclude Include="engine\system\manager\particle\ParticleManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="engine\graphics\rendering\object\BaseObject.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="engine\core\common\rendetTexture\RenderTexture.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -372,6 +363,15 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\test\TestScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\graphics\3d\object\BaseObject.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\graphics\3d\object\Object3D.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\graphics\3d\object\Particle.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
