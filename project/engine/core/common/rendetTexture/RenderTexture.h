@@ -35,7 +35,8 @@ public:
 
 private:
 
-	Vector4 clearColor_;
+	//Vector4 clearColor_ = { 1.0f, 0.0f, 0.0f, 1.0f };
+	Vector4 clearColor_ = { 0.1f,0.25f,0.5f,1.0f };
 	Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource_ = nullptr;
 	uint32_t renderTextureSrvIndex_ = 0;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_{};

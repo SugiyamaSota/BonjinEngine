@@ -46,6 +46,9 @@ void GameScene::Update(float deltaTime) {
 
 	player_->Update();
 
+	// プレイヤーを追従
+	camera_->SetTarget(player_->GetPosition());
+
 	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
 		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
 			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
