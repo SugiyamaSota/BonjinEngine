@@ -1,6 +1,6 @@
 #pragma once
 #include"../audio/AudioPlayer.h"
-#include"../camera/Camera.h"
+#include"Camera.h"
 #include"DirectXCommon.h"
 #include"function/function.h"
 #include"input/Input.h"
