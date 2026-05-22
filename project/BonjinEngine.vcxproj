@@ -84,7 +84,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/rendering</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/2d/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/rendering</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,7 +110,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/rendering</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/2d/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/rendering</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
@@ -140,7 +140,7 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/rendering/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/rendering</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/2d/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/rendering</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -209,7 +209,7 @@
     <ClCompile Include="engine\system\utility\math\Convert.cpp" />
     <ClCompile Include="engine\system\utility\math\Matrix.cpp" />
     <ClCompile Include="engine\system\utility\math\vector.cpp" />
-    <ClCompile Include="engine\graphics\rendering\sprite\Sprite.cpp" />
+    <ClCompile Include="engine\graphics\2d\sprite\Sprite.cpp" />
     <ClCompile Include="engine\system\platform\windows\WinApp.cpp" />
     <ClCompile Include="engine\system\utility\time\Time.cpp" />
     <ClCompile Include="application\scene\title\TitleScene.cpp" />
@@ -259,7 +259,7 @@
     <ClInclude Include="engine\system\utility\math\Matrix.h" />
     <ClInclude Include="engine\system\utility\math\Struct.h" />
     <ClInclude Include="engine\system\utility\math\vector.h" />
-    <ClInclude Include="engine\graphics\rendering\sprite\Sprite.h" />
+    <ClInclude Include="engine\graphics\2d\sprite\Sprite.h" />
     <ClInclude Include="engine\system\platform\windows\WinApp.h" />
     <ClInclude Include="engine\system\utility\time\Time.h" />
     <ClInclude Include="application\scene\title\TitleScene.h" />

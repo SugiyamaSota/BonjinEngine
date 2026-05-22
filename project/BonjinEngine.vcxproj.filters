@@ -141,7 +141,7 @@
     <ClCompile Include="engine\core\bonjin\BonjinEngine.cpp">
       <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="engine\graphics\rendering\sprite\Sprite.cpp">
+    <ClCompile Include="engine\graphics\2d\sprite\Sprite.cpp">
       <Filter>engine\sprite</Filter>
     </ClCompile>
     <ClCompile Include="engine\graphics\rendering\color\Color.cpp">
@@ -284,7 +284,7 @@
     <ClInclude Include="engine\system\utility\math\Struct.h">
       <Filter>engine\math\ヘッダー</Filter>
     </ClInclude>
-    <ClInclude Include="engine\graphics\rendering\sprite\Sprite.h">
+    <ClInclude Include="engine\graphics\2d\sprite\Sprite.h">
       <Filter>engine\sprite</Filter>
     </ClInclude>
     <ClInclude Include="engine\core\common\DirectXCommon.h">

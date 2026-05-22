@@ -24,6 +24,9 @@ void TestScene::Initialize(Camera* camera)
 	testCube_->CreateModel(ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
 	testCube_->SetEnableEnableEnvironmentMap(false);
 
+	testSprite_ = std::make_unique<Sprite>();
+	testSprite_->Initialize("uvChecker.png");
+
 	pm = ParticleManager::GetInstance();
 	pm->Initialize();
 
@@ -57,6 +60,8 @@ void TestScene::Update(float deltaTime) {
 	testSkyBox_->Update(InitializeWorldTransform(), camera_);
 
 	testCube_->Update(InitializeWorldTransform(), camera_);
+
+	testSprite_->Update();
 
 	if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
 		ParticleManager::GetInstance()->Emit("ringGroup", ringEffect);
@@ -93,6 +98,8 @@ void TestScene::Draw() {
 	testSkyBox_->Draw();
 
 	testCube_->Draw();
+
+	testSprite_->Draw();
 
 	pm->Draw();
 }
