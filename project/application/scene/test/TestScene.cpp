@@ -24,9 +24,9 @@ void TestScene::Initialize(Camera* camera)
 	pm->Initialize();
 
 	// 「炎」と「火花」など、見た目（モデルやテクスチャ）ごとにグループを作る
-	pm->CreateParticleGroup("ringGroup", ModelBuilder::ModelType::kRing, "resources/textures/gradationLine.png");
+	pm->CreateParticleGroup("ringGroup", ModelBuilder::ModelType::kCylinder, "resources/textures/gradationLine.png");
 
-	ringEffect.position = { 0.0f, 0.0f, 0.0f };
+	ringEffect.position = { 0.0f, -1.0f, 0.0f };
 	ringEffect.rotate = { 0.0f, 0.0f, 0.0f };
 	ringEffect.velocity = { 0.0f, 0.0f, 0.0f };
 	ringEffect.scale = { 1.0f, 1.0f, 1.0f }; // 大きなリングにする
@@ -34,7 +34,7 @@ void TestScene::Initialize(Camera* camera)
 	ringEffect.lifeTime = 2.0f;
 
 	auto ringUpdate = [](ParticleData& data, float deltaTime) {
-		data.transform.rotate.z += deltaTime; // 回転速度を追
+		data.transform.translate.y += deltaTime; // 回転速度を追
 		};
 
 	ringEffect.updateFunc = ringUpdate;
