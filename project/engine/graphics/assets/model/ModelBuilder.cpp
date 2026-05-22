@@ -66,6 +66,8 @@ ModelData ModelBuilder::CreateModel(ModelType type) {
 		return CreatePlaneModel();
 	case ModelType::kRing: // 追加
 		return CreateRingModel();
+	case ModelType::kCylinder:
+		return CreateCylinderModel();
 	default:
 		assert(false && "未定義のモデルタイプです");
 		return ModelData();
@@ -341,6 +343,73 @@ ModelData ModelBuilder::CreateRingModel(uint32_t subdivision, float innerRadius,
 		modelData.vertices.push_back(v3);
 		modelData.vertices.push_back(v2);
 		modelData.vertices.push_back(v4);
+	}
+
+	return modelData;
+}
+
+ModelData ModelBuilder::CreateCylinderModel() {
+	ModelData modelData;
+
+	// スライドの定数定義
+	const uint32_t kCylinderDivide = 32;
+	const float kTopRadius = 1.0f;
+	const float kBottomRadius = 1.0f;
+	const float kHeight = 2.0f;
+	const float kPi = 3.1415926535f;
+	const float radianPerDivide = 2.0f * kPi / float(kCylinderDivide);
+
+	for (uint32_t index = 0; index < kCylinderDivide; ++index) {
+		float sin = std::sin(float(index) * radianPerDivide);
+		float cos = std::cos(float(index) * radianPerDivide);
+		float sinNext = std::sin(float(index + 1) * radianPerDivide);
+		float cosNext = std::cos(float(index + 1) * radianPerDivide);
+
+		float u = float(index) / float(kCylinderDivide);
+		float uNext = float(index + 1) / float(kCylinderDivide);
+
+		// --- スライドのデータを元に6つの頂点を生成して push_back ---
+
+		// 1つ目の三角形
+		VertexData v1, v2, v3;
+		// kHeight と 0.0f を入れ替える
+		v1.position = { -sin * kTopRadius, 0.0f, cos * kTopRadius, 1.0f }; // kHeight から 0.0f に
+		v1.texcoord = { u, 0.0f };
+		v1.normal = { -sin, 0.0f, cos };
+
+		v2.position = { -sinNext * kTopRadius, 0.0f, cosNext * kTopRadius, 1.0f }; // kHeight から 0.0f に
+		v2.texcoord = { uNext, 0.0f };
+		v2.normal = { -sinNext, 0.0f, cosNext };
+
+		v3.position = { -sin * kBottomRadius, kHeight, cos * kBottomRadius, 1.0f }; // 0.0f から kHeight に
+		v3.texcoord = { u, 1.0f };
+		v3.normal = { -sin, 0.0f, cos };
+
+		// ★重要：上下をひっくり返すと「時計回り」の順序が変わるため、
+		// 裏返らないように v1 -> v3 -> v2 の順番で push します
+		modelData.vertices.push_back(v1);
+		modelData.vertices.push_back(v3);
+		modelData.vertices.push_back(v2);
+
+
+		// 2つ目の三角形
+		VertexData v4, v5, v6;
+		v4.position = { -sin * kBottomRadius, kHeight, cos * kBottomRadius, 1.0f }; // 0.0f から kHeight に
+		v4.texcoord = { u, 1.0f };
+		v4.normal = { -sin, 0.0f, cos };
+
+		v5.position = { -sinNext * kTopRadius, 0.0f, cosNext * kTopRadius, 1.0f }; // kHeight から 0.0f に
+		v5.texcoord = { uNext, 0.0f };
+		v5.normal = { -sinNext, 0.0f, cosNext };
+
+		v6.position = { -sinNext * kBottomRadius, kHeight, cosNext * kBottomRadius, 1.0f }; // 0.0f から kHeight に
+		v6.texcoord = { uNext, 1.0f };
+		v6.normal = { -sinNext, 0.0f, cosNext };
+
+		// ★こちらも順序を v4 -> v6 -> v5 に入れ替えて push します
+		modelData.vertices.push_back(v4);
+		modelData.vertices.push_back(v6);
+		modelData.vertices.push_back(v5);
 	}
 
 	return modelData;
