@@ -46,7 +46,8 @@ namespace Bonjin
 		std::unique_ptr<Player> player_ = nullptr;
 		std::unique_ptr<Object3D> playerModel_ = nullptr;
 
-		std::unique_ptr<Enemy> enemy_;
+		std::list<std::unique_ptr<Enemy>> enemies_;
+		std::list<std::unique_ptr<Object3D>> enemyModels_;
 
 		std::unique_ptr<MapChipField> mapChipField_ = nullptr;	
 		static const uint32_t kNumBlockVirtical = 10;

@@ -1,6 +1,5 @@
 #pragma once
 #include "../../logic/Data.h"
-#include "Debris.h"
 
 #include "Object3D.h"
 #include "Sprite.h"
@@ -67,12 +66,6 @@ public:
     /// <param name="flag">設定するフラグ</param>
     void SetIsDead(bool flag) { isDead_ = flag; }
 
-    /// <summary>
-   /// 爆発して破片を取得
-   /// </summary>
-   /// <returns>生成された破片のリスト</returns>
-    std::list<std::unique_ptr<Debris>> ExplodeAndGetDebris();
-
 private:
     // --- メンバー変数 ---
 
@@ -101,7 +94,7 @@ private:
     static inline const float kWalkMotionAngleEnd = 50.0f;    // 首を振る終了角度
     static inline const float kPi = 3.14159265359f; // 円周率
 
-    Bonjin::Sprite* lockedOnSprite_ = nullptr;
+    //Bonjin::Sprite* lockedOnSprite_ = nullptr;
 
 private:
     // --- プライベート関数 ---

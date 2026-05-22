@@ -1,5 +1,6 @@
 #pragma once
-#include "../../engine/bonjin/BonjinEngine.h"
+
+#include "Object3D.h"
 
 class Debris {
 public:

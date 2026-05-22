@@ -38,6 +38,25 @@ void GameScene::Initialize(Camera* camera)
 	player_->Initialize(playerModel_.get(), camera_, playerPosition);
 	player_->SetMapChipField(mapChipField_.get());
 
+	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
+		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
+			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kEnemy) {
+				// 新しいモデルを生成
+				enemyModels_.push_back(std::make_unique<Object3D>());
+
+				enemyModels_.back()->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+				enemyModels_.back()->SetEnableEnableEnvironmentMap(false);
+				enemyModels_.back()->SetColor({ 0.2f,0.2f,0.2f,1.f });
+
+				// 新しい敵を生成
+				enemies_.push_back(std::make_unique<Enemy>());
+				// 敵の位置を縦に並べる
+				Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(j, i);
+				// 生成したモデルを敵に渡して初期化
+				enemies_.back()->Initialize(enemyModels_.back().get(), camera_, enemyPosition);
+			}
+		}
+	}
 }
 
 void GameScene::Unload() {
@@ -46,6 +65,10 @@ void GameScene::Unload() {
 void GameScene::Update(float deltaTime) {
 
 	player_->Update();
+
+	for (const auto& enemy : enemies_) {
+		enemy->Update();
+	}
 
 	// プレイヤーを追従
 	camera_->SetTarget(player_->GetPosition());
@@ -91,6 +114,11 @@ void GameScene::Draw() {
 	}
 
 	player_->Draw();
+
+	for (const auto& enemy : enemies_) {
+		enemy->Draw();
+	}
+
 	
 }
 
