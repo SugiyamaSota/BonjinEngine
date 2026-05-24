@@ -91,8 +91,13 @@ PixelShaderOutput main(VertexShaderOutput input)
         float32_t3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
         float32_t3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
         float32_t4 environmentColor = gEnvironmentMap.Sample(gSampler, reflectedVector);
-
-        output.color.rgb += environmentColor.rgb;
+        
+        if (gMaterial.enableEnvironmentMap != 0)
+        {
+        // environmentCoefficient (0.0 ~ 1.0) を掛けて影響度を調整
+            output.color.rgb += environmentColor.rgb * gMaterial.environmentCoefficient;
+        }
+        
         output.color.a = gMaterial.color.a * textureColor.a;
     }
     else

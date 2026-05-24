@@ -1,20 +1,24 @@
 #pragma once
 #include "../interface/BaseScene.h" // ISceneをインクルード
 
+#include "Object3D.h"
+
+#include"ParticleManager.h"
+
 namespace Bonjin
 {
 
-	enum class GamePhase {
+	enum class TestPhase {
 		kStart,
 		kPlay,
 		kGoal,
 	};
 
-	class GameScene : public BaseScene<GamePhase>
+	class TestScene : public BaseScene<TestPhase>
 	{
 	public:
 		// --- オーバーライド関数 --- 
-		virtual ~GameScene() = default;
+		virtual ~TestScene() = default;
 
 		void Initialize(Camera* camera) override;
 
@@ -29,12 +33,17 @@ namespace Bonjin
 		void DrawSceneImGui() override;
 
 		const char* GetScenename()const override {
-			return "GameScene";
+			return "TestScene";
 		}
 
 	private:
 		// --- ゲーム固有の変数 ---
-	
+		std::unique_ptr<Object3D> testModel_ = nullptr;
+
+		std::unique_ptr<Object3D> testSkyBox_ = nullptr;
+
+		ParticleManager* pm = nullptr;
+		ParticleConfig ringEffect;
 
 	private:
 		// --- ゲーム固有の関数 ---
