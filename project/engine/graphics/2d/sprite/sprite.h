@@ -1,6 +1,5 @@
 #pragma once
 #include"../bonjin/BonjinEngine.h"
-#include"../color/Color.h"
 
 namespace Bonjin {
 

@@ -1,6 +1,6 @@
 #pragma once
 #include"../audio/AudioPlayer.h"
-#include"../camera/Camera.h"
+#include"Camera.h"
 #include"DirectXCommon.h"
 #include"function/function.h"
 #include"input/Input.h"
@@ -8,11 +8,11 @@
 #include"math/Vector.h"
 #include"math/Matrix.h"
 #include"math/Convert.h"
-#include"sprite/sprite.h"
+#include"sprite.h"
 #include"color/Color.h"
 #include"windows/WinApp.h"
 #include"time/Time.h"
-#include"pso/PSOManager.h"
+#include"PSOManager.h"
 
 #include"ImGuiManager.h"
 #include"TextureManager.h"

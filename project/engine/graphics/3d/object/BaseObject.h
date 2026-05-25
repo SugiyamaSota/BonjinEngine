@@ -23,6 +23,7 @@ public:
 	void SetPrimitiveType(PrimitiveType primitiveType) { primitiveType_ = primitiveType; }
 	void SetColor(const Vector4& color) { if (materialData_) materialData_->color = color; }
 	void SetEnableLighting(bool enable) { if (materialData_) materialData_->enableLighting = enable; }
+	void SetEnableEnableEnvironmentMap(bool flag) { if (materialData_) materialData_->enableEnvironmentMap = flag; }
 
 protected:
 	BaseObject();
