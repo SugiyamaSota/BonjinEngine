@@ -71,7 +71,9 @@ void GameScene::Update(float deltaTime) {
 	}
 
 	// プレイヤーを追従
-	camera_->SetTarget(player_->GetPosition());
+	IndexSet currentIS = mapChipField_->GetMapChipIndexSetByCenter();
+	Vector3 currentPos = mapChipField_->GetMapChipPositionByIndex(currentIS.xIndex, currentIS.yIndex);
+	camera_->SetTarget(currentPos);
 
 	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
 		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {

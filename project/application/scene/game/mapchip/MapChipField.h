@@ -21,8 +21,8 @@ private:
 	static inline const float kBlockWidth = 2.0f;
 	static inline const float kBlockHeight = 2.0f;
 
-	static inline const uint32_t kNumBlockVirtical = 10;
-	static inline const uint32_t kNumBlockHorizontal = 60;
+	uint32_t numBlockVertical_ = 0;
+	uint32_t numBlockHorizontal_ = 0;
 
 	MapChipData mapChipData_;
 
@@ -47,8 +47,9 @@ public:
 	//ゲッター
 	MapChipType GetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex);
 	Vector3 GetMapChipPositionByIndex(uint32_t xIndex, uint32_t yIndex);
-	uint32_t GetNumBlockVirtical() { return kNumBlockVirtical; };
-	uint32_t GetNumBlockHorizontal() { return kNumBlockHorizontal; };
+	uint32_t GetNumBlockVirtical() { return numBlockVertical_; };
+	uint32_t GetNumBlockHorizontal() { return numBlockHorizontal_; };
 	IndexSet GetMapChipIndexSetByPosition(const Vector3& position);
 	Rect GetRectByIndex(uint32_t xIndex, uint32_t yIndex);
+	IndexSet GetMapChipIndexSetByCenter() const;
 };
