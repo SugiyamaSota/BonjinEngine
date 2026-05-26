@@ -2,7 +2,7 @@
 #include "../interface/BaseScene.h" // ISceneをインクルード
 
 #include "Object3D.h"
-
+#include "Sprite.h"
 #include"ParticleManager.h"
 
 namespace Bonjin
@@ -46,6 +46,8 @@ namespace Bonjin
 
 		// テストモデルcube
 		std::unique_ptr<Object3D> testCube_ = nullptr;
+
+		std::unique_ptr<Sprite> testSprite_ = nullptr;
 
 		ParticleManager* pm = nullptr;
 		ParticleConfig ringEffect;

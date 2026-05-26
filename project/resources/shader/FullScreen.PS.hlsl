@@ -13,7 +13,7 @@ PixelShaderOutPut main(VertexShaderOutPut input)
     PixelShaderOutPut output;
     output.color = gTexture.Sample(gSampler, input.texcoord);
     
-    bool isGray = false;
+    bool isGray = true;
     bool isVignette = true;
     
     if (isGray)

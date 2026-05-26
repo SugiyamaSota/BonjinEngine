@@ -141,25 +141,22 @@
     <ClCompile Include="engine\core\bonjin\BonjinEngine.cpp">
       <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="engine\graphics\camera\Camera.cpp">
-      <Filter>engine\camera</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\graphics\rendering\sprite\Sprite.cpp">
+    <ClCompile Include="engine\graphics\2d\sprite\Sprite.cpp">
       <Filter>engine\sprite</Filter>
     </ClCompile>
-    <ClCompile Include="engine\graphics\rendering\color\Color.cpp">
+    <ClCompile Include="engine\graphics\utility\color\Color.cpp">
       <Filter>engine\color</Filter>
     </ClCompile>
-    <ClCompile Include="engine\graphics\rendering\pso\PSOManager.cpp">
+    <ClCompile Include="engine\graphics\core\pso\PSOManager.cpp">
       <Filter>engine\pso</Filter>
     </ClCompile>
-    <ClCompile Include="engine\graphics\rendering\pso\graphicsPipelineStateBuilder\GraphicsPipelineStateBuilder.cpp">
+    <ClCompile Include="engine\graphics\core\pso\graphicsPipelineStateBuilder\GraphicsPipelineStateBuilder.cpp">
       <Filter>engine\pso\graphicsPipelineStateBuilder</Filter>
     </ClCompile>
-    <ClCompile Include="engine\graphics\rendering\pso\rootSignatureBuilder\RootSignatureBuilder.cpp">
+    <ClCompile Include="engine\graphics\core\pso\rootSignatureBuilder\RootSignatureBuilder.cpp">
       <Filter>engine\pso\rootSignatureBuilder</Filter>
     </ClCompile>
-    <ClCompile Include="engine\graphics\rendering\pso\shaderCompiler\ShaderCompiler.cpp">
+    <ClCompile Include="engine\graphics\core\pso\shaderCompiler\ShaderCompiler.cpp">
       <Filter>engine\pso\ShaderCompiler</Filter>
     </ClCompile>
     <ClCompile Include="engine\system\platform\windows\WinApp.cpp">
@@ -172,15 +169,6 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="application\scene\title\TitleScene.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\graphics\rendering\object\Object3D.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\graphics\assets\model\ModelBuilder.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\graphics\rendering\object\Particle.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="engine\system\utility\random\RandomEngine.cpp">
@@ -235,6 +223,21 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="application\scene\test\TestScene.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\graphics\3d\object\BaseObject.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\graphics\3d\object\Object3D.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\graphics\3d\object\Particle.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\graphics\3d\camera\Camera.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\graphics\3d\builder\ModelBuilder.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="application\scene\game\gameObject\enemy\Enemy.cpp">
@@ -299,28 +302,25 @@
     <ClInclude Include="engine\system\utility\math\Struct.h">
       <Filter>engine\math\ヘッダー</Filter>
     </ClInclude>
-    <ClInclude Include="engine\graphics\camera\Camera.h">
-      <Filter>engine\camera</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\graphics\rendering\sprite\Sprite.h">
+    <ClInclude Include="engine\graphics\2d\sprite\Sprite.h">
       <Filter>engine\sprite</Filter>
     </ClInclude>
     <ClInclude Include="engine\core\common\DirectXCommon.h">
       <Filter>engine\directXCommon</Filter>
     </ClInclude>
-    <ClInclude Include="engine\graphics\rendering\color\Color.h">
+    <ClInclude Include="engine\graphics\utility\color\Color.h">
       <Filter>engine\color</Filter>
     </ClInclude>
-    <ClInclude Include="engine\graphics\rendering\pso\PSOManager.h">
+    <ClInclude Include="engine\graphics\core\pso\PSOManager.h">
       <Filter>engine\pso</Filter>
     </ClInclude>
-    <ClInclude Include="engine\graphics\rendering\pso\graphicsPipelineStateBuilder\GraphicsPipelineStateBuilder.h">
+    <ClInclude Include="engine\graphics\core\pso\graphicsPipelineStateBuilder\GraphicsPipelineStateBuilder.h">
       <Filter>engine\pso\graphicsPipelineStateBuilder</Filter>
     </ClInclude>
-    <ClInclude Include="engine\graphics\rendering\pso\rootSignatureBuilder\RootSignatureBuilder.h">
+    <ClInclude Include="engine\graphics\core\pso\rootSignatureBuilder\RootSignatureBuilder.h">
       <Filter>engine\pso\rootSignatureBuilder</Filter>
     </ClInclude>
-    <ClInclude Include="engine\graphics\rendering\pso\shaderCompiler\ShaderCompiler.h">
+    <ClInclude Include="engine\graphics\core\pso\shaderCompiler\ShaderCompiler.h">
       <Filter>engine\pso\ShaderCompiler</Filter>
     </ClInclude>
     <ClInclude Include="engine\system\platform\windows\WinApp.h">
@@ -336,15 +336,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\title\TitleScene.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\graphics\rendering\object\Object3D.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\graphics\assets\model\ModelBuilder.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\graphics\rendering\object\Particle.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\system\utility\random\RandomEngine.h">
@@ -402,6 +393,21 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\test\TestScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\graphics\3d\object\BaseObject.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\graphics\3d\object\Object3D.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\graphics\3d\object\Particle.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\graphics\3d\camera\Camera.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\graphics\3d\builder\ModelBuilder.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\game\gameObject\enemy\Enemy.h">
