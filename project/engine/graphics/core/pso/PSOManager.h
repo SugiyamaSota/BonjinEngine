@@ -6,36 +6,21 @@
 #include <dxcapi.h>
 #include<array>
 #include <unordered_map>
+#include <memory>
 
 #include "shaderCompiler/ShaderCompiler.h"
-#include "rootSignatureBuilder/RootSignatureBuilder.h"
 #include "graphicsPipelineStateBuilder/GraphicsPipelineStateBuilder.h"
+#include "config/IPipelineConfig.h"
 
 enum class PrimitiveType {
 	kModel,   // モデル
-	kGrid,    // グリッド
 	kParticle,
 	kSkyBox,
 	kCopyImage,
 	kCount,
 };
 
-enum class ShaderStage {
-	kVertex,
-	kPixel,
-	kCount,
-};
-//
-//enum class FillMode {
-//	kSolid,
-//	kWireFrame,
-//};
-//
-//enum class CullMode {
-//	kNone,
-//	kFront,
-//	kBack,
-//};
+
 
 class PSOManager {
 public:
@@ -61,7 +46,19 @@ public:
 		D3D12_CULL_MODE cullMode);
 
 private:
-	/// --- 変数 ---
+
+	// 各形状ごとのconfigを保持
+	std::array<
+		std::unique_ptr<IPipelineConfig>,
+		static_cast<size_t>(PrimitiveType::kCount)
+	> configs_;
+
+	// inputElementsを生存させるため保持
+	std::array<
+		std::vector<D3D12_INPUT_ELEMENT_DESC>,
+		static_cast<size_t>(PrimitiveType::kCount)
+	> inputElementsCache_;
+
 	// RootSignatureを形状ごとに管理
 	std::array<
 		Microsoft::WRL::ComPtr<ID3D12RootSignature>,
@@ -80,20 +77,6 @@ private:
 
 	// シェーダーコンパイラー
 	ShaderCompiler shaderCompiler_;
-
-	// ⭐ モデルの入力要素ディスクリプタを格納するメンバ配列
-	static const size_t kModelInputElements = 3;
-	std::array<
-		D3D12_INPUT_ELEMENT_DESC,
-		kModelInputElements
-	> modelInputElementDescs_;
-
-	// ⭐ グリッドの入力要素ディスクリプタを格納するメンバ配列
-	static const size_t kGridInputElements = 2;
-	std::array<
-		D3D12_INPUT_ELEMENT_DESC,
-		kGridInputElements
-	> gridInputElementDescs_;
 
 	// ⭐ パーティクルの入力要素ディスクリプタを格納するメンバ配列
 	static const size_t kParticleInputElements = 3;

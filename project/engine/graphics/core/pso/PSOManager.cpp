@@ -1,14 +1,15 @@
 #include "PSOManager.h"
 #include <cassert>
-#include <format>
+
+#include "rootSignatureBuilder/RootSignatureBuilder.h"
+
+#include "config/Object3D/Object3DConfig.h"
 
 // ⭐ シェーダーファイルパスの定数定義 [PrimitiveType][ShaderStage]
 static const wchar_t* kShaderPaths[static_cast<size_t>(PrimitiveType::kCount)]
 [static_cast<size_t>(ShaderStage::kCount)] = {
 	// kModel
 	{ L"resources/shader/Object3d.VS.hlsl", L"resources/shader/Object3d.PS.hlsl" },
-	// kLine
-	{ L"resources/shader/Grid.VS.hlsl", L"resources/shader/Grid.PS.hlsl" },
 	// kParticle
 	{ L"resources/shader/Particle.VS.hlsl", L"resources/shader/Particle.PS.hlsl" },
 	// kSkyBox
@@ -26,12 +27,20 @@ static const wchar_t* kShaderProfiles[static_cast<size_t>(ShaderStage::kCount)] 
 PSOManager::PSOManager() {
 	// dxcの初期化
 	shaderCompiler_.InitializeDxc();
+
+	// pso生成時にconfigを取得
+	configs_[static_cast<size_t>(PrimitiveType::kModel)] = std::make_unique<Object3DConfig>();
 }
 
 PSOManager::~PSOManager() {}
 
 void PSOManager::Initialize(ID3D12Device* device, DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat)
 {
+	if (configs_[static_cast<size_t>(PrimitiveType::kModel)]) {
+		rootSignatures_[static_cast<size_t>(PrimitiveType::kModel)] =
+			configs_[static_cast<size_t>(PrimitiveType::kModel)]->CreateRootSignature(device);
+	}
+
 	/// --- 形状ごとのRoorSignature ---
 	CreateRootSignature(device);
 
@@ -42,6 +51,11 @@ void PSOManager::Initialize(ID3D12Device* device, DXGI_FORMAT rtvFormat, DXGI_FO
 
 	/// --- シェーダー ---
 	CompileAllShaders();
+
+	if (configs_[static_cast<size_t>(PrimitiveType::kModel)]) {
+		inputElementsCache_[static_cast<size_t>(PrimitiveType::kModel)] =
+			configs_[static_cast<size_t>(PrimitiveType::kModel)]->GetInputElements();
+	}
 
 	/// --- InputLayout ---
 	CreateInputLayout();
@@ -56,87 +70,6 @@ void PSOManager::Initialize(ID3D12Device* device, DXGI_FORMAT rtvFormat, DXGI_FO
 
 void PSOManager::CreateRootSignature(ID3D12Device* device)
 {
-	// モデル
-	RootSignatureBuilder rootSigBuilder;
-	rootSigBuilder.SetFlags(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-
-	D3D12_DESCRIPTOR_RANGE descriptorRangeT0[1] = {};
-	descriptorRangeT0[0].BaseShaderRegister = 0;
-	descriptorRangeT0[0].NumDescriptors = 1;
-	descriptorRangeT0[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	descriptorRangeT0[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-	D3D12_DESCRIPTOR_RANGE descriptorRangeT1[1] = {};
-	descriptorRangeT1[0].BaseShaderRegister = 1;
-	descriptorRangeT1[0].NumDescriptors = 1;
-	descriptorRangeT1[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	descriptorRangeT1[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-	D3D12_ROOT_PARAMETER rootParameters[8] = {};
-	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameters[0].Descriptor.ShaderRegister = 0;
-
-	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-	rootParameters[1].Descriptor.ShaderRegister = 0;
-
-	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRangeT0;
-	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeT0);
-
-	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // ディレクショナルライト
-	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameters[3].Descriptor.ShaderRegister = 1;
-	rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // カメラ
-	rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameters[4].Descriptor.ShaderRegister = 2;
-	rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // ポイントライト
-	rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameters[5].Descriptor.ShaderRegister = 3;
-	rootParameters[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // スポット
-	rootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameters[6].Descriptor.ShaderRegister = 4;
-
-
-	rootParameters[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameters[7].DescriptorTable.pDescriptorRanges = descriptorRangeT1; // ここで T1 を指定
-	rootParameters[7].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeT1);
-
-
-	for (int i = 0; i < _countof(rootParameters); ++i) {
-		rootSigBuilder.AddRootParameter(rootParameters[i]);
-	}
-
-	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
-	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-	staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
-	staticSamplers[0].ShaderRegister = 0;
-	staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-	for (int i = 0; i < _countof(staticSamplers); ++i) {
-		rootSigBuilder.AddStaticSampler(staticSamplers[i]);
-	}
-
-	rootSignatures_[(size_t)PrimitiveType::kModel] = rootSigBuilder.Build(device);
-
-	// グリッド
-	RootSignatureBuilder lineRootSigBuilder;
-	lineRootSigBuilder.SetFlags(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-
-	D3D12_ROOT_PARAMETER lineRootParameters[1] = {};
-	lineRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	lineRootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-	lineRootParameters[0].Descriptor.ShaderRegister = 0;
-	lineRootSigBuilder.AddRootParameter(lineRootParameters[0]);
-
-	rootSignatures_[(size_t)PrimitiveType::kGrid] = lineRootSigBuilder.Build(device);
 	// パーティクル
 	RootSignatureBuilder particleRootSigBuilder;
 	particleRootSigBuilder.SetFlags(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -307,11 +240,16 @@ void PSOManager::CompileAllShaders() {
 	for (int i = 0; i < static_cast<int>(PrimitiveType::kCount); ++i) {
 		for (int j = 0; j < static_cast<int>(ShaderStage::kCount); ++j) {
 
-			// パスとプロファイルを取得
-			const wchar_t* path = kShaderPaths[i][j];
-			const wchar_t* profile = kShaderProfiles[j];
+			const wchar_t* path = nullptr;
 
-			// コンパイルして配列に格納
+			if (configs_[i]) {
+				path = configs_[i]->GetShaderPath(static_cast<ShaderStage>(j));
+			} else {
+
+				path = kShaderPaths[i][j];
+			}
+
+			const wchar_t* profile = kShaderProfiles[j];
 			shaderBlobs_[i][j] = shaderCompiler_.CompileShader(path, profile);
 			assert(shaderBlobs_[i][j] != nullptr && "Shader compilation failed!");
 		}
@@ -320,36 +258,10 @@ void PSOManager::CompileAllShaders() {
 
 void PSOManager::CreateInputLayout()
 {
-	// モデル
-	modelInputElementDescs_[0].SemanticName = "POSITION";
-	modelInputElementDescs_[0].SemanticIndex = 0;
-	modelInputElementDescs_[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	modelInputElementDescs_[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	modelInputElementDescs_[1].SemanticName = "TEXCOORD";
-	modelInputElementDescs_[1].SemanticIndex = 0;
-	modelInputElementDescs_[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-	modelInputElementDescs_[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	modelInputElementDescs_[2].SemanticName = "NORMAL";
-	modelInputElementDescs_[2].SemanticIndex = 0;
-	modelInputElementDescs_[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-	modelInputElementDescs_[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-
-	inputLayoutDescs_[(size_t)PrimitiveType::kModel].pInputElementDescs = modelInputElementDescs_.data();
-	inputLayoutDescs_[(size_t)PrimitiveType::kModel].NumElements = kModelInputElements;
-
-
-	// グリッド
-	gridInputElementDescs_[0].SemanticName = "POSITION";
-	gridInputElementDescs_[0].SemanticIndex = 0;
-	gridInputElementDescs_[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	gridInputElementDescs_[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	gridInputElementDescs_[1].SemanticName = "TEXCOORD";
-	gridInputElementDescs_[1].SemanticIndex = 0;
-	gridInputElementDescs_[1].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	gridInputElementDescs_[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-
-	inputLayoutDescs_[(size_t)PrimitiveType::kGrid].pInputElementDescs = gridInputElementDescs_.data();
-	inputLayoutDescs_[(size_t)PrimitiveType::kGrid].NumElements = kGridInputElements;
+	size_t modelIdx = static_cast<size_t>(PrimitiveType::kModel);
+	// 💡 Object3D (kModel) はキャッシュから安全にポインタを紐付け！
+	inputLayoutDescs_[modelIdx].pInputElementDescs = inputElementsCache_[modelIdx].data();
+	inputLayoutDescs_[modelIdx].NumElements = static_cast<UINT>(inputElementsCache_[modelIdx].size());
 
 	// パーティクル
 	particleInputElementDescs_[0].SemanticName = "POSITION";
@@ -378,16 +290,6 @@ void PSOManager::CreateInputLayout()
 
 void PSOManager::CreateDepthStencil()
 {
-	// モデル
-	depthStencilDescs_[(size_t)PrimitiveType::kModel].DepthEnable = true;
-	depthStencilDescs_[(size_t)PrimitiveType::kModel].DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	depthStencilDescs_[(size_t)PrimitiveType::kModel].DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-
-	// グリッド
-	depthStencilDescs_[(size_t)PrimitiveType::kGrid].DepthEnable = true;
-	depthStencilDescs_[(size_t)PrimitiveType::kGrid].DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-	depthStencilDescs_[(size_t)PrimitiveType::kGrid].DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-
 	// パーティクル
 	depthStencilDescs_[(size_t)PrimitiveType::kParticle].DepthEnable = true;
 	depthStencilDescs_[(size_t)PrimitiveType::kParticle].DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
@@ -438,42 +340,36 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOManager::CreatePSOInternal(
 
 	// --- 1. 共通の設定 (Builderを使用) ---
 	psoBuilder
-		// ルートシグネチャ、インプットレイアウト、シェーダーを設定
 		.SetRootSignature(rootSignatures_[static_cast<size_t>(type)].Get())
 		.SetInputLayout(inputLayoutDescs_[static_cast<size_t>(type)])
 		.SetVertexShader(shaderBlobs_[static_cast<size_t>(type)][static_cast<size_t>(ShaderStage::kVertex)].Get())
 		.SetPixelShader(shaderBlobs_[static_cast<size_t>(type)][static_cast<size_t>(ShaderStage::kPixel)].Get())
-
-		// レンダーターゲットフォーマット、深度ステンシルビューフォーマットを設定
 		.SetDepthStencilViewFormat(dsvFormat_)
 		.AddRenderTargetFormat(rtvFormat_)
-
-		// ブレンドモードの設定（引数で受け取ったモードを使用）
-		.SetBlendMode(mode);
-
-	// 警告防止のため、SampleMaskをデフォルトに明示的に設定
-	psoBuilder.SetSampleMask(D3D12_DEFAULT_SAMPLE_MASK);
+		.SetBlendMode(mode)
+		.SetSampleMask(D3D12_DEFAULT_SAMPLE_MASK);
 
 
 	// --- 2. ラスタライザーと深度/ステンシルステートのベース設定 ---
-
-	// ラスタライザーはベース設定(rasterizerDesc_)に引数で渡された FillMode/CullMode を適用
 	D3D12_RASTERIZER_DESC currentRasterizerDesc = rasterizerDesc_;
 	currentRasterizerDesc.FillMode = fillMode;
 	currentRasterizerDesc.CullMode = cullMode;
 	psoBuilder.SetRasterizerState(currentRasterizerDesc);
 
-	// 深度/ステンシルステートはプリミティブタイプごとの設定を使用
 	D3D12_DEPTH_STENCIL_DESC currentDepthStencilDesc = depthStencilDescs_[static_cast<size_t>(type)];
 	psoBuilder.SetDepthStencilState(currentDepthStencilDesc);
 
-
 	// --- 3. プリミティブタイプごとの特殊な設定とオーバーライド ---
+	size_t idx = static_cast<size_t>(type);
+	if (configs_[idx]) {
+		configs_[idx]->CustomSetupPSO(psoBuilder, fillMode, cullMode);
+		return psoBuilder.Build(device);
+	}
 	switch (type) {
-	case PrimitiveType::kModel:
-		// モデルは三角形リスト
-		psoBuilder.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-		break;
+	//case PrimitiveType::kModel:
+	//	// モデルは三角形リスト
+	//	psoBuilder.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+	//	break;
 
 	case PrimitiveType::kParticle:
 		// パーティクルは三角形リスト
@@ -482,12 +378,6 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOManager::CreatePSOInternal(
 		// パーティクル専用のCullModeオーバーライド (両面描画)
 		currentRasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 		psoBuilder.SetRasterizerState(currentRasterizerDesc);
-		break;
-
-	case PrimitiveType::kGrid:
-		// グリッドは線リスト
-		psoBuilder.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE);
-		// グリッド用の深度/ステンシル設定（深度書き込みなしなど）は、すでに currentDepthStencilDesc で設定済み
 		break;
 	case PrimitiveType::kSkyBox:
 		psoBuilder.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
