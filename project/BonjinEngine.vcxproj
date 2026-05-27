@@ -216,6 +216,7 @@
     <ClCompile Include="engine\system\utility\random\RandomEngine.cpp" />
     <ClCompile Include="engine\system\manager\srv\SrvManager.cpp" />
     <ClCompile Include="engine\system\manager\particle\ParticleManager.cpp" />
+    <ClCompile Include="engine\graphics\3d\object\SkyBox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\core\Core.h" />
@@ -267,6 +268,7 @@
     <ClInclude Include="engine\system\manager\light\LightManager.h" />
     <ClInclude Include="engine\system\manager\srv\SrvManager.h" />
     <ClInclude Include="engine\system\manager\particle\ParticleManager.h" />
+    <ClInclude Include="engine\graphics\3d\object\SkyBox.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
