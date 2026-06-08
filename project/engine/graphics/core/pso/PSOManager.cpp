@@ -5,6 +5,8 @@
 
 #include "config/Object3D/Object3DConfig.h"
 
+#include "config/skyBox/SkyBoxConfig.h"
+
 // ⭐ シェーダーファイルパスの定数定義 [PrimitiveType][ShaderStage]
 static const wchar_t* kShaderPaths[static_cast<size_t>(PrimitiveType::kCount)]
 [static_cast<size_t>(ShaderStage::kCount)] = {
@@ -15,7 +17,7 @@ static const wchar_t* kShaderPaths[static_cast<size_t>(PrimitiveType::kCount)]
 	// kSkyBox
    { L"resources/shader/SkyBox.VS.hlsl", L"resources/shader/SkyBox.PS.hlsl" },
    //
-	{ L"resources/shader/FullScreen.VS.hlsl", L"resources/shader/GaussianFilter.PS.hlsl" },
+	{ L"resources/shader/FullScreen.VS.hlsl", L"resources/shader/FullScreen.PS.hlsl" },
 };
 
 // ⭐ シェーダープロファイルの定数定義 [ShaderStage]
@@ -29,16 +31,20 @@ PSOManager::PSOManager() {
 	shaderCompiler_.InitializeDxc();
 
 	// pso生成時にconfigを取得
-	configs_[static_cast<size_t>(PrimitiveType::kModel)] = std::make_unique<Object3DConfig>();
+	configs_[static_cast<size_t>(PrimitiveType::kModel)] = std::make_unique<Object3DConfig>(); // object3D
+	                                                                                           // particle
+	configs_[static_cast<size_t>(PrimitiveType::kSkyBox)] = std::make_unique<SkyBoxConfig>();  // skyBox
+
 }
 
 PSOManager::~PSOManager() {}
 
 void PSOManager::Initialize(ID3D12Device* device, DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat)
 {
-	if (configs_[static_cast<size_t>(PrimitiveType::kModel)]) {
-		rootSignatures_[static_cast<size_t>(PrimitiveType::kModel)] =
-			configs_[static_cast<size_t>(PrimitiveType::kModel)]->CreateRootSignature(device);
+	for (size_t idx = 0; idx < static_cast<size_t>(PrimitiveType::kCount); ++idx) {
+		if (configs_[idx]) {
+			rootSignatures_[idx] = configs_[idx]->CreateRootSignature(device);
+		}
 	}
 
 	/// --- 形状ごとのRoorSignature ---
@@ -52,10 +58,6 @@ void PSOManager::Initialize(ID3D12Device* device, DXGI_FORMAT rtvFormat, DXGI_FO
 	/// --- シェーダー ---
 	CompileAllShaders();
 
-	if (configs_[static_cast<size_t>(PrimitiveType::kModel)]) {
-		inputElementsCache_[static_cast<size_t>(PrimitiveType::kModel)] =
-			configs_[static_cast<size_t>(PrimitiveType::kModel)]->GetInputElements();
-	}
 
 	/// --- InputLayout ---
 	CreateInputLayout();
@@ -129,63 +131,6 @@ void PSOManager::CreateRootSignature(ID3D12Device* device)
 
 	rootSignatures_[(size_t)PrimitiveType::kParticle] = particleRootSigBuilder.Build(device);
 
-	// スカイボックス
-	RootSignatureBuilder skyBoxRootSigBuilder;
-	skyBoxRootSigBuilder.SetFlags(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-
-	D3D12_DESCRIPTOR_RANGE skyBoxDescriptorRange[1] = {};
-	skyBoxDescriptorRange[0].BaseShaderRegister = 0;
-	skyBoxDescriptorRange[0].NumDescriptors = 2;
-	skyBoxDescriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	skyBoxDescriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-	D3D12_ROOT_PARAMETER skyBoxRootParameters[7] = {};
-	skyBoxRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	skyBoxRootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	skyBoxRootParameters[0].Descriptor.ShaderRegister = 0;
-	skyBoxRootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	skyBoxRootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-	skyBoxRootParameters[1].Descriptor.ShaderRegister = 0;
-
-	skyBoxRootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	skyBoxRootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	skyBoxRootParameters[2].DescriptorTable.pDescriptorRanges = skyBoxDescriptorRange;
-	skyBoxRootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(skyBoxDescriptorRange);
-
-	skyBoxRootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // ディレクショナルライト
-	skyBoxRootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	skyBoxRootParameters[3].Descriptor.ShaderRegister = 1;
-	skyBoxRootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // カメラ
-	skyBoxRootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	skyBoxRootParameters[4].Descriptor.ShaderRegister = 2;
-	skyBoxRootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // ポイントライト
-	skyBoxRootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	skyBoxRootParameters[5].Descriptor.ShaderRegister = 3;
-	skyBoxRootParameters[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // スポット
-	skyBoxRootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	skyBoxRootParameters[6].Descriptor.ShaderRegister = 4;
-
-
-	for (int i = 0; i < _countof(skyBoxRootParameters); ++i) {
-		skyBoxRootSigBuilder.AddRootParameter(skyBoxRootParameters[i]);
-	}
-
-	D3D12_STATIC_SAMPLER_DESC skyBoxStaticSamplers[1] = {};
-	skyBoxStaticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-	skyBoxStaticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	skyBoxStaticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	skyBoxStaticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	skyBoxStaticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-	skyBoxStaticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
-	skyBoxStaticSamplers[0].ShaderRegister = 0;
-	skyBoxStaticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-	for (int i = 0; i < _countof(skyBoxStaticSamplers); ++i) {
-		skyBoxRootSigBuilder.AddStaticSampler(skyBoxStaticSamplers[i]);
-	}
-
-	rootSignatures_[(size_t)PrimitiveType::kSkyBox] = skyBoxRootSigBuilder.Build(device);
-
 	// コピーイメージRootSignatureBuilder
 	RootSignatureBuilder copyImageRootSigBuilder;
 	copyImageRootSigBuilder.SetFlags(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -258,10 +203,22 @@ void PSOManager::CompileAllShaders() {
 
 void PSOManager::CreateInputLayout()
 {
-	size_t modelIdx = static_cast<size_t>(PrimitiveType::kModel);
-	// 💡 Object3D (kModel) はキャッシュから安全にポインタを紐付け！
-	inputLayoutDescs_[modelIdx].pInputElementDescs = inputElementsCache_[modelIdx].data();
-	inputLayoutDescs_[modelIdx].NumElements = static_cast<UINT>(inputElementsCache_[modelIdx].size());
+
+
+	for (size_t idx = 0; idx < static_cast<size_t>(PrimitiveType::kCount); ++idx) {
+		if (configs_[idx]) {
+			inputElementsCache_[idx] =
+				configs_[idx]->GetInputElements();
+		}
+	}
+
+	for (int idx = 0; idx < static_cast<int>(PrimitiveType::kCount); ++idx) {
+		if(configs_[idx]) {
+			inputLayoutDescs_[idx].pInputElementDescs = inputElementsCache_[idx].data();
+			inputLayoutDescs_[idx].NumElements = static_cast<UINT>(inputElementsCache_[idx].size());
+		}
+		
+	}
 
 	// パーティクル
 	particleInputElementDescs_[0].SemanticName = "POSITION";
@@ -280,9 +237,6 @@ void PSOManager::CreateInputLayout()
 	inputLayoutDescs_[(size_t)PrimitiveType::kParticle].pInputElementDescs = particleInputElementDescs_.data();
 	inputLayoutDescs_[(size_t)PrimitiveType::kParticle].NumElements = kParticleInputElements;
 
-	// スカイボックス
-	inputLayoutDescs_[(size_t)PrimitiveType::kSkyBox] = inputLayoutDescs_[(size_t)PrimitiveType::kModel];
-
 	// コピーイメージ
 	inputLayoutDescs_[(size_t)PrimitiveType::kCopyImage].pInputElementDescs = nullptr;
 	inputLayoutDescs_[(size_t)PrimitiveType::kCopyImage].NumElements = 0;
@@ -295,9 +249,7 @@ void PSOManager::CreateDepthStencil()
 	depthStencilDescs_[(size_t)PrimitiveType::kParticle].DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 	depthStencilDescs_[(size_t)PrimitiveType::kParticle].DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
-	depthStencilDescs_[(size_t)PrimitiveType::kSkyBox].DepthEnable = true;
-	depthStencilDescs_[(size_t)PrimitiveType::kSkyBox].DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-	depthStencilDescs_[(size_t)PrimitiveType::kSkyBox].DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	
 
 	depthStencilDescs_[(size_t)PrimitiveType::kCopyImage].DepthEnable = false;
 }
@@ -365,12 +317,8 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOManager::CreatePSOInternal(
 		configs_[idx]->CustomSetupPSO(psoBuilder, fillMode, cullMode);
 		return psoBuilder.Build(device);
 	}
-	switch (type) {
-	//case PrimitiveType::kModel:
-	//	// モデルは三角形リスト
-	//	psoBuilder.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-	//	break;
 
+	switch (type) {
 	case PrimitiveType::kParticle:
 		// パーティクルは三角形リスト
 		psoBuilder.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
@@ -378,10 +326,6 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOManager::CreatePSOInternal(
 		// パーティクル専用のCullModeオーバーライド (両面描画)
 		currentRasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 		psoBuilder.SetRasterizerState(currentRasterizerDesc);
-		break;
-	case PrimitiveType::kSkyBox:
-		psoBuilder.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-
 		break;
 	case PrimitiveType::kCopyImage:
 		psoBuilder.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
