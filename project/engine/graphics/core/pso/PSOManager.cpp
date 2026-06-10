@@ -4,7 +4,7 @@
 #include "rootSignatureBuilder/RootSignatureBuilder.h"
 
 #include "config/Object3D/Object3DConfig.h"
-
+#include "config/particle/ParticleConfig.h"
 #include "config/skyBox/SkyBoxConfig.h"
 
 // ⭐ シェーダーファイルパスの定数定義 [PrimitiveType][ShaderStage]
@@ -32,7 +32,7 @@ PSOManager::PSOManager() {
 
 	// pso生成時にconfigを取得
 	configs_[static_cast<size_t>(PrimitiveType::kModel)] = std::make_unique<Object3DConfig>(); // object3D
-	                                                                                           // particle
+	configs_[static_cast<size_t>(PrimitiveType::kParticle)] = std::make_unique<ParticleConfigEx>();   // particle
 	configs_[static_cast<size_t>(PrimitiveType::kSkyBox)] = std::make_unique<SkyBoxConfig>();  // skyBox
 
 }
@@ -72,75 +72,9 @@ void PSOManager::Initialize(ID3D12Device* device, DXGI_FORMAT rtvFormat, DXGI_FO
 
 void PSOManager::CreateRootSignature(ID3D12Device* device)
 {
-	// パーティクル
-	RootSignatureBuilder particleRootSigBuilder;
-	particleRootSigBuilder.SetFlags(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-
-	D3D12_DESCRIPTOR_RANGE particleInstanceDescriptorRange[1] = {};
-	particleInstanceDescriptorRange[0].BaseShaderRegister = 0; // t0
-	particleInstanceDescriptorRange[0].NumDescriptors = 1;
-	particleInstanceDescriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	particleInstanceDescriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-	D3D12_DESCRIPTOR_RANGE particleTextureDescriptorRange[1] = {};
-	particleTextureDescriptorRange[0].BaseShaderRegister = 1; // PSの t0
-	particleTextureDescriptorRange[0].NumDescriptors = 1;
-	particleTextureDescriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	particleTextureDescriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-	D3D12_ROOT_PARAMETER particleRootParameters[4] = {};
-
-	particleRootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	particleRootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL; // ★ PIXEL -> ALL に変更
-	particleRootParameters[0].Descriptor.ShaderRegister = 0;
-
-	// Root Parameter 1: Instance Data SRV Table (t0 for VS)
-	particleRootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	particleRootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-	particleRootParameters[1].DescriptorTable.pDescriptorRanges = particleInstanceDescriptorRange; // ★ インスタンス専用の Range を参照
-	particleRootParameters[1].DescriptorTable.NumDescriptorRanges = _countof(particleInstanceDescriptorRange);
-
-	// Root Parameter 2: Texture SRV Table (t0 for PS)
-	particleRootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	particleRootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	particleRootParameters[2].DescriptorTable.pDescriptorRanges = particleTextureDescriptorRange; // ★ テクスチャ用の Range を参照 (t0 for PS)
-	particleRootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(particleTextureDescriptorRange);
-
-	// Root Parameter 3: Light CBV (b1)
-	particleRootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	particleRootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	particleRootParameters[3].Descriptor.ShaderRegister = 1;
-
-	for (int i = 0; i < _countof(particleRootParameters); ++i) {
-		particleRootSigBuilder.AddRootParameter(particleRootParameters[i]);
-	}
-
-	D3D12_STATIC_SAMPLER_DESC particleStaticSamplers[1] = {};
-	particleStaticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-	particleStaticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	particleStaticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	particleStaticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	particleStaticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-	particleStaticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
-	particleStaticSamplers[0].ShaderRegister = 0;
-	particleStaticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-	for (int i = 0; i < _countof(particleStaticSamplers); ++i) {
-		particleRootSigBuilder.AddStaticSampler(particleStaticSamplers[i]);
-	}
-
-	rootSignatures_[(size_t)PrimitiveType::kParticle] = particleRootSigBuilder.Build(device);
-
 	// コピーイメージRootSignatureBuilder
 	RootSignatureBuilder copyImageRootSigBuilder;
 	copyImageRootSigBuilder.SetFlags(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-
-	// -------------------------------------------------------------------------
-	// ★修正：DescriptorRange もビルダーに直接登録するか、Buildまで寿命を維持する
-	// -------------------------------------------------------------------------
-	// もし Builder クラスに、レンジをまとめて追加できる関数や、
-	// パラメータをスマートに登録するヘルパー関数があればそれを使うのがベストです。
-	// ここでは、配列の寿命を Build() の瞬間まで維持するために、同じスコープで一気に処理します。
 
 	D3D12_DESCRIPTOR_RANGE copyImageDescriptorRange[1] = {};
 	copyImageDescriptorRange[0].BaseShaderRegister = 0; // t0
@@ -220,23 +154,6 @@ void PSOManager::CreateInputLayout()
 		
 	}
 
-	// パーティクル
-	particleInputElementDescs_[0].SemanticName = "POSITION";
-	particleInputElementDescs_[0].SemanticIndex = 0;
-	particleInputElementDescs_[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	particleInputElementDescs_[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	particleInputElementDescs_[1].SemanticName = "TEXCOORD";
-	particleInputElementDescs_[1].SemanticIndex = 0;
-	particleInputElementDescs_[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-	particleInputElementDescs_[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	particleInputElementDescs_[2].SemanticName = "COLOR";
-	particleInputElementDescs_[2].SemanticIndex = 0;
-	particleInputElementDescs_[2].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	particleInputElementDescs_[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-
-	inputLayoutDescs_[(size_t)PrimitiveType::kParticle].pInputElementDescs = particleInputElementDescs_.data();
-	inputLayoutDescs_[(size_t)PrimitiveType::kParticle].NumElements = kParticleInputElements;
-
 	// コピーイメージ
 	inputLayoutDescs_[(size_t)PrimitiveType::kCopyImage].pInputElementDescs = nullptr;
 	inputLayoutDescs_[(size_t)PrimitiveType::kCopyImage].NumElements = 0;
@@ -244,13 +161,6 @@ void PSOManager::CreateInputLayout()
 
 void PSOManager::CreateDepthStencil()
 {
-	// パーティクル
-	depthStencilDescs_[(size_t)PrimitiveType::kParticle].DepthEnable = true;
-	depthStencilDescs_[(size_t)PrimitiveType::kParticle].DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	depthStencilDescs_[(size_t)PrimitiveType::kParticle].DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-
-	
-
 	depthStencilDescs_[(size_t)PrimitiveType::kCopyImage].DepthEnable = false;
 }
 
@@ -320,12 +230,6 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOManager::CreatePSOInternal(
 
 	switch (type) {
 	case PrimitiveType::kParticle:
-		// パーティクルは三角形リスト
-		psoBuilder.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-
-		// パーティクル専用のCullModeオーバーライド (両面描画)
-		currentRasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
-		psoBuilder.SetRasterizerState(currentRasterizerDesc);
 		break;
 	case PrimitiveType::kCopyImage:
 		psoBuilder.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
