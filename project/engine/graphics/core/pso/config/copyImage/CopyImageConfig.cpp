@@ -1,5 +1,7 @@
 #include "CopyImageConfig.h"
 
+#include "rootSignatureBuilder/RootSignatureBuilder.h"
+
 const wchar_t* CopyImageConfig::GetShaderPath(ShaderStage stage) const {
 	if (stage == ShaderStage::kVertex) {
 		return L"resources/shader/FullScreen.VS.hlsl";
@@ -10,39 +12,40 @@ const wchar_t* CopyImageConfig::GetShaderPath(ShaderStage stage) const {
 
 Microsoft::WRL::ComPtr<ID3D12RootSignature> CopyImageConfig::CreateRootSignature(ID3D12Device* device) {
 	// コピーイメージRootSignatureBuilder
-	RootSignatureBuilder copyImageRootSigBuilder;
-	copyImageRootSigBuilder.SetFlags(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	RootSignatureBuilder rootSigBuilder;
+	rootSigBuilder.SetFlags(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
-	D3D12_DESCRIPTOR_RANGE copyImageDescriptorRange[1] = {};
-	copyImageDescriptorRange[0].BaseShaderRegister = 0; // t0
-	copyImageDescriptorRange[0].NumDescriptors = 1;
-	copyImageDescriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	copyImageDescriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+	descriptorRange[0].BaseShaderRegister = 0; // t0
+	descriptorRange[0].NumDescriptors = 1;
+	descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	// 2. ルートパラメータの設定 (DescriptorTableとして設定)
-	D3D12_ROOT_PARAMETER copyImageRootParameters{};
-	copyImageRootParameters.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	copyImageRootParameters.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	copyImageRootParameters.DescriptorTable.NumDescriptorRanges = _countof(copyImageDescriptorRange);
+	D3D12_ROOT_PARAMETER rootParameters{};
+	rootParameters.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+		
 	// 💡Build()を実行するこのスコープ内であれば、このポインタはまだ有効です
-	copyImageRootParameters.DescriptorTable.pDescriptorRanges = copyImageDescriptorRange;
+	rootParameters.DescriptorTable.pDescriptorRanges = descriptorRange;
 
-	copyImageRootSigBuilder.AddRootParameter(copyImageRootParameters);
+	rootSigBuilder.AddRootParameter(rootParameters);
 
 	// 3. サンプラーの設定 (CopyImage.PS.hlsl の register(s0) に対応)
-	D3D12_STATIC_SAMPLER_DESC copyImageStaticSampler{};
-	copyImageStaticSampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-	copyImageStaticSampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	copyImageStaticSampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	copyImageStaticSampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	copyImageStaticSampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-	copyImageStaticSampler.MaxLOD = D3D12_FLOAT32_MAX;
-	copyImageStaticSampler.ShaderRegister = 0; // register(s0)
-	copyImageStaticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	D3D12_STATIC_SAMPLER_DESC staticSampler{};
+	staticSampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	staticSampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	staticSampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	staticSampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	staticSampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	staticSampler.MaxLOD = D3D12_FLOAT32_MAX;
+	staticSampler.ShaderRegister = 0; // register(s0)
+	staticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	copyImageRootSigBuilder.AddStaticSampler(copyImageStaticSampler);
+	rootSigBuilder.AddStaticSampler(staticSampler);
 
-	return  copyImageRootSigBuilder.Build(device);
+	return  rootSigBuilder.Build(device);
 }
 
 std::vector<D3D12_INPUT_ELEMENT_DESC> CopyImageConfig::GetInputElements() {

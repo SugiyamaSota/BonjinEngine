@@ -1,14 +1,8 @@
-// ModelPipelineConfig.h
 #pragma once
 #include "../IPipelineConfig.h"
-#include "rootSignatureBuilder/RootSignatureBuilder.h"
 
 class ParticleConfigEx : public IPipelineConfig {
 public:
-
-    ParticleConfigEx() {
-        //__debugbreak();
-    }
 
     const wchar_t* GetShaderPath(ShaderStage stage) const override;
 

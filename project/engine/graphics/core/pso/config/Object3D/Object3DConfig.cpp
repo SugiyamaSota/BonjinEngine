@@ -1,5 +1,7 @@
 #include "Object3DConfig.h"
 
+#include "rootSignatureBuilder/RootSignatureBuilder.h"
+
 const wchar_t* Object3DConfig::GetShaderPath(ShaderStage stage) const {
 	if (stage == ShaderStage::kVertex) {
 		return L"resources/shader/Object3d.VS.hlsl";

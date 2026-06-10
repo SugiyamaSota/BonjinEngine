@@ -1,7 +1,5 @@
-// ModelPipelineConfig.h
 #pragma once
 #include "../IPipelineConfig.h"
-#include "rootSignatureBuilder/RootSignatureBuilder.h"
 
 class CopyImageConfig : public IPipelineConfig {
 public:
