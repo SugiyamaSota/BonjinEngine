@@ -1,7 +1,6 @@
 #pragma once
 #include <d3d12.h>
 #include <wrl/client.h>
-#include <string>
 #include <vector>
 #include <dxcapi.h>
 #include<array>
@@ -19,8 +18,6 @@ enum class PrimitiveType {
 	kCopyImage,
 	kCount,
 };
-
-
 
 class PSOManager {
 public:
@@ -83,19 +80,19 @@ private:
 	std::array<
 		D3D12_INPUT_ELEMENT_DESC,
 		kParticleInputElements
-	> particleInputElementDescs_;
+	> particleInputElementDescs_{};
 
 	static const size_t kCopyImageInputElements = 0;
 	std::array<
 		D3D12_INPUT_ELEMENT_DESC,
 		kCopyImageInputElements
-	> copyImageInputElementDescs_;
+	> copyImageInputElementDescs_{};
 
 	// 形状ごとのインプットレイアウトディスク
 	std::array<
 		D3D12_INPUT_LAYOUT_DESC,
 		static_cast<size_t>(PrimitiveType::kCount)>
-		inputLayoutDescs_;
+		inputLayoutDescs_{};
 
 	// ラスタライザーディスク
 	D3D12_RASTERIZER_DESC rasterizerDesc_{};
@@ -113,13 +110,12 @@ private:
 	std::array<
 		D3D12_DEPTH_STENCIL_DESC,
 		static_cast<size_t>(PrimitiveType::kCount)
-	> depthStencilDescs_;
+	> depthStencilDescs_{};
 
 	/// --- 関数 ---
 	void CreateRootSignature(ID3D12Device* device);
 	void CompileAllShaders();
 	void CreateInputLayout();
-	void CreateDepthStencil();
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> CreatePSOInternal(
 		ID3D12Device* device,
 		PrimitiveType type,
