@@ -6,7 +6,7 @@ const wchar_t* CopyImageConfig::GetShaderPath(ShaderStage stage) const {
 	if (stage == ShaderStage::kVertex) {
 		return L"resources/shader/FullScreen.VS.hlsl";
 	} else {
-		return L"resources/shader/FullScreen.PS.hlsl";
+		return L"resources/shader/LuminanceBasedOutline.PS.hlsl";
 	}
 }
 
