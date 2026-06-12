@@ -16,9 +16,8 @@ void TestScene::Initialize(Camera* camera)
 	//testModel_->LoadModel("teapot", "teapot.obj");
 
 
-	testSkyBox_ = std::make_unique<Object3D>();
+	testSkyBox_ = std::make_unique<SkyBox>();
 	testSkyBox_->CreateModel(ModelBuilder::ModelType::kSkyBox, "resources/textures/skyBox.dds");
-	testSkyBox_->SetPrimitiveType(PrimitiveType::kSkyBox);
 
 	testCube_ = std::make_unique<Object3D>();
 	testCube_->CreateModel(ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
