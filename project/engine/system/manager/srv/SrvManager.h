@@ -5,7 +5,8 @@
 enum class SrvType {
     Texture2D,
     TextureCube,
-    StructuredBuffer
+    StructuredBuffer,
+    DepthTexture
 };
 
 class SrvManager {

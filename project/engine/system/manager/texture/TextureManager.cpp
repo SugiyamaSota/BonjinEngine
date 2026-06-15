@@ -13,6 +13,7 @@ TextureManager* TextureManager::GetInstance() {
 
 void TextureManager::Finalize() {
 	textureResources_.clear();
+	srvIndices_.clear();
 	pendingUploadResources_.clear();
 	loadedTextures_.clear();
 	metadatas_.clear();
@@ -54,10 +55,11 @@ int TextureManager::LoadTexture(const std::string& filePath) {
 	int index = (int)textureResources_.size();
 	textureResources_.push_back(textureResource);
 	metadatas_.push_back(metadata);
+	srvIndices_.push_back(srvIndex);
 
-	// filePath に対して srvIndex を紐付け
-	loadedTextures_[filePath] = (int)srvIndex;
-	return (int)srvIndex;
+	// filePath に対して index を紐付け
+	loadedTextures_[filePath] = index;
+	return index;
 }
 
 void TextureManager::ReleaseIntermediateResources() {
@@ -75,12 +77,13 @@ void TextureManager::ReleaseIntermediateResources() {
 
 // GetGPUHandle の引数を int に変更
 D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetGPUHandle(int textureIndex) const {
-	return SrvManager::GetInstance()->GetGPUHandle(static_cast<uint32_t>(textureIndex));
+	assert(textureIndex >= 0 && textureIndex < static_cast<int>(srvIndices_.size()));
+	return SrvManager::GetInstance()->GetGPUHandle(srvIndices_[textureIndex]);
 }
 
 // GetMetadata の引数を int に変更
 const DirectX::TexMetadata& TextureManager::GetMetadata(int textureIndex) const {
-	assert(static_cast<uint32_t>(textureIndex) < metadatas_.size()); // キャストして比較
+	assert(textureIndex >= 0 && textureIndex < static_cast<int>(metadatas_.size()));
 	return metadatas_[textureIndex];
 }
 

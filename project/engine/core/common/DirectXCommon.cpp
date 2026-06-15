@@ -3,10 +3,12 @@
 #include<filesystem>
 #include<thread>
 
-#include"function/function.h"
-#include"windows/WinApp.h"
-#include"ImGuiManager.h"
+#include "function/function.h"
+#include "windows/WinApp.h"
+#include "ImGuiManager.h"
 #include "SrvManager.h"
+#include "math/Matrix.h"
+#include "SceneManager.h"
 
 DirectXCommon* DirectXCommon::instance_ = nullptr;
 
@@ -76,9 +78,17 @@ void DirectXCommon::Initialize() {
 	scissorRect_.top = 0;
 	scissorRect_.bottom = LONG(WinApp::GetInstance()->GetClientHeight());
 
+	// depthOutlineCB_ の生成とマップ
+	depthOutlineCB_ = CreateBufferResource(device_.Get(), sizeof(DepthOutlineMaterial));
+	depthOutlineCB_->Map(0, nullptr, reinterpret_cast<void**>(&depthOutlineData_));
+	depthOutlineData_->projectionInverse = MakeIdentity4x4();
+
 }
 
 DirectXCommon::~DirectXCommon() {
+	if (depthOutlineCB_) {
+		depthOutlineCB_->Unmap(0, nullptr);
+	}
 	if (fenceEvent_ != nullptr) {
 		CloseHandle(fenceEvent_);
 		fenceEvent_ = nullptr;
@@ -130,7 +140,15 @@ void DirectXCommon::PostDraw()
 	bbBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 	bbBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
-	D3D12_RESOURCE_BARRIER barriers[] = { rtBarrier, bbBarrier };
+	// C) 深度テクスチャ を デプス書き込み(DEPTH_WRITE) から ピクセルシェーダー用(SRV) に
+	D3D12_RESOURCE_BARRIER depthBarrier{};
+	depthBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	depthBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	depthBarrier.Transition.pResource = depthStencil_->GetResource();
+	depthBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+	depthBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+	D3D12_RESOURCE_BARRIER barriers[] = { rtBarrier, bbBarrier, depthBarrier };
 	commandList_->ResourceBarrier(_countof(barriers), barriers);
 
 	// -------------------------------------------------------------------------
@@ -150,12 +168,18 @@ void DirectXCommon::PostDraw()
 	// SrvManagerのディスクリプタヒープをセット
 	SrvManager::GetInstance()->PreDraw();
 
+	// アクティブなカメラの逆行列を定数バッファに書き込む
+	Matrix4x4 projectionMatrix_ = MakePerspectiveFovMatrix(0.45f, float(WinApp::GetInstance()->GetClientWidth()) / float(WinApp::GetInstance()->GetClientHeight()), 0.1f, 1000.0f);
+	depthOutlineData_->projectionInverse = Inverse(projectionMatrix_);
+
 	// RenderTextureの内容をバックバッファにフルスクリーンコピー描画
 	commandList_->SetGraphicsRootSignature(pso->GetRootSignature(PrimitiveType::kCopyImage));
 	commandList_->SetPipelineState(pso->GetPipelineState(
 		device_.Get(), PrimitiveType::kCopyImage, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE
 	));
 	commandList_->SetGraphicsRootDescriptorTable(0, SrvManager::GetInstance()->GetGPUHandle(renderTexture_->GetSrvIndex()));
+	commandList_->SetGraphicsRootDescriptorTable(1, SrvManager::GetInstance()->GetGPUHandle(depthStencil_->GetSrvIndex()));
+	commandList_->SetGraphicsRootConstantBufferView(2, depthOutlineCB_->GetGPUVirtualAddress());
 
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -164,24 +188,32 @@ void DirectXCommon::PostDraw()
 
 void DirectXCommon::EndFrame() 
 {	
-
 	UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
 
-	// 状態を遷移（バックバッファをPRESENTに戻す）
-	barrier_.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier_.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier_.Transition.pResource = swapChainResources_[backBufferIndex].Get(); // ★ここを明示
-	barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-	commandList_->ResourceBarrier(1, &barrier_);
+	D3D12_RESOURCE_BARRIER endBarriers[3]{};
 
-	// -------------------------------------------------------------------------
-	// ★追加：RenderTexture の状態を次のフレームのために COMMON（または RENDER_TARGET用）に戻しておく
-	// -------------------------------------------------------------------------
-	barrier_.Transition.pResource = renderTexture_->GetResource();
-	barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
-	commandList_->ResourceBarrier(1, &barrier_);
+	// PRESENTへの遷移
+	endBarriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	endBarriers[0].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	endBarriers[0].Transition.pResource = swapChainResources_[backBufferIndex].Get();
+	endBarriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	endBarriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+
+	// RenderTextureをCOMMONへ
+	endBarriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	endBarriers[1].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	endBarriers[1].Transition.pResource = renderTexture_->GetResource();
+	endBarriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	endBarriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
+
+	// DepthStencilをDEPTH_WRITEへ
+	endBarriers[2].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	endBarriers[2].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	endBarriers[2].Transition.pResource = depthStencil_->GetResource();
+	endBarriers[2].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	endBarriers[2].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+
+	commandList_->ResourceBarrier(3, endBarriers);
 
 	// コマンドリストの内容を確定させる（既存の処理）
 	HRESULT hr = commandList_->Close();

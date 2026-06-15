@@ -150,4 +150,11 @@ private:
 
 	std::unique_ptr<DepthStencil> depthStencil_ = nullptr;
 
+	struct DepthOutlineMaterial {
+		Matrix4x4 projectionInverse;
+	};
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthOutlineCB_ = nullptr;
+	DepthOutlineMaterial* depthOutlineData_ = nullptr;
+
 };
