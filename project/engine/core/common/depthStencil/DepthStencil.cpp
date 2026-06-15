@@ -3,7 +3,8 @@
 #include <cassert>
 
 #include "WinApp.h"
-#include"function/function.h"
+#include "function/function.h"
+#include "SrvManager.h"
 
 DepthStencil::DepthStencil(ID3D12Device* device) : device_(device) 
 {
@@ -26,6 +27,11 @@ DepthStencil::DepthStencil(ID3D12Device* device) : device_(device)
 	//比較関数
 	desc_.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
+	// SRVの割り当てと生成
+	SrvManager* srvManager = SrvManager::GetInstance();
+	srvIndex_ = srvManager->Allocate();
+	srvManager->CreateSrv(srvIndex_, resource_.Get(), SrvType::DepthTexture);
+
 }
 
 Microsoft::WRL::ComPtr<ID3D12Resource>  DepthStencil::CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height) {
@@ -35,7 +41,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource>  DepthStencil::CreateDepthStencilTextureR
 	resourceDesc.Height = height;
 	resourceDesc.MipLevels = 1;
 	resourceDesc.DepthOrArraySize = 1;
-	resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	resourceDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 	resourceDesc.SampleDesc.Count = 1;
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;

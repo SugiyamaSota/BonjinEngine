@@ -175,6 +175,9 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="engine\graphics\3d\object\BaseObject.cpp" />
     <ClCompile Include="engine\graphics\3d\object\Object3D.cpp" />
     <ClCompile Include="engine\graphics\3d\object\Particle.cpp" />
+    <ClCompile Include="engine\graphics\core\pso\config\copyImage\CopyImageConfig.cpp" />
+    <ClCompile Include="engine\graphics\core\pso\config\particle\ParticleConfig.cpp" />
+    <ClCompile Include="engine\graphics\core\pso\config\skyBox\SkyBoxConfig.cpp" />
     <ClCompile Include="engine\system\manager\imgui\ImGuiManager.cpp" />
     <ClCompile Include="engine\system\manager\model\ModelManager.cpp" />
     <ClCompile Include="engine\graphics\utility\color\Color.cpp" />
@@ -228,6 +231,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="engine\system\manager\srv\SrvManager.cpp" />
     <ClCompile Include="engine\system\manager\particle\ParticleManager.cpp" />
     <ClCompile Include="engine\graphics\3d\object\SkyBox.cpp" />
+    <ClCompile Include="engine\graphics\core\pso\config\Object3D\Object3DConfig.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\core\Core.h" />
@@ -245,6 +249,10 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\graphics\3d\object\BaseObject.h" />
     <ClInclude Include="engine\graphics\3d\object\Object3D.h" />
     <ClInclude Include="engine\graphics\3d\object\Particle.h" />
+    <ClInclude Include="engine\graphics\core\pso\config\copyImage\CopyImageConfig.h" />
+    <ClInclude Include="engine\graphics\core\pso\config\IPipelineConfig.h" />
+    <ClInclude Include="engine\graphics\core\pso\config\particle\ParticleConfig.h" />
+    <ClInclude Include="engine\graphics\core\pso\config\skyBox\SkyBoxConfig.h" />
     <ClInclude Include="engine\interface\BaseScene.h" />
     <ClInclude Include="engine\interface\IScene.h" />
     <ClInclude Include="application\scene\game\GameScene.h" />
@@ -286,6 +294,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\system\manager\srv\SrvManager.h" />
     <ClInclude Include="engine\system\manager\particle\ParticleManager.h" />
     <ClInclude Include="engine\graphics\3d\object\SkyBox.h" />
+    <ClInclude Include="engine\graphics\core\pso\config\Object3D\Object3DConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

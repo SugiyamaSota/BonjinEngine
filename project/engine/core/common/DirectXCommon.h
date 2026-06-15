@@ -14,6 +14,15 @@
 
 class DirectXCommon {
 public:
+	enum class PostEffect {
+		kFullScreen,
+		kBoxFilter,
+		kGaussianFilter,
+		kLuminanceBasedOutline,
+		kDepthBasedOutline,
+		kRadialBlur
+	};
+
 	/// --- インスタンス関連 ---
 	// 生成、取得
 	static DirectXCommon* GetInstance();
@@ -24,6 +33,17 @@ public:
 	// コピー禁止
 	DirectXCommon(const DirectXCommon&) = delete;
 	DirectXCommon& operator=(const DirectXCommon&) = delete;
+
+	void SetPostEffect(PostEffect effect) { currentEffect_ = effect; }
+	PostEffect GetPostEffect() const { return currentEffect_; }
+	void SetFullScreenGray(bool isGray);
+	bool IsFullScreenGray() const { return fullScreenMaterial_.isGray != 0; }
+	void SetFullScreenVignette(bool isVignette);
+	bool IsFullScreenVignette() const { return fullScreenMaterial_.isVignette != 0; }
+	void SetRadialBlurCenter(const Vector2& center);
+	Vector2 GetRadialBlurCenter() const { return fullScreenMaterial_.radialBlurCenter; }
+	void SetRadialBlurWidth(float blurWidth);
+	float GetRadialBlurWidth() const { return fullScreenMaterial_.radialBlurWidth; }
 
 	/// --- 汎用関数 ---
 	// デストラクタ
@@ -149,5 +169,21 @@ private:
 	std::unique_ptr<RenderTexture> renderTexture_ = nullptr;
 
 	std::unique_ptr<DepthStencil> depthStencil_ = nullptr;
+
+	struct FullScreenMaterial {
+		Matrix4x4 projectionInverse;
+		int32_t isGray;
+		int32_t isVignette;
+		float padding[2];
+		Vector2 radialBlurCenter;
+		float radialBlurWidth;
+		float padding2;
+	};
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> fullScreenCB_ = nullptr;
+	FullScreenMaterial* fullScreenData_ = nullptr;
+	FullScreenMaterial fullScreenMaterial_{};
+
+	PostEffect currentEffect_ = PostEffect::kFullScreen;
 
 };
