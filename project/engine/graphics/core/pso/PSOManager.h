@@ -15,7 +15,11 @@ enum class PrimitiveType {
 	kModel,   // モデル
 	kParticle,
 	kSkyBox,
-	kCopyImage,
+	kPostEffectFullScreen,
+	kPostEffectBoxFilter,
+	kPostEffectGaussianFilter,
+	kPostEffectLuminanceOutline,
+	kPostEffectDepthOutline,
 	kCount,
 };
 

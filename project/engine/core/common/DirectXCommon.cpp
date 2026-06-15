@@ -172,10 +172,31 @@ void DirectXCommon::PostDraw()
 	Matrix4x4 projectionMatrix_ = MakePerspectiveFovMatrix(0.45f, float(WinApp::GetInstance()->GetClientWidth()) / float(WinApp::GetInstance()->GetClientHeight()), 0.1f, 1000.0f);
 	depthOutlineData_->projectionInverse = Inverse(projectionMatrix_);
 
+	PrimitiveType postEffectType = PrimitiveType::kPostEffectFullScreen;
+	switch (currentEffect_) {
+	case PostEffect::kFullScreen:
+		postEffectType = PrimitiveType::kPostEffectFullScreen;
+		break;
+	case PostEffect::kBoxFilter:
+		postEffectType = PrimitiveType::kPostEffectBoxFilter;
+		break;
+	case PostEffect::kGaussianFilter:
+		postEffectType = PrimitiveType::kPostEffectGaussianFilter;
+		break;
+	case PostEffect::kLuminanceBasedOutline:
+		postEffectType = PrimitiveType::kPostEffectLuminanceOutline;
+		break;
+	case PostEffect::kDepthBasedOutline:
+		postEffectType = PrimitiveType::kPostEffectDepthOutline;
+		break;
+	default:
+		break;
+	}
+
 	// RenderTextureの内容をバックバッファにフルスクリーンコピー描画
-	commandList_->SetGraphicsRootSignature(pso->GetRootSignature(PrimitiveType::kCopyImage));
+	commandList_->SetGraphicsRootSignature(pso->GetRootSignature(postEffectType));
 	commandList_->SetPipelineState(pso->GetPipelineState(
-		device_.Get(), PrimitiveType::kCopyImage, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE
+		device_.Get(), postEffectType, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE
 	));
 	commandList_->SetGraphicsRootDescriptorTable(0, SrvManager::GetInstance()->GetGPUHandle(renderTexture_->GetSrvIndex()));
 	commandList_->SetGraphicsRootDescriptorTable(1, SrvManager::GetInstance()->GetGPUHandle(depthStencil_->GetSrvIndex()));

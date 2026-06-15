@@ -17,7 +17,13 @@ PSOManager::PSOManager() {
 	configs_[static_cast<size_t>(PrimitiveType::kModel)] = std::make_unique<Object3DConfig>();      // object3D
 	configs_[static_cast<size_t>(PrimitiveType::kParticle)] = std::make_unique<ParticleConfigEx>(); // particle
 	configs_[static_cast<size_t>(PrimitiveType::kSkyBox)] = std::make_unique<SkyBoxConfig>();       // skyBox
-	configs_[static_cast<size_t>(PrimitiveType::kCopyImage)] = std::make_unique<CopyImageConfig>(); // copyImage
+
+	// 各種ポストエフェクトのConfig
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectFullScreen)] = std::make_unique<CopyImageConfig>(L"resources/shader/FullScreen.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectBoxFilter)] = std::make_unique<CopyImageConfig>(L"resources/shader/BoxFilter.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectGaussianFilter)] = std::make_unique<CopyImageConfig>(L"resources/shader/GaussianFilter.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectLuminanceOutline)] = std::make_unique<CopyImageConfig>(L"resources/shader/LuminanceBasedOutline.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectDepthOutline)] = std::make_unique<CopyImageConfig>(L"resources/shader/DepthBasedOutline.PS.hlsl");
 
 }
 

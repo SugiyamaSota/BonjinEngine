@@ -76,6 +76,22 @@ void SceneManager::DrawImGui() {
 	if (currentScene_ == nullptr) {
 		return;
 	}
+
+#ifdef USE_IMGUI
+	const char* postEffectNames[] = {
+		"FullScreen",
+		"BoxFilter",
+		"GaussianFilter",
+		"LuminanceBasedOutline",
+		"DepthBasedOutline"
+	};
+
+	int currentPostEffect = static_cast<int>(GetPostEffect());
+	if (ImGui::Combo("PostEffect", &currentPostEffect, postEffectNames, _countof(postEffectNames))) {
+		SetPostEffect(static_cast<DirectXCommon::PostEffect>(currentPostEffect));
+	}
+#endif
+
 	currentScene_->DrawSceneImGui();
 }
 
@@ -95,4 +111,12 @@ void SceneManager::ChangeScene(SceneType nextSceneType) {
 	// unique_ptr が管理する実体のアドレスをセット
 	currentScene_ = it->second.get();
 	currentScene_->Initialize(camera_.get());
+}
+
+void SceneManager::SetPostEffect(DirectXCommon::PostEffect effect) {
+	DirectXCommon::GetInstance()->SetPostEffect(effect);
+}
+
+DirectXCommon::PostEffect SceneManager::GetPostEffect() const {
+	return DirectXCommon::GetInstance()->GetPostEffect();
 }
