@@ -31,6 +31,8 @@ namespace Bonjin
         // 💡 シーン切り替えロジック
         void ChangeScene(SceneType nextSceneType);
 
+        Camera* GetCamera() const { return camera_.get(); }
+
     private:
 
         // シングルトン関連の禁止

@@ -7,7 +7,9 @@ SrvManager* SrvManager::GetInstance() {
 }
 
 void SrvManager::Initialize() {
-	useCount_ = 1;
+	if (useCount_ == 0) {
+		useCount_ = 1;
+	}
 }
 
 uint32_t SrvManager::Allocate() {
@@ -42,6 +44,12 @@ void SrvManager::CreateSrv(uint32_t index, ID3D12Resource* resource, SrvType typ
 		srvDesc.Buffer.FirstElement = 0;
 		srvDesc.Buffer.NumElements = numElements;
 		srvDesc.Buffer.StructureByteStride = stride;
+		break;
+
+	case SrvType::DepthTexture:
+		srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = 1;
 		break;
 	}
 

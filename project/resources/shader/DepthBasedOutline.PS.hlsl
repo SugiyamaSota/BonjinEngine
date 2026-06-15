@@ -52,7 +52,8 @@ PixelShaderOutPut main(VertexShaderOutPut input)
     {
         for (int32_t y = 0; y < 3; ++y)
         {
-            float32_t ndcDepth = gDepthTexture.Sample(gSamplerPoint, input.texcoord);
+            float32_t2 texcoord = input.texcoord + kIndex3x3[x][y] * uvStepSize;
+            float32_t ndcDepth = gDepthTexture.Sample(gSamplerPoint, texcoord);
             float32_t4 viewSpace = mul(float32_t4(0.f,0.f, ndcDepth, 1.f), gMaterial.projectionInverse);
             float32_t viewZ = rcp(viewSpace.w); // ★追加：深度値を線形化
             difference.x += viewZ * kPrewittHorizontalKernel3x3[x][y];

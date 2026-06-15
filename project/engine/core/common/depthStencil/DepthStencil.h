@@ -18,6 +18,14 @@ public:
 		return descriptorHeap_->GetCPUDescriptorHandleForHeapStart();
 	}
 
+	ID3D12Resource* GetResource() const {
+		return resource_.Get();
+	}
+
+	uint32_t GetSrvIndex() const {
+		return srvIndex_;
+	}
+
 private:
 	
 	ID3D12Device* device_;
@@ -26,6 +34,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> resource_ = nullptr;
 	D3D12_DEPTH_STENCIL_VIEW_DESC viewDesc_ = {};
 	D3D12_DEPTH_STENCIL_DESC desc_ = {};
+	uint32_t srvIndex_ = 0;
 
 private:
 

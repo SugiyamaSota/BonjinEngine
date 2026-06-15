@@ -72,8 +72,8 @@ public:
     void ReleaseIntermediateResources();
 
     D3D12_RESOURCE_DESC GetResourceDesc(int textureIndex) const {
-        assert(textureIndex > 0 && textureIndex <= textureResources_.size());
-        return textureResources_[textureIndex - 1]->GetDesc();
+        assert(textureIndex >= 0 && textureIndex < static_cast<int>(textureResources_.size()));
+        return textureResources_[textureIndex]->GetDesc();
     }
 
 private:
@@ -81,6 +81,9 @@ private:
 
     // ロードされたテクスチャリソース
     std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> textureResources_;
+
+    // SRVインデックスの記録
+    std::vector<uint32_t> srvIndices_;
 
     // GPUディスクリプタハンドル
     std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> gpuDescriptorHandles_;
