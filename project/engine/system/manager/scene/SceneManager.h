@@ -33,6 +33,9 @@ namespace Bonjin
 
         Camera* GetCamera() const { return camera_.get(); }
 
+        void SetPostEffect(DirectXCommon::PostEffect effect);
+        DirectXCommon::PostEffect GetPostEffect() const;
+
     private:
 
         // シングルトン関連の禁止

@@ -2,11 +2,13 @@
 
 #include "rootSignatureBuilder/RootSignatureBuilder.h"
 
+CopyImageConfig::CopyImageConfig(const wchar_t* psPath) : psPath_(psPath) {}
+
 const wchar_t* CopyImageConfig::GetShaderPath(ShaderStage stage) const {
 	if (stage == ShaderStage::kVertex) {
 		return L"resources/shader/FullScreen.VS.hlsl";
 	} else {
-		return L"resources/shader/DepthBasedOutline.PS.hlsl";
+		return psPath_;
 	}
 }
 

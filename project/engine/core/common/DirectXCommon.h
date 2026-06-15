@@ -14,6 +14,14 @@
 
 class DirectXCommon {
 public:
+	enum class PostEffect {
+		kFullScreen,
+		kBoxFilter,
+		kGaussianFilter,
+		kLuminanceBasedOutline,
+		kDepthBasedOutline
+	};
+
 	/// --- インスタンス関連 ---
 	// 生成、取得
 	static DirectXCommon* GetInstance();
@@ -24,6 +32,9 @@ public:
 	// コピー禁止
 	DirectXCommon(const DirectXCommon&) = delete;
 	DirectXCommon& operator=(const DirectXCommon&) = delete;
+
+	void SetPostEffect(PostEffect effect) { currentEffect_ = effect; }
+	PostEffect GetPostEffect() const { return currentEffect_; }
 
 	/// --- 汎用関数 ---
 	// デストラクタ
@@ -156,5 +167,7 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthOutlineCB_ = nullptr;
 	DepthOutlineMaterial* depthOutlineData_ = nullptr;
+
+	PostEffect currentEffect_ = PostEffect::kFullScreen;
 
 };
