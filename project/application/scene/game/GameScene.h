@@ -8,6 +8,7 @@
 #include "mapchip/MapChipField.h"
 
 #include "Object3D.h"
+#include "SkyBox.h"
 
 namespace Bonjin
 {
@@ -57,6 +58,9 @@ namespace Bonjin
 
 		std::unique_ptr<Object3D> goalModel_ = nullptr;
 		WorldTransform goalWorldTransform_;
+
+		// 
+		std::unique_ptr<SkyBox> testSkyBox_ = nullptr;
 
 	private:
 		// --- ゲーム固有の関数 ---

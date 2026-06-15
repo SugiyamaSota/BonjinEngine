@@ -57,12 +57,18 @@ void GameScene::Initialize(Camera* camera)
 			}
 		}
 	}
+
+	testSkyBox_ = std::make_unique<SkyBox>();
+	testSkyBox_->CreateModel(ModelBuilder::ModelType::kSkyBox, "resources/textures/skyBox.dds");
+
 }
 
 void GameScene::Unload() {
 }
 
 void GameScene::Update(float deltaTime) {
+
+	testSkyBox_->Update(InitializeWorldTransform(), camera_);
 
 	player_->Update();
 
@@ -121,7 +127,7 @@ void GameScene::Draw() {
 		enemy->Draw();
 	}
 
-	
+	testSkyBox_->Draw();
 }
 
 void GameScene::DrawSceneImGui() {
