@@ -44,6 +44,11 @@ void SceneManager::AddScene(SceneType type, std::unique_ptr<IScene> scene) {
 
 // 💡 5. シーンの更新処理
 void SceneManager::Update(float deltaTime) {
+	if (hasPendingSceneChange_) {
+		hasPendingSceneChange_ = false;
+		ChangeScene(pendingSceneType_);
+	}
+
 	if (currentScene_ == nullptr) {
 		return;
 	}
@@ -90,6 +95,29 @@ void SceneManager::DrawImGui() {
 	if (ImGui::Combo("PostEffect", &currentPostEffect, postEffectNames, _countof(postEffectNames))) {
 		SetPostEffect(static_cast<DirectXCommon::PostEffect>(currentPostEffect));
 	}
+
+	if (ImGui::BeginCombo("Scene", currentScene_->GetScenename())) {
+		for (const auto& [sceneType, scene] : scenes_) {
+			const bool isSelected = scene.get() == currentScene_;
+			if (ImGui::Selectable(scene->GetScenename(), isSelected)) {
+				RequestSceneChange(sceneType);
+			}
+			if (isSelected) {
+				ImGui::SetItemDefaultFocus();
+			}
+		}
+		ImGui::EndCombo();
+	}
+
+	bool isGray = IsFullScreenGray();
+	if (ImGui::Checkbox("FullScreen Gray", &isGray)) {
+		SetFullScreenGray(isGray);
+	}
+
+	bool isVignette = IsFullScreenVignette();
+	if (ImGui::Checkbox("FullScreen Vignette", &isVignette)) {
+		SetFullScreenVignette(isVignette);
+	}
 #endif
 
 	currentScene_->DrawSceneImGui();
@@ -113,10 +141,35 @@ void SceneManager::ChangeScene(SceneType nextSceneType) {
 	currentScene_->Initialize(camera_.get());
 }
 
+void SceneManager::RequestSceneChange(SceneType nextSceneType) {
+	if (currentScene_ != nullptr && nextSceneType == currentScene_->GetCurrentSceneType()) {
+		return;
+	}
+
+	pendingSceneType_ = nextSceneType;
+	hasPendingSceneChange_ = true;
+}
+
 void SceneManager::SetPostEffect(DirectXCommon::PostEffect effect) {
 	DirectXCommon::GetInstance()->SetPostEffect(effect);
 }
 
 DirectXCommon::PostEffect SceneManager::GetPostEffect() const {
 	return DirectXCommon::GetInstance()->GetPostEffect();
+}
+
+void SceneManager::SetFullScreenGray(bool isGray) {
+	DirectXCommon::GetInstance()->SetFullScreenGray(isGray);
+}
+
+bool SceneManager::IsFullScreenGray() const {
+	return DirectXCommon::GetInstance()->IsFullScreenGray();
+}
+
+void SceneManager::SetFullScreenVignette(bool isVignette) {
+	DirectXCommon::GetInstance()->SetFullScreenVignette(isVignette);
+}
+
+bool SceneManager::IsFullScreenVignette() const {
+	return DirectXCommon::GetInstance()->IsFullScreenVignette();
 }

@@ -78,16 +78,19 @@ void DirectXCommon::Initialize() {
 	scissorRect_.top = 0;
 	scissorRect_.bottom = LONG(WinApp::GetInstance()->GetClientHeight());
 
-	// depthOutlineCB_ の生成とマップ
-	depthOutlineCB_ = CreateBufferResource(device_.Get(), sizeof(DepthOutlineMaterial));
-	depthOutlineCB_->Map(0, nullptr, reinterpret_cast<void**>(&depthOutlineData_));
-	depthOutlineData_->projectionInverse = MakeIdentity4x4();
+	// FullScreen/DepthOutline 用の定数バッファを生成
+	fullScreenMaterial_.projectionInverse = MakeIdentity4x4();
+	fullScreenMaterial_.isGray = true;
+	fullScreenMaterial_.isVignette = true;
+	fullScreenCB_ = CreateBufferResource(device_.Get(), sizeof(FullScreenMaterial));
+	fullScreenCB_->Map(0, nullptr, reinterpret_cast<void**>(&fullScreenData_));
+	*fullScreenData_ = fullScreenMaterial_;
 
 }
 
 DirectXCommon::~DirectXCommon() {
-	if (depthOutlineCB_) {
-		depthOutlineCB_->Unmap(0, nullptr);
+	if (fullScreenCB_) {
+		fullScreenCB_->Unmap(0, nullptr);
 	}
 	if (fenceEvent_ != nullptr) {
 		CloseHandle(fenceEvent_);
@@ -170,7 +173,8 @@ void DirectXCommon::PostDraw()
 
 	// アクティブなカメラの逆行列を定数バッファに書き込む
 	Matrix4x4 projectionMatrix_ = MakePerspectiveFovMatrix(0.45f, float(WinApp::GetInstance()->GetClientWidth()) / float(WinApp::GetInstance()->GetClientHeight()), 0.1f, 1000.0f);
-	depthOutlineData_->projectionInverse = Inverse(projectionMatrix_);
+	fullScreenMaterial_.projectionInverse = Inverse(projectionMatrix_);
+	*fullScreenData_ = fullScreenMaterial_;
 
 	PrimitiveType postEffectType = PrimitiveType::kPostEffectFullScreen;
 	switch (currentEffect_) {
@@ -200,11 +204,19 @@ void DirectXCommon::PostDraw()
 	));
 	commandList_->SetGraphicsRootDescriptorTable(0, SrvManager::GetInstance()->GetGPUHandle(renderTexture_->GetSrvIndex()));
 	commandList_->SetGraphicsRootDescriptorTable(1, SrvManager::GetInstance()->GetGPUHandle(depthStencil_->GetSrvIndex()));
-	commandList_->SetGraphicsRootConstantBufferView(2, depthOutlineCB_->GetGPUVirtualAddress());
+	commandList_->SetGraphicsRootConstantBufferView(2, fullScreenCB_->GetGPUVirtualAddress());
 
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	commandList_->DrawInstanced(3, 1, 0, 0); // フルスクリーン三角形で描画
+}
+
+void DirectXCommon::SetFullScreenGray(bool isGray) {
+	fullScreenMaterial_.isGray = isGray;
+}
+
+void DirectXCommon::SetFullScreenVignette(bool isVignette) {
+	fullScreenMaterial_.isVignette = isVignette;
 }
 
 void DirectXCommon::EndFrame() 

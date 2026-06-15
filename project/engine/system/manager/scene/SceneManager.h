@@ -30,11 +30,16 @@ namespace Bonjin
 
         // 💡 シーン切り替えロジック
         void ChangeScene(SceneType nextSceneType);
+        void RequestSceneChange(SceneType nextSceneType);
 
         Camera* GetCamera() const { return camera_.get(); }
 
         void SetPostEffect(DirectXCommon::PostEffect effect);
         DirectXCommon::PostEffect GetPostEffect() const;
+        void SetFullScreenGray(bool isGray);
+        bool IsFullScreenGray() const;
+        void SetFullScreenVignette(bool isVignette);
+        bool IsFullScreenVignette() const;
 
     private:
 
@@ -46,6 +51,8 @@ namespace Bonjin
         IScene* currentScene_ = nullptr;
         // 💡 登録されたすべてのシーンを保持するマップ
         std::map<SceneType, std::unique_ptr<IScene>> scenes_;
+        bool hasPendingSceneChange_ = false;
+        SceneType pendingSceneType_ = SceneType::kTitle;
 
         std::unique_ptr<Camera> camera_ = nullptr;
 

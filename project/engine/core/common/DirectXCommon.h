@@ -35,6 +35,10 @@ public:
 
 	void SetPostEffect(PostEffect effect) { currentEffect_ = effect; }
 	PostEffect GetPostEffect() const { return currentEffect_; }
+	void SetFullScreenGray(bool isGray);
+	bool IsFullScreenGray() const { return fullScreenMaterial_.isGray != 0; }
+	void SetFullScreenVignette(bool isVignette);
+	bool IsFullScreenVignette() const { return fullScreenMaterial_.isVignette != 0; }
 
 	/// --- 汎用関数 ---
 	// デストラクタ
@@ -161,12 +165,16 @@ private:
 
 	std::unique_ptr<DepthStencil> depthStencil_ = nullptr;
 
-	struct DepthOutlineMaterial {
+	struct FullScreenMaterial {
 		Matrix4x4 projectionInverse;
+		int32_t isGray;
+		int32_t isVignette;
+		float padding[2];
 	};
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> depthOutlineCB_ = nullptr;
-	DepthOutlineMaterial* depthOutlineData_ = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource> fullScreenCB_ = nullptr;
+	FullScreenMaterial* fullScreenData_ = nullptr;
+	FullScreenMaterial fullScreenMaterial_{};
 
 	PostEffect currentEffect_ = PostEffect::kFullScreen;
 
