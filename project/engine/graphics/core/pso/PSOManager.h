@@ -20,6 +20,7 @@ enum class PrimitiveType {
 	kPostEffectGaussianFilter,
 	kPostEffectLuminanceOutline,
 	kPostEffectDepthOutline,
+	kPostEffectRadialBlur,
 	kCount,
 };
 
