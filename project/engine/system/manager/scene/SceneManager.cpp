@@ -88,7 +88,8 @@ void SceneManager::DrawImGui() {
 		"BoxFilter",
 		"GaussianFilter",
 		"LuminanceBasedOutline",
-		"DepthBasedOutline"
+		"DepthBasedOutline",
+		"RadialBlur"
 	};
 
 	int currentPostEffect = static_cast<int>(GetPostEffect());
@@ -117,6 +118,17 @@ void SceneManager::DrawImGui() {
 	bool isVignette = IsFullScreenVignette();
 	if (ImGui::Checkbox("FullScreen Vignette", &isVignette)) {
 		SetFullScreenVignette(isVignette);
+	}
+
+	Vector2 radialBlurCenter = GetRadialBlurCenter();
+	float center[2] = { radialBlurCenter.x, radialBlurCenter.y };
+	if (ImGui::SliderFloat2("RadialBlur Center", center, 0.0f, 1.0f)) {
+		SetRadialBlurCenter({ center[0], center[1] });
+	}
+
+	float radialBlurWidth = GetRadialBlurWidth();
+	if (ImGui::SliderFloat("RadialBlur Width", &radialBlurWidth, 0.0f, 0.05f)) {
+		SetRadialBlurWidth(radialBlurWidth);
 	}
 #endif
 
@@ -172,4 +184,20 @@ void SceneManager::SetFullScreenVignette(bool isVignette) {
 
 bool SceneManager::IsFullScreenVignette() const {
 	return DirectXCommon::GetInstance()->IsFullScreenVignette();
+}
+
+void SceneManager::SetRadialBlurCenter(const Vector2& center) {
+	DirectXCommon::GetInstance()->SetRadialBlurCenter(center);
+}
+
+Vector2 SceneManager::GetRadialBlurCenter() const {
+	return DirectXCommon::GetInstance()->GetRadialBlurCenter();
+}
+
+void SceneManager::SetRadialBlurWidth(float blurWidth) {
+	DirectXCommon::GetInstance()->SetRadialBlurWidth(blurWidth);
+}
+
+float SceneManager::GetRadialBlurWidth() const {
+	return DirectXCommon::GetInstance()->GetRadialBlurWidth();
 }

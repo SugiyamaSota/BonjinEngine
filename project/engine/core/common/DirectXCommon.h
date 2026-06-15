@@ -19,7 +19,8 @@ public:
 		kBoxFilter,
 		kGaussianFilter,
 		kLuminanceBasedOutline,
-		kDepthBasedOutline
+		kDepthBasedOutline,
+		kRadialBlur
 	};
 
 	/// --- インスタンス関連 ---
@@ -39,6 +40,10 @@ public:
 	bool IsFullScreenGray() const { return fullScreenMaterial_.isGray != 0; }
 	void SetFullScreenVignette(bool isVignette);
 	bool IsFullScreenVignette() const { return fullScreenMaterial_.isVignette != 0; }
+	void SetRadialBlurCenter(const Vector2& center);
+	Vector2 GetRadialBlurCenter() const { return fullScreenMaterial_.radialBlurCenter; }
+	void SetRadialBlurWidth(float blurWidth);
+	float GetRadialBlurWidth() const { return fullScreenMaterial_.radialBlurWidth; }
 
 	/// --- 汎用関数 ---
 	// デストラクタ
@@ -170,6 +175,9 @@ private:
 		int32_t isGray;
 		int32_t isVignette;
 		float padding[2];
+		Vector2 radialBlurCenter;
+		float radialBlurWidth;
+		float padding2;
 	};
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> fullScreenCB_ = nullptr;

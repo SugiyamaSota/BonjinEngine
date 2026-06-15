@@ -82,6 +82,8 @@ void DirectXCommon::Initialize() {
 	fullScreenMaterial_.projectionInverse = MakeIdentity4x4();
 	fullScreenMaterial_.isGray = true;
 	fullScreenMaterial_.isVignette = true;
+	fullScreenMaterial_.radialBlurCenter = { 0.5f, 0.5f };
+	fullScreenMaterial_.radialBlurWidth = 0.01f;
 	fullScreenCB_ = CreateBufferResource(device_.Get(), sizeof(FullScreenMaterial));
 	fullScreenCB_->Map(0, nullptr, reinterpret_cast<void**>(&fullScreenData_));
 	*fullScreenData_ = fullScreenMaterial_;
@@ -193,6 +195,9 @@ void DirectXCommon::PostDraw()
 	case PostEffect::kDepthBasedOutline:
 		postEffectType = PrimitiveType::kPostEffectDepthOutline;
 		break;
+	case PostEffect::kRadialBlur:
+		postEffectType = PrimitiveType::kPostEffectRadialBlur;
+		break;
 	default:
 		break;
 	}
@@ -217,6 +222,14 @@ void DirectXCommon::SetFullScreenGray(bool isGray) {
 
 void DirectXCommon::SetFullScreenVignette(bool isVignette) {
 	fullScreenMaterial_.isVignette = isVignette;
+}
+
+void DirectXCommon::SetRadialBlurCenter(const Vector2& center) {
+	fullScreenMaterial_.radialBlurCenter = center;
+}
+
+void DirectXCommon::SetRadialBlurWidth(float blurWidth) {
+	fullScreenMaterial_.radialBlurWidth = blurWidth;
 }
 
 void DirectXCommon::EndFrame() 
