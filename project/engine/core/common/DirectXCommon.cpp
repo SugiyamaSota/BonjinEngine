@@ -11,6 +11,7 @@
 #include "TextureManager.h"
 #include "math/Matrix.h"
 #include "SceneManager.h"
+#include "time/Time.h"
 
 DirectXCommon* DirectXCommon::instance_ = nullptr;
 
@@ -89,6 +90,8 @@ void DirectXCommon::Initialize() {
 	fullScreenMaterial_.dissolveThreshold = 0.5f;
 	fullScreenMaterial_.dissolveEdgeColor = { 1.0f, 0.4f, 0.3f };
 	fullScreenMaterial_.dissolveEdgeWidth = 0.03f;
+	fullScreenMaterial_.time = 0.0f;
+	fullScreenMaterial_.noiseAlpha = 0.5f;
 	fullScreenCB_ = CreateBufferResource(device_.Get(), sizeof(FullScreenMaterial));
 	fullScreenCB_->Map(0, nullptr, reinterpret_cast<void**>(&fullScreenData_));
 	*fullScreenData_ = fullScreenMaterial_;
@@ -182,6 +185,7 @@ void DirectXCommon::PostDraw()
 	// アクティブなカメラの逆行列を定数バッファに書き込む
 	Matrix4x4 projectionMatrix_ = MakePerspectiveFovMatrix(0.45f, float(WinApp::GetInstance()->GetClientWidth()) / float(WinApp::GetInstance()->GetClientHeight()), 0.1f, 1000.0f);
 	fullScreenMaterial_.projectionInverse = Inverse(projectionMatrix_);
+	fullScreenMaterial_.time = Bonjin::Time::GetInstance()->GetElapsedTime();
 	*fullScreenData_ = fullScreenMaterial_;
 
 	PrimitiveType postEffectType = PrimitiveType::kPostEffectFullScreen;
@@ -206,6 +210,9 @@ void DirectXCommon::PostDraw()
 		break;
 	case PostEffect::kDissolve:
 		postEffectType = PrimitiveType::kPostEffectDissolve;
+		break;
+	case PostEffect::kRandomNoise:
+		postEffectType = PrimitiveType::kPostEffectRandomNoise;
 		break;
 	default:
 		break;
@@ -259,6 +266,10 @@ void DirectXCommon::SetDissolveEdgeColor(const Vector3& color) {
 
 void DirectXCommon::SetDissolveEdgeWidth(float width) {
 	fullScreenMaterial_.dissolveEdgeWidth = std::clamp(width, 0.0f, 0.2f);
+}
+
+void DirectXCommon::SetNoiseAlpha(float alpha) {
+	fullScreenMaterial_.noiseAlpha = std::clamp(alpha, 0.0f, 1.0f);
 }
 
 void DirectXCommon::EndFrame() 

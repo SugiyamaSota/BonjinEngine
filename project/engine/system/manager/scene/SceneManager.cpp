@@ -90,7 +90,8 @@ void SceneManager::DrawImGui() {
 		"LuminanceBasedOutline",
 		"DepthBasedOutline",
 		"RadialBlur",
-		"Dissolve"
+		"Dissolve",
+		"RandomNoise"
 	};
 
 	int currentPostEffect = static_cast<int>(GetPostEffect());
@@ -146,6 +147,11 @@ void SceneManager::DrawImGui() {
 	float edgeColor[3] = { dissolveEdgeColor.x, dissolveEdgeColor.y, dissolveEdgeColor.z };
 	if (ImGui::ColorEdit3("Dissolve Edge Color", edgeColor)) {
 		SetDissolveEdgeColor({ edgeColor[0], edgeColor[1], edgeColor[2] });
+	}
+
+	float noiseAlpha = GetNoiseAlpha();
+	if (ImGui::SliderFloat("Noise Alpha", &noiseAlpha, 0.0f, 1.0f)) {
+		SetNoiseAlpha(noiseAlpha);
 	}
 #endif
 
@@ -241,4 +247,12 @@ void SceneManager::SetDissolveEdgeWidth(float width) {
 
 float SceneManager::GetDissolveEdgeWidth() const {
 	return DirectXCommon::GetInstance()->GetDissolveEdgeWidth();
+}
+
+void SceneManager::SetNoiseAlpha(float alpha) {
+	DirectXCommon::GetInstance()->SetNoiseAlpha(alpha);
+}
+
+float SceneManager::GetNoiseAlpha() const {
+	return DirectXCommon::GetInstance()->GetNoiseAlpha();
 }

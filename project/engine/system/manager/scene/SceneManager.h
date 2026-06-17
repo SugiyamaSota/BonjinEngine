@@ -50,6 +50,8 @@ namespace Bonjin
         Vector3 GetDissolveEdgeColor() const;
         void SetDissolveEdgeWidth(float width);
         float GetDissolveEdgeWidth() const;
+        void SetNoiseAlpha(float alpha);
+        float GetNoiseAlpha() const;
 
     private:
 
