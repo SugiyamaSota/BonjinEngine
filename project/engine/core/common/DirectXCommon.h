@@ -21,7 +21,8 @@ public:
 		kLuminanceBasedOutline,
 		kDepthBasedOutline,
 		kRadialBlur,
-		kDissolve
+		kDissolve,
+		kRandomNoise
 	};
 
 	/// --- インスタンス関連 ---
@@ -51,6 +52,8 @@ public:
 	Vector3 GetDissolveEdgeColor() const { return fullScreenMaterial_.dissolveEdgeColor; }
 	void SetDissolveEdgeWidth(float width);
 	float GetDissolveEdgeWidth() const { return fullScreenMaterial_.dissolveEdgeWidth; }
+	void SetNoiseAlpha(float alpha);
+	float GetNoiseAlpha() const { return fullScreenMaterial_.noiseAlpha; }
 
 	/// --- 汎用関数 ---
 	// デストラクタ
@@ -187,6 +190,9 @@ private:
 		float dissolveThreshold;
 		Vector3 dissolveEdgeColor;
 		float dissolveEdgeWidth;
+		float time;
+		float noiseAlpha;
+		float padding3[2];
 	};
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> fullScreenCB_ = nullptr;
