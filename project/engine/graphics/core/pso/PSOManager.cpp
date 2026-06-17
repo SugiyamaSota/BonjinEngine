@@ -4,6 +4,7 @@
 // 各形状のconfigクラスのインクルード
 #include "config/Object3D/Object3DConfig.h"
 #include "config/particle/ParticleConfig.h"
+#include "config/sprite/SpriteConfig.h"
 #include "config/skyBox/SkyBoxConfig.h"
 #include "config/copyImage/CopyImageConfig.h"
 
@@ -14,7 +15,8 @@ PSOManager::PSOManager() {
 	shaderCompiler_.InitializeDxc();
 
 	// pso生成時にconfigを取得
-	configs_[static_cast<size_t>(PrimitiveType::kModel)] = std::make_unique<Object3DConfig>();      // object3D
+	configs_[static_cast<size_t>(PrimitiveType::kObject3D)] = std::make_unique<Object3DConfig>();   // object3D
+	configs_[static_cast<size_t>(PrimitiveType::kSprite)] = std::make_unique<SpriteConfig>();       // sprite
 	configs_[static_cast<size_t>(PrimitiveType::kParticle)] = std::make_unique<ParticleConfigEx>(); // particle
 	configs_[static_cast<size_t>(PrimitiveType::kSkyBox)] = std::make_unique<SkyBoxConfig>();       // skyBox
 

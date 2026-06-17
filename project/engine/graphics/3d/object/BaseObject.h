@@ -54,5 +54,5 @@ protected:
 	D3D12_FILL_MODE fillMode_ = D3D12_FILL_MODE_SOLID;
 	D3D12_CULL_MODE cullMode_ = D3D12_CULL_MODE_BACK;
 	BlendMode blendMode_ = BlendMode::kNone;
-	PrimitiveType primitiveType_ = PrimitiveType::kModel;
+	PrimitiveType primitiveType_ = PrimitiveType::kObject3D;
 };

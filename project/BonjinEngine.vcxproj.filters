@@ -240,6 +240,9 @@
     <ClCompile Include="engine\graphics\core\pso\config\skyBox\SkyBoxConfig.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="engine\graphics\core\pso\config\sprite\SpriteConfig.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="engine\graphics\core\pso\config\particle\ParticleConfig.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -410,6 +413,9 @@
     <ClInclude Include="engine\graphics\core\pso\config\skyBox\SkyBoxConfig.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="engine\graphics\core\pso\config\sprite\SpriteConfig.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="engine\graphics\core\pso\config\particle\ParticleConfig.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -428,5 +434,7 @@
   <ItemGroup>
     <FxCompile Include="resources\shader\Object3d.PS.hlsl" />
     <FxCompile Include="resources\shader\Object3d.VS.hlsl" />
+    <FxCompile Include="resources\shader\Sprite.PS.hlsl" />
+    <FxCompile Include="resources\shader\Sprite.VS.hlsl" />
   </ItemGroup>
 </Project>
