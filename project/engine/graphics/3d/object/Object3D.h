@@ -10,6 +10,7 @@ public:
 
 	// 更新・描画処理関数
     void Update(WorldTransform worldTransform, Camera* camera);
+    void Update(const Matrix4x4& worldMatrix, Camera* camera);
     void Draw() override;
 
     /// <summary>
