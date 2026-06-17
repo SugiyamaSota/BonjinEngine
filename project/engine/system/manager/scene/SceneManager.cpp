@@ -89,7 +89,8 @@ void SceneManager::DrawImGui() {
 		"GaussianFilter",
 		"LuminanceBasedOutline",
 		"DepthBasedOutline",
-		"RadialBlur"
+		"RadialBlur",
+		"Dissolve"
 	};
 
 	int currentPostEffect = static_cast<int>(GetPostEffect());
@@ -129,6 +130,22 @@ void SceneManager::DrawImGui() {
 	float radialBlurWidth = GetRadialBlurWidth();
 	if (ImGui::SliderFloat("RadialBlur Width", &radialBlurWidth, 0.0f, 0.05f)) {
 		SetRadialBlurWidth(radialBlurWidth);
+	}
+
+	float dissolveThreshold = GetDissolveThreshold();
+	if (ImGui::SliderFloat("Dissolve Threshold", &dissolveThreshold, 0.0f, 1.0f)) {
+		SetDissolveThreshold(dissolveThreshold);
+	}
+
+	float dissolveEdgeWidth = GetDissolveEdgeWidth();
+	if (ImGui::SliderFloat("Dissolve Edge Width", &dissolveEdgeWidth, 0.0f, 0.2f)) {
+		SetDissolveEdgeWidth(dissolveEdgeWidth);
+	}
+
+	Vector3 dissolveEdgeColor = GetDissolveEdgeColor();
+	float edgeColor[3] = { dissolveEdgeColor.x, dissolveEdgeColor.y, dissolveEdgeColor.z };
+	if (ImGui::ColorEdit3("Dissolve Edge Color", edgeColor)) {
+		SetDissolveEdgeColor({ edgeColor[0], edgeColor[1], edgeColor[2] });
 	}
 #endif
 
@@ -200,4 +217,28 @@ void SceneManager::SetRadialBlurWidth(float blurWidth) {
 
 float SceneManager::GetRadialBlurWidth() const {
 	return DirectXCommon::GetInstance()->GetRadialBlurWidth();
+}
+
+void SceneManager::SetDissolveThreshold(float threshold) {
+	DirectXCommon::GetInstance()->SetDissolveThreshold(threshold);
+}
+
+float SceneManager::GetDissolveThreshold() const {
+	return DirectXCommon::GetInstance()->GetDissolveThreshold();
+}
+
+void SceneManager::SetDissolveEdgeColor(const Vector3& color) {
+	DirectXCommon::GetInstance()->SetDissolveEdgeColor(color);
+}
+
+Vector3 SceneManager::GetDissolveEdgeColor() const {
+	return DirectXCommon::GetInstance()->GetDissolveEdgeColor();
+}
+
+void SceneManager::SetDissolveEdgeWidth(float width) {
+	DirectXCommon::GetInstance()->SetDissolveEdgeWidth(width);
+}
+
+float SceneManager::GetDissolveEdgeWidth() const {
+	return DirectXCommon::GetInstance()->GetDissolveEdgeWidth();
 }

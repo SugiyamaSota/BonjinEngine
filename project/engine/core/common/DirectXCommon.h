@@ -20,7 +20,8 @@ public:
 		kGaussianFilter,
 		kLuminanceBasedOutline,
 		kDepthBasedOutline,
-		kRadialBlur
+		kRadialBlur,
+		kDissolve
 	};
 
 	/// --- インスタンス関連 ---
@@ -44,6 +45,12 @@ public:
 	Vector2 GetRadialBlurCenter() const { return fullScreenMaterial_.radialBlurCenter; }
 	void SetRadialBlurWidth(float blurWidth);
 	float GetRadialBlurWidth() const { return fullScreenMaterial_.radialBlurWidth; }
+	void SetDissolveThreshold(float threshold);
+	float GetDissolveThreshold() const { return fullScreenMaterial_.dissolveThreshold; }
+	void SetDissolveEdgeColor(const Vector3& color);
+	Vector3 GetDissolveEdgeColor() const { return fullScreenMaterial_.dissolveEdgeColor; }
+	void SetDissolveEdgeWidth(float width);
+	float GetDissolveEdgeWidth() const { return fullScreenMaterial_.dissolveEdgeWidth; }
 
 	/// --- 汎用関数 ---
 	// デストラクタ
@@ -177,12 +184,15 @@ private:
 		float padding[2];
 		Vector2 radialBlurCenter;
 		float radialBlurWidth;
-		float padding2;
+		float dissolveThreshold;
+		Vector3 dissolveEdgeColor;
+		float dissolveEdgeWidth;
 	};
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> fullScreenCB_ = nullptr;
 	FullScreenMaterial* fullScreenData_ = nullptr;
 	FullScreenMaterial fullScreenMaterial_{};
+	int dissolveMaskTextureHandle_ = -1;
 
 	PostEffect currentEffect_ = PostEffect::kFullScreen;
 

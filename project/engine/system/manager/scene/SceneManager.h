@@ -44,6 +44,12 @@ namespace Bonjin
         Vector2 GetRadialBlurCenter() const;
         void SetRadialBlurWidth(float blurWidth);
         float GetRadialBlurWidth() const;
+        void SetDissolveThreshold(float threshold);
+        float GetDissolveThreshold() const;
+        void SetDissolveEdgeColor(const Vector3& color);
+        Vector3 GetDissolveEdgeColor() const;
+        void SetDissolveEdgeWidth(float width);
+        float GetDissolveEdgeWidth() const;
 
     private:
 
