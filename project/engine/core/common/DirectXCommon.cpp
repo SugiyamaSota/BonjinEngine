@@ -1,4 +1,5 @@
 #include "DirectXCommon.h"
+#include<algorithm>
 #include<cassert>
 #include<filesystem>
 #include<thread>
@@ -7,6 +8,7 @@
 #include "windows/WinApp.h"
 #include "ImGuiManager.h"
 #include "SrvManager.h"
+#include "TextureManager.h"
 #include "math/Matrix.h"
 #include "SceneManager.h"
 
@@ -84,9 +86,13 @@ void DirectXCommon::Initialize() {
 	fullScreenMaterial_.isVignette = true;
 	fullScreenMaterial_.radialBlurCenter = { 0.5f, 0.5f };
 	fullScreenMaterial_.radialBlurWidth = 0.01f;
+	fullScreenMaterial_.dissolveThreshold = 0.5f;
+	fullScreenMaterial_.dissolveEdgeColor = { 1.0f, 0.4f, 0.3f };
+	fullScreenMaterial_.dissolveEdgeWidth = 0.03f;
 	fullScreenCB_ = CreateBufferResource(device_.Get(), sizeof(FullScreenMaterial));
 	fullScreenCB_->Map(0, nullptr, reinterpret_cast<void**>(&fullScreenData_));
 	*fullScreenData_ = fullScreenMaterial_;
+	dissolveMaskTextureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/noise0.png");
 
 }
 
@@ -198,6 +204,9 @@ void DirectXCommon::PostDraw()
 	case PostEffect::kRadialBlur:
 		postEffectType = PrimitiveType::kPostEffectRadialBlur;
 		break;
+	case PostEffect::kDissolve:
+		postEffectType = PrimitiveType::kPostEffectDissolve;
+		break;
 	default:
 		break;
 	}
@@ -208,7 +217,11 @@ void DirectXCommon::PostDraw()
 		device_.Get(), postEffectType, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE
 	));
 	commandList_->SetGraphicsRootDescriptorTable(0, SrvManager::GetInstance()->GetGPUHandle(renderTexture_->GetSrvIndex()));
-	commandList_->SetGraphicsRootDescriptorTable(1, SrvManager::GetInstance()->GetGPUHandle(depthStencil_->GetSrvIndex()));
+	if (currentEffect_ == PostEffect::kDissolve && dissolveMaskTextureHandle_ >= 0) {
+		commandList_->SetGraphicsRootDescriptorTable(1, TextureManager::GetInstance()->GetGPUHandle(dissolveMaskTextureHandle_));
+	} else {
+		commandList_->SetGraphicsRootDescriptorTable(1, SrvManager::GetInstance()->GetGPUHandle(depthStencil_->GetSrvIndex()));
+	}
 	commandList_->SetGraphicsRootConstantBufferView(2, fullScreenCB_->GetGPUVirtualAddress());
 
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -230,6 +243,22 @@ void DirectXCommon::SetRadialBlurCenter(const Vector2& center) {
 
 void DirectXCommon::SetRadialBlurWidth(float blurWidth) {
 	fullScreenMaterial_.radialBlurWidth = blurWidth;
+}
+
+void DirectXCommon::SetDissolveThreshold(float threshold) {
+	fullScreenMaterial_.dissolveThreshold = std::clamp(threshold, 0.0f, 1.0f);
+}
+
+void DirectXCommon::SetDissolveEdgeColor(const Vector3& color) {
+	fullScreenMaterial_.dissolveEdgeColor = {
+		std::clamp(color.x, 0.0f, 1.0f),
+		std::clamp(color.y, 0.0f, 1.0f),
+		std::clamp(color.z, 0.0f, 1.0f)
+	};
+}
+
+void DirectXCommon::SetDissolveEdgeWidth(float width) {
+	fullScreenMaterial_.dissolveEdgeWidth = std::clamp(width, 0.0f, 0.2f);
 }
 
 void DirectXCommon::EndFrame() 
