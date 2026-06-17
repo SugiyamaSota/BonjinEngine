@@ -1,6 +1,5 @@
 #pragma once
 #include<stdint.h>
-#include<map>
 #include<string>
 #include<vector>
 
@@ -59,31 +58,6 @@ struct Node {
 	Matrix4x4 localMatrix;
 	std::string name;
 	std::vector<Node> children;
-};
-
-template <typename tValue>
-struct Keyframe {
-	float time;
-	tValue value;
-};
-
-using KeyframeVector3 = Keyframe<Vector3>;
-using KeyframeQuaternion = Keyframe<Quaternion>;
-
-template <typename tValue>
-struct AnimationCurve {
-	std::vector<Keyframe<tValue>> keyframes;
-};
-
-struct NodeAnimation {
-	AnimationCurve<Vector3> translate;
-	AnimationCurve<Quaternion> rotate;
-	AnimationCurve<Vector3> scale;
-};
-
-struct Animation {
-	float duration = 0.0f;
-	std::map<std::string, NodeAnimation> nodeAnimations;
 };
 
 struct ModelData {

@@ -1,6 +1,7 @@
 #pragma once
 #include "../interface/BaseScene.h" // ISceneをインクルード
 
+#include "Animation.h"
 #include "Object3D.h"
 #include "SkyBox.h"
 #include "Sprite.h"

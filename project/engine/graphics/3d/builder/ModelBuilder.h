@@ -22,13 +22,7 @@ public:
 	/// </summary>
 	static ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename);
 
-	static Animation LoadAnimationFile(const std::string& directoryPath, const std::string& filename);
-
 	static ModelData CreateModel(ModelType type);
-
-	static Vector3 CalculateValue(const std::vector<KeyframeVector3>& keyframes, float time);
-
-	static Quaternion CalculateValue(const std::vector<KeyframeQuaternion>& keyframes, float time);
 	
 
 private:
