@@ -47,6 +47,8 @@ namespace Bonjin
 
 		// テストモデルcube
 		std::unique_ptr<Object3D> testCube_ = nullptr;
+		Animation cubeAnimation_{};
+		float animationTime_ = 0.0f;
 
 		std::unique_ptr<Sprite> testSprite_ = nullptr;
 
