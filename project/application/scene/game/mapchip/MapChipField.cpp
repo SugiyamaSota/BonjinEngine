@@ -73,7 +73,7 @@ void MapChipField::LoadmapChipCsv(const std::string& filePath) {
     }
 }
 
-MapChipType MapChipField::GetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex) {
+MapChipType MapChipField::GetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex) const {
     // メンバ変数に変更した numBlockHorizontal_ と numBlockVertical_ で範囲チェック
     if (xIndex >= numBlockHorizontal_ || yIndex >= numBlockVertical_) {
         return MapChipType::kBlank;
@@ -82,12 +82,12 @@ MapChipType MapChipField::GetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex
     return mapChipData_.data[yIndex][xIndex];
 }
 
-Vector3 MapChipField::GetMapChipPositionByIndex(uint32_t xIndex, uint32_t yIndex) {
+Vector3 MapChipField::GetMapChipPositionByIndex(uint32_t xIndex, uint32_t yIndex) const {
     // メンバ変数 numBlockVertical_ を使用
     return Vector3(kBlockWidth * xIndex, kBlockHeight * (numBlockVertical_ - 1 - yIndex), 0);
 }
 
-IndexSet MapChipField::GetMapChipIndexSetByPosition(const Vector3& position) {
+IndexSet MapChipField::GetMapChipIndexSetByPosition(const Vector3& position) const {
     IndexSet indexSet = {};
     indexSet.xIndex = uint32_t((position.x + kBlockWidth / 2.0f) / kBlockWidth);
     // メンバ変数 numBlockVertical_ を使用
@@ -95,7 +95,7 @@ IndexSet MapChipField::GetMapChipIndexSetByPosition(const Vector3& position) {
     return indexSet;
 }
 
-Rect MapChipField::GetRectByIndex(uint32_t xIndex, uint32_t yIndex) {
+Rect MapChipField::GetRectByIndex(uint32_t xIndex, uint32_t yIndex) const {
     Vector3 center = GetMapChipPositionByIndex(xIndex, yIndex);
 
     Rect rect;

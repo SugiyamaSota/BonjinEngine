@@ -164,6 +164,8 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="application\scene\game\gameObject\enemy\Enemy.cpp" />
     <ClCompile Include="application\scene\game\gameObject\player\Player.cpp" />
     <ClCompile Include="application\scene\game\GameScene.cpp" />
+    <ClCompile Include="application\scene\game\BattleController.cpp" />
+    <ClCompile Include="application\scene\tutorial\TutorialScene.cpp" />
     <ClCompile Include="application\core\Core.cpp" />
     <ClCompile Include="application\scene\game\logic\Collision.cpp" />
     <ClCompile Include="application\scene\game\mapchip\MapChipField.cpp" />
@@ -256,6 +258,8 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\interface\BaseScene.h" />
     <ClInclude Include="engine\interface\IScene.h" />
     <ClInclude Include="application\scene\game\GameScene.h" />
+    <ClInclude Include="application\scene\game\BattleController.h" />
+    <ClInclude Include="application\scene\tutorial\TutorialScene.h" />
     <ClInclude Include="engine\system\manager\imgui\ImGuiManager.h" />
     <ClInclude Include="engine\system\manager\model\ModelManager.h" />
     <ClInclude Include="engine\graphics\utility\color\Color.h" />

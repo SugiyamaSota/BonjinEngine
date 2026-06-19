@@ -165,6 +165,12 @@
     <ClCompile Include="application\scene\game\GameScene.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="application\scene\game\BattleController.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\scene\tutorial\TutorialScene.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="engine\system\utility\time\Time.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -342,6 +348,12 @@
       <Filter>engine\windows</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\game\GameScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\scene\game\BattleController.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\scene\tutorial\TutorialScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\interface\IScene.h">

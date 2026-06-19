@@ -45,11 +45,11 @@ public:
 	//セッター
 
 	//ゲッター
-	MapChipType GetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex);
-	Vector3 GetMapChipPositionByIndex(uint32_t xIndex, uint32_t yIndex);
+	MapChipType GetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex) const;
+	Vector3 GetMapChipPositionByIndex(uint32_t xIndex, uint32_t yIndex) const;
 	uint32_t GetNumBlockVirtical() { return numBlockVertical_; };
 	uint32_t GetNumBlockHorizontal() { return numBlockHorizontal_; };
-	IndexSet GetMapChipIndexSetByPosition(const Vector3& position);
-	Rect GetRectByIndex(uint32_t xIndex, uint32_t yIndex);
+	IndexSet GetMapChipIndexSetByPosition(const Vector3& position) const;
+	Rect GetRectByIndex(uint32_t xIndex, uint32_t yIndex) const;
 	IndexSet GetMapChipIndexSetByCenter() const;
 };

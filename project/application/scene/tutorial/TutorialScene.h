@@ -1,17 +1,17 @@
 #pragma once
 
 #include "../interface/BaseScene.h"
-#include "BattleController.h"
+#include "../game/BattleController.h"
 
 namespace Bonjin {
 
-enum class GamePhase {
+enum class TutorialPhase {
 	kStart,
 	kPlay,
-	kGoal,
+	kComplete,
 };
 
-class GameScene : public BaseScene<GamePhase> {
+class TutorialScene : public BaseScene<TutorialPhase> {
 public:
 	void Initialize(Camera* camera) override;
 	void Unload() override;
@@ -19,7 +19,7 @@ public:
 	void Draw() override;
 	SceneType GetNextScene() const override;
 	void DrawSceneImGui() override;
-	const char* GetScenename() const override { return "GameScene"; }
+	const char* GetScenename() const override { return "TutorialScene"; }
 
 private:
 	std::unique_ptr<BattleController> battleController_;

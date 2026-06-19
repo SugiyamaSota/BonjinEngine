@@ -4,6 +4,8 @@
 #include "Object3D.h"
 #include "Sprite.h"
 
+class MapChipField;
+
 class Enemy {
 public:
     /// <summary>
@@ -66,6 +68,11 @@ public:
     /// <param name="flag">設定するフラグ</param>
     void SetIsDead(bool flag) { isDead_ = flag; }
 
+    /// <summary>
+    /// 衝突判定に使用するマップを設定
+    /// </summary>
+    void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
+
 private:
     // --- メンバー変数 ---
 
@@ -73,6 +80,7 @@ private:
     WorldTransform worldTransform_{}; // ワールドトランスフォーム
     Camera* camera_ = nullptr;        // カメラ
     Object3D* model_ = nullptr;        // 3Dモデル
+    MapChipField* mapChipField_ = nullptr; // マップチップフィールド
 
     // 状態
     bool isLockedOn_ = false;         // ロックオン状態
@@ -85,6 +93,8 @@ private:
     // 移動
     Vector3 velocity_ = {};                       // 現在の速度
     static inline const float kWalkSpeed = 0.05f; // 歩行速度
+    static inline const float kGravityAcceleration = 0.0098f;
+    static inline const float kLimitFallSpeed = 2.0f;
 
     // アニメーション
     LRDirection lrDirection_ = LRDirection::kLeft; // モデルの向き

@@ -1,4 +1,6 @@
 #include "Enemy.h"
+#include "../../logic/Collision.h"
+#include "../../mapchip/MapChipField.h"
 #include <cmath>
 #include <numbers>
 #include <random>
@@ -34,8 +36,27 @@ void Enemy::Initialize(Object3D* model, Camera* camera, const Vector3& position)
 
 void Enemy::Update() {
 
-	// 移動処理
-	//worldTransform_.translate = Add(worldTransform_.translate, velocity_);
+	// プレイヤーと共通のマップ衝突処理を使って移動する。
+	velocity_.y -= kGravityAcceleration;
+	if (velocity_.y < -kLimitFallSpeed) {
+		velocity_.y = -kLimitFallSpeed;
+	}
+	if (mapChipField_) {
+		const CollisionMapInfo collisionInfo =
+			ResolveMapCollision(*mapChipField_, worldTransform_.translate, velocity_, kWidth_, kHeight_);
+		worldTransform_.translate = Add(worldTransform_.translate, collisionInfo.movement_);
+
+		if (collisionInfo.isLandin_ || collisionInfo.isHotTop_) {
+			velocity_.y = 0.0f;
+		}
+		if (collisionInfo.isHitWall_) {
+			velocity_.x *= -1.0f;
+			lrDirection_ =
+				velocity_.x > 0.0f ? LRDirection::kRight : LRDirection::kLeft;
+		}
+	} else {
+		worldTransform_.translate = Add(worldTransform_.translate, velocity_);
+	}
 
 	// 旋回制御
 	TurningControl();
