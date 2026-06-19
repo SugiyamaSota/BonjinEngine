@@ -1,5 +1,7 @@
 #include "TestScene.h"
 
+#include <cmath>
+
 using namespace Bonjin;
 
 void TestScene::Initialize(Camera* camera)
@@ -20,8 +22,9 @@ void TestScene::Initialize(Camera* camera)
 	testSkyBox_->CreateModel(ModelBuilder::ModelType::kSkyBox, "resources/textures/skyBox.dds");
 
 	testCube_ = std::make_unique<Object3D>();
-	testCube_->CreateModel(ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
+	testCube_->LoadModel("animatedCube", "AnimatedCube.gltf");
 	testCube_->SetEnableEnableEnvironmentMap(false);
+	cubeAnimation_ = ModelBuilder::LoadAnimationFile("resources/models/animatedCube", "AnimatedCube.gltf");
 
 	testSprite_ = std::make_unique<Sprite>();
 	testSprite_->Initialize("uvChecker.png");
@@ -58,7 +61,24 @@ void TestScene::Update(float deltaTime) {
 
 	testSkyBox_->Update(InitializeWorldTransform(), camera_);
 
-	testCube_->Update(InitializeWorldTransform(), camera_);
+	if (cubeAnimation_.duration > 0.0f) {
+		animationTime_ += deltaTime;
+		animationTime_ = std::fmod(animationTime_, cubeAnimation_.duration);
+	}
+
+	NodeAnimation& cubeAnimation = cubeAnimation_.nodeAnimations["AnimatedCube"];
+	Vector3 translate = cubeAnimation.translate.keyframes.empty()
+		? Vector3{ 0.0f, 0.0f, 0.0f }
+		: ModelBuilder::CalculateValue(cubeAnimation.translate.keyframes, animationTime_);
+	Quaternion rotate = cubeAnimation.rotate.keyframes.empty()
+		? Quaternion{ 0.0f, 0.0f, 0.0f, 1.0f }
+		: ModelBuilder::CalculateValue(cubeAnimation.rotate.keyframes, animationTime_);
+	Vector3 scale = cubeAnimation.scale.keyframes.empty()
+		? Vector3{ 1.0f, 1.0f, 1.0f }
+		: ModelBuilder::CalculateValue(cubeAnimation.scale.keyframes, animationTime_);
+	Matrix4x4 localMatrix = MakeAffineMatrix(scale, MakeRotateMatrix(rotate), translate);
+	Matrix4x4 worldMatrix = Multiply(localMatrix, MakeTranslateMatrix({ 2.5f, 0.0f, 0.0f }));
+	testCube_->Update(worldMatrix, camera_);
 
 	testSprite_->Update();
 

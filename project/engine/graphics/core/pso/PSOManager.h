@@ -21,6 +21,8 @@ enum class PrimitiveType {
 	kPostEffectLuminanceOutline,
 	kPostEffectDepthOutline,
 	kPostEffectRadialBlur,
+	kPostEffectDissolve,
+	kPostEffectRandomNoise,
 	kCount,
 };
 

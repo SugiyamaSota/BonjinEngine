@@ -40,6 +40,12 @@ void Object3D::Update(WorldTransform worldTransform, Camera* camera) {
 
     Matrix4x4 worldMat = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
 
+    Update(worldMat, camera);
+}
+
+void Object3D::Update(const Matrix4x4& worldMatrix, Camera* camera) {
+    Matrix4x4 worldMat = worldMatrix;
+
     wvpData_->World = worldMat;
     wvpData_->WVP = Multiply(worldMat, camera->GetViewProjectionMatrix());
     wvpData_->WorldInverseTranspose = Inverse(Transpose(worldMat));

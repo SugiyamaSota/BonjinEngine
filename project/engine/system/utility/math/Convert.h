@@ -6,6 +6,7 @@ struct Vector3;
 struct Matrix4x4;
 struct WorldTransform;
 struct Material;
+struct Quaternion;
 
 /// <summary>
 /// 平行移動行列
@@ -40,6 +41,8 @@ Matrix4x4 MakeRotateZMatrix(float radian);
 
 //XYZ軸
 Matrix4x4 MakeRotateMatrix(Vector3 rotate);
+
+Matrix4x4 MakeRotateMatrix(const Quaternion& quaternion);
 
 /// <summary>
 /// 合成された行列の作成
