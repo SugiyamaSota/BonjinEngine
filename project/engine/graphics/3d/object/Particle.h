@@ -37,6 +37,7 @@ public:
 	void Draw() override; // BaseObjectの純粋仮想関数を実装
 
 	void Emit(const ParticleConfig& config);
+	void Clear();
 
 	void DrawImGui();
 

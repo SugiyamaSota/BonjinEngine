@@ -140,6 +140,20 @@ void Particle::Emit(const ParticleConfig& config) {
 	}
 }
 
+void Particle::Clear() {
+	for (uint32_t index = 0; index < kNumInstance_; ++index) {
+		particles_[index].lifeTime = 0.0f;
+		particles_[index].currentTime = 0.0f;
+		particles_[index].updateFunc = nullptr;
+
+		if (instancingData_) {
+			instancingData_[index].WVP = MakeScaleMatrix({0.0f, 0.0f, 0.0f});
+			instancingData_[index].World = MakeScaleMatrix({0.0f, 0.0f, 0.0f});
+			instancingData_[index].color = {0.0f, 0.0f, 0.0f, 0.0f};
+		}
+	}
+}
+
 void Particle::DrawImGui()
 {
 
@@ -153,8 +167,9 @@ void Particle::SetupResources() {
 	instancingResource_->Map(0, nullptr, reinterpret_cast<void**>(&instancingData_));
 
 	for (uint32_t index = 0; index < kNumInstance_; ++index) {
-		instancingData_[index].WVP = MakeIdentity4x4();
-		instancingData_[index].World = MakeIdentity4x4();
+		instancingData_[index].WVP = MakeScaleMatrix({0.0f, 0.0f, 0.0f});
+		instancingData_[index].World = MakeScaleMatrix({0.0f, 0.0f, 0.0f});
+		instancingData_[index].color = {0.0f, 0.0f, 0.0f, 0.0f};
 	}
 
 	// SRVの作成

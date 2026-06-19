@@ -50,3 +50,9 @@ void ParticleManager::Emit(const std::string& name, const ParticleConfig& config
 		particleGroups_[name]->Emit(config);
 	}
 }
+
+void ParticleManager::Clear(const std::string& name) {
+	if (particleGroups_.contains(name)) {
+		particleGroups_[name]->Clear();
+	}
+}

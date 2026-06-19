@@ -24,6 +24,9 @@ void Enemy::Initialize(Object3D* model, Camera* camera, const Vector3& position)
 	velocity_ = { -kWalkSpeed, 0, 0 };
 
 	walkTimer_ = 0.0f;
+	isLockedOn_ = false;
+	isDead_ = false;
+	defeatEffectRequested_ = false;
 
 	/*
 	lockedOnSprite_ = new Sprite();
@@ -122,4 +125,20 @@ void Enemy::SetIsLockedOn(bool frag) {
 	} else {
 		model_->SetColor(Vector4{ 1,1,1,1 });
 	}
+}
+
+void Enemy::SetIsDead(bool flag) {
+	if (flag && !isDead_) {
+		defeatEffectRequested_ = true;
+	}
+	isDead_ = flag;
+}
+
+bool Enemy::ConsumeDefeatEffectRequest() {
+	if (!defeatEffectRequested_) {
+		return false;
+	}
+
+	defeatEffectRequested_ = false;
+	return true;
 }

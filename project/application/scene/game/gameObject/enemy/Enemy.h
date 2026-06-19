@@ -54,6 +54,7 @@ public:
     /// </summary>
     /// <returns>死亡していればtrue</returns>
     bool GetIsDead() const { return isDead_; }
+    bool ConsumeDefeatEffectRequest();
 
     // セッター
     /// <summary>
@@ -66,7 +67,7 @@ public:
     /// 死亡状態を設定
     /// </summary>
     /// <param name="flag">設定するフラグ</param>
-    void SetIsDead(bool flag) { isDead_ = flag; }
+    void SetIsDead(bool flag);
 
     /// <summary>
     /// 衝突判定に使用するマップを設定
@@ -85,6 +86,7 @@ private:
     // 状態
     bool isLockedOn_ = false;         // ロックオン状態
     bool isDead_ = false;             // 死亡状態
+    bool defeatEffectRequested_ = false; // 撃破エフェクトの発生要求
 
     // 当たり判定
     static inline const float kWidth_ = 2.0f;     // 幅

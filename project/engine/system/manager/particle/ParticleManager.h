@@ -26,6 +26,7 @@ public:
 
     // エミット（発生）
     void Emit(const std::string& name, const ParticleConfig& config);
+    void Clear(const std::string& name);
 
 private:
     ParticleManager() = default;

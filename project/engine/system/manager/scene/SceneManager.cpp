@@ -46,11 +46,21 @@ void SceneManager::AddScene(SceneType type, std::unique_ptr<IScene> scene) {
 void SceneManager::Update(float deltaTime) {
 	if (hasPendingSceneChange_) {
 		hasPendingSceneChange_ = false;
+		hasPendingSceneRestart_ = false;
 		ChangeScene(pendingSceneType_);
 	}
 
 	if (currentScene_ == nullptr) {
 		return;
+	}
+
+	if (Input::GetInstance()->IsTrigger(DIK_F5)) {
+		RequestSceneRestart();
+	}
+
+	if (hasPendingSceneRestart_) {
+		hasPendingSceneRestart_ = false;
+		RestartCurrentScene();
 	}
 
 	camera_->Update(Camera::CameraType::kDebug);
@@ -110,6 +120,10 @@ void SceneManager::DrawImGui() {
 			}
 		}
 		ImGui::EndCombo();
+	}
+
+	if (ImGui::Button("Restart Scene (F5)")) {
+		RequestSceneRestart();
 	}
 
 	bool isGray = IsFullScreenGray();
@@ -183,6 +197,23 @@ void SceneManager::RequestSceneChange(SceneType nextSceneType) {
 
 	pendingSceneType_ = nextSceneType;
 	hasPendingSceneChange_ = true;
+}
+
+void SceneManager::RestartCurrentScene() {
+	if (currentScene_ == nullptr) {
+		return;
+	}
+
+	currentScene_->Unload();
+	currentScene_->Initialize(camera_.get());
+}
+
+void SceneManager::RequestSceneRestart() {
+	if (currentScene_ == nullptr || hasPendingSceneChange_) {
+		return;
+	}
+
+	hasPendingSceneRestart_ = true;
 }
 
 void SceneManager::SetPostEffect(DirectXCommon::PostEffect effect) {

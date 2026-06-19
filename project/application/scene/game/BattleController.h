@@ -2,11 +2,13 @@
 
 #include <list>
 #include <memory>
+#include <random>
 
 #include "gameObject/enemy/Enemy.h"
 #include "gameObject/player/Player.h"
 #include "mapchip/MapChipField.h"
 #include "Object3D.h"
+#include "ParticleManager.h"
 #include "SkyBox.h"
 
 namespace Bonjin {
@@ -40,9 +42,13 @@ private:
 	WorldTransform blockWorldTransform_[kNumBlockVirtical][kNumBlockHorizontal] = {};
 	WorldTransform goalWorldTransform_{};
 	std::unique_ptr<SkyBox> skyBox_;
+	ParticleManager* particleManager_ = nullptr;
+	std::mt19937 randomEngine_{std::random_device{}()};
 
 	void GenerateBlocksAndGoal();
 	void CheckAnchorEnemyCollision();
+	void EmitAnchorHitEffect(const Vector3& position);
+	void EmitEnemyDefeatEffect(const Vector3& position);
 };
 
 }
