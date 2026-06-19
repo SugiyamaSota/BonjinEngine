@@ -26,6 +26,8 @@ public:
 
 	Player* GetPlayer() const { return player_.get(); }
 	MapChipField* GetMapChipField() const { return mapChipField_.get(); }
+	void SetEnemyRespawnEnabled(bool enabled) { isEnemyRespawnEnabled_ = enabled; }
+	bool IsEnemyRespawnEnabled() const { return isEnemyRespawnEnabled_; }
 
 private:
 	static const uint32_t kNumBlockVirtical = 11;
@@ -44,11 +46,14 @@ private:
 	std::unique_ptr<SkyBox> skyBox_;
 	ParticleManager* particleManager_ = nullptr;
 	std::mt19937 randomEngine_{std::random_device{}()};
+	bool isEnemyRespawnEnabled_ = true;
+	float enemyRespawnTime_ = 3.0f;
 
 	void GenerateBlocksAndGoal();
 	void CheckAnchorEnemyCollision();
 	void EmitAnchorHitEffect(const Vector3& position);
 	void EmitEnemyDefeatEffect(const Vector3& position);
+	void EmitLandingDustEffect(const Vector3& position);
 };
 
 }

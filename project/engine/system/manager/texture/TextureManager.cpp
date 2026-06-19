@@ -1,6 +1,67 @@
 #include "TextureManager.h"
 #include"../srv/SrvManager.h"
 
+namespace {
+DirectX::ScratchImage ConvertHorizontalCrossToCube(const DirectX::ScratchImage& source) {
+	const DirectX::TexMetadata& sourceMetadata = source.GetMetadata();
+	if (sourceMetadata.IsCubemap() ||
+		sourceMetadata.width % 4 != 0 ||
+		sourceMetadata.height % 3 != 0 ||
+		sourceMetadata.width / 4 != sourceMetadata.height / 3) {
+		return {};
+	}
+
+	DirectX::ScratchImage decompressed;
+	const DirectX::Image* sourceImage = source.GetImage(0, 0, 0);
+	if (!sourceImage) {
+		return {};
+	}
+
+	if (DirectX::IsCompressed(sourceMetadata.format)) {
+		HRESULT hr = DirectX::Decompress(
+			*sourceImage, DXGI_FORMAT_R8G8B8A8_UNORM, decompressed);
+		if (FAILED(hr)) {
+			return {};
+		}
+		sourceImage = decompressed.GetImage(0, 0, 0);
+	}
+
+	const size_t faceSize = sourceMetadata.width / 4;
+	DirectX::ScratchImage cube;
+	HRESULT hr = cube.InitializeCube(
+		sourceImage->format, faceSize, faceSize, 1, 1);
+	if (FAILED(hr)) {
+		return {};
+	}
+
+	// DirectXのキューブ面順: +X, -X, +Y, -Y, +Z, -Z
+	const DirectX::Rect faceRects[6] = {
+		{faceSize * 2, faceSize, faceSize, faceSize},
+		{0, faceSize, faceSize, faceSize},
+		{faceSize, 0, faceSize, faceSize},
+		{faceSize, faceSize * 2, faceSize, faceSize},
+		{faceSize, faceSize, faceSize, faceSize},
+		{faceSize * 3, faceSize, faceSize, faceSize},
+	};
+
+	for (size_t face = 0; face < 6; ++face) {
+		const DirectX::Image* destination = cube.GetImage(0, face, 0);
+		if (!destination ||
+			FAILED(DirectX::CopyRectangle(
+				*sourceImage, faceRects[face], *destination,
+				DirectX::TEX_FILTER_DEFAULT, 0, 0))) {
+			return {};
+		}
+	}
+
+	DirectX::ScratchImage mipChain;
+	hr = DirectX::GenerateMipMaps(
+		cube.GetImages(), cube.GetImageCount(), cube.GetMetadata(),
+		DirectX::TEX_FILTER_DEFAULT, 0, mipChain);
+	return SUCCEEDED(hr) ? std::move(mipChain) : std::move(cube);
+}
+}
+
 bool EndsWith(const std::string& str, const std::string& suffix) {
 	if (str.size() < suffix.size()) return false;
 	return str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
@@ -102,6 +163,14 @@ DirectX::ScratchImage TextureManager::LoadTextureInternal(const std::string& fil
 	}
 
 	assert(SUCCEEDED(hr));
+
+	// 4×3の水平クロス画像は、SkyBoxで使える6面キューブマップへ変換する。
+	if (!image.GetMetadata().IsCubemap()) {
+		DirectX::ScratchImage cubeImage = ConvertHorizontalCrossToCube(image);
+		if (cubeImage.GetImageCount() > 0) {
+			return cubeImage;
+		}
+	}
 
 	// ミップマップの生成（DDSにミップマップが含まれていない場合などのための共通処理）
 	// 資料の2枚目に「ミップマップ生成」がある場合はここに追加

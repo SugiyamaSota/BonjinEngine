@@ -66,6 +66,7 @@ private:
 
 	//接地状態フラグ
 	bool onGround_ = true;
+	bool landingEffectRequested_ = false;
 
 	bool isKnockedBack_ = false;
 	float knockbackTimer_ = 0.0f;
@@ -117,6 +118,7 @@ public:
 	Vector3 GetWorldPosition();
 	AABB GetAABB();
 	void OnCollision(Enemy* enemy);
+	bool ConsumeLandingEffectRequest();
 	bool HasAnchor() const {
 		return anchor_ != nullptr;
 	}

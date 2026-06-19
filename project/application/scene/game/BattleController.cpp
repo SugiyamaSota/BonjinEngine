@@ -60,7 +60,7 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 
 	skyBox_ = std::make_unique<SkyBox>();
 	skyBox_->CreateModel(
-		ModelBuilder::ModelType::kSkyBox, "resources/textures/skyBox.dds");
+		ModelBuilder::ModelType::kSkyBox, "resources/textures/SkyBox_Dark.dds");
 
 	particleManager_ = ParticleManager::GetInstance();
 	particleManager_->Initialize();
@@ -72,10 +72,13 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 		"enemyDefeatSpark", ModelBuilder::ModelType::kPlane, "resources/textures/circle.png");
 	particleManager_->CreateParticleGroup(
 		"enemyDefeatRing", ModelBuilder::ModelType::kRing, "resources/textures/gradationLine.png");
+	particleManager_->CreateParticleGroup(
+		"landingDust", ModelBuilder::ModelType::kPlane, "resources/textures/circle.png");
 	particleManager_->Clear("anchorHitRay");
 	particleManager_->Clear("anchorHitFlash");
 	particleManager_->Clear("enemyDefeatSpark");
 	particleManager_->Clear("enemyDefeatRing");
+	particleManager_->Clear("landingDust");
 }
 
 void BattleController::Unload() {
@@ -94,6 +97,12 @@ void BattleController::Update(float deltaTime) {
 	(void)deltaTime;
 	skyBox_->Update(InitializeWorldTransform(), camera_);
 	player_->Update();
+	if (player_->ConsumeLandingEffectRequest()) {
+		Vector3 dustPosition = player_->GetPosition();
+		dustPosition.y -= 1.0f;
+		dustPosition.z = -0.1f;
+		EmitLandingDustEffect(dustPosition);
+	}
 	CheckAnchorEnemyCollision();
 
 	for (const auto& enemy : enemies_) {
@@ -101,7 +110,9 @@ void BattleController::Update(float deltaTime) {
 			EmitEnemyDefeatEffect(enemy->GetWorldPosition());
 		}
 
-		if (!enemy->GetIsDead()) {
+		if (enemy->GetIsDead()) {
+			enemy->UpdateRespawn(deltaTime, enemyRespawnTime_, isEnemyRespawnEnabled_);
+		} else {
 			enemy->Update();
 		}
 	}
@@ -143,6 +154,8 @@ void BattleController::Draw() {
 void BattleController::DrawImGui() {
 #ifdef USE_IMGUI
 	LightManager::GetInstance()->DrawImGui();
+	ImGui::Checkbox("Enemy Respawn", &isEnemyRespawnEnabled_);
+	ImGui::SliderFloat("Enemy Respawn Time", &enemyRespawnTime_, 0.5f, 10.0f, "%.1f sec");
 #endif
 }
 
@@ -276,4 +289,40 @@ void BattleController::EmitEnemyDefeatEffect(const Vector3& position) {
 		particle.transform.scale.y += expansion;
 	};
 	particleManager_->Emit("enemyDefeatRing", ring);
+}
+
+void BattleController::EmitLandingDustEffect(const Vector3& position) {
+	constexpr uint32_t kDustCount = 10;
+	std::uniform_real_distribution<float> horizontalSpeed(-3.2f, 3.2f);
+	std::uniform_real_distribution<float> upwardSpeed(0.8f, 2.0f);
+	std::uniform_real_distribution<float> sizeDistribution(0.25f, 0.55f);
+	std::uniform_real_distribution<float> positionOffset(-0.5f, 0.5f);
+
+	for (uint32_t index = 0; index < kDustCount; ++index) {
+		ParticleConfig dust{};
+		dust.position = {
+			position.x + positionOffset(randomEngine_),
+			position.y,
+			position.z
+		};
+		dust.velocity = {
+			horizontalSpeed(randomEngine_),
+			upwardSpeed(randomEngine_),
+			0.0f
+		};
+		const float size = sizeDistribution(randomEngine_);
+		dust.scale = {size * 1.4f, size, 1.0f};
+		dust.color = {0.55f, 0.42f, 0.25f, 0.7f};
+		dust.lifeTime = 0.55f;
+		dust.updateFunc = [](ParticleData& particle, float deltaTime) {
+			particle.transform.translate.x += particle.velocity.x * deltaTime;
+			particle.transform.translate.y += particle.velocity.y * deltaTime;
+			particle.velocity.x *= 0.94f;
+			particle.velocity.y -= 2.5f * deltaTime;
+
+			particle.transform.scale.x += 0.7f * deltaTime;
+			particle.transform.scale.y += 0.35f * deltaTime;
+		};
+		particleManager_->Emit("landingDust", dust);
+	}
 }

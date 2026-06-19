@@ -121,6 +121,7 @@ void Player::Move() {
 void Player::Update() {
 
 	HandleLockOnRemovalInput();
+	const bool wasOnGround = onGround_;
 
 
 	// 1.移動処理
@@ -156,6 +157,10 @@ void Player::Update() {
 	} else if (velocity_.y > 0.0f ||
 		!IsGroundedOnMap(*mapChipField_, worldTransform_.translate, kWidth, kHeight)) {
 		onGround_ = false;
+	}
+
+	if (!wasOnGround && onGround_) {
+		landingEffectRequested_ = true;
 	}
 
 	// 旋回制御
@@ -315,6 +320,15 @@ void Player::OnCollision(Enemy* enemy) {
 	//// ノックバック状態を開始
 	//isKnockedBack_ = true;
 	//knockbackTimer_ = kKnockbackTime;
+}
+
+bool Player::ConsumeLandingEffectRequest() {
+	if (!landingEffectRequested_) {
+		return false;
+	}
+
+	landingEffectRequested_ = false;
+	return true;
 }
 
 void Player::RemoveLockedOnEnemies(std::list<Enemy*>& enemies) {

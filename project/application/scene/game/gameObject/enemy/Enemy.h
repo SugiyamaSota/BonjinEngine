@@ -20,6 +20,7 @@ public:
     /// 更新処理
     /// </summary>
     void Update();
+    void UpdateRespawn(float deltaTime, float respawnTime, bool isRespawnEnabled);
 
     /// <summary>
     /// 描画処理
@@ -87,6 +88,8 @@ private:
     bool isLockedOn_ = false;         // ロックオン状態
     bool isDead_ = false;             // 死亡状態
     bool defeatEffectRequested_ = false; // 撃破エフェクトの発生要求
+    Vector3 spawnPosition_{};             // リスポーン地点
+    float respawnTimer_ = 0.0f;           // 死亡後の経過時間
 
     // 当たり判定
     static inline const float kWidth_ = 2.0f;     // 幅

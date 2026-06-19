@@ -16,6 +16,7 @@ void Enemy::Initialize(Object3D* model, Camera* camera, const Vector3& position)
 		{0,0,0},
 		position,
 	};
+	spawnPosition_ = position;
 
 	model_ = model;
 
@@ -27,6 +28,7 @@ void Enemy::Initialize(Object3D* model, Camera* camera, const Vector3& position)
 	isLockedOn_ = false;
 	isDead_ = false;
 	defeatEffectRequested_ = false;
+	respawnTimer_ = 0.0f;
 
 	/*
 	lockedOnSprite_ = new Sprite();
@@ -127,9 +129,41 @@ void Enemy::SetIsLockedOn(bool frag) {
 	}
 }
 
+void Enemy::UpdateRespawn(float deltaTime, float respawnTime, bool isRespawnEnabled) {
+	if (!isDead_) {
+		return;
+	}
+
+	if (!isRespawnEnabled) {
+		respawnTimer_ = 0.0f;
+		return;
+	}
+
+	respawnTimer_ += deltaTime;
+	if (respawnTimer_ < respawnTime) {
+		return;
+	}
+
+	worldTransform_ = {
+		{1.0f, 1.0f, 1.0f},
+		{0.0f, 0.0f, 0.0f},
+		spawnPosition_,
+	};
+	velocity_ = {-kWalkSpeed, 0.0f, 0.0f};
+	lrDirection_ = LRDirection::kLeft;
+	walkTimer_ = 0.0f;
+	respawnTimer_ = 0.0f;
+	isDead_ = false;
+	isLockedOn_ = false;
+	defeatEffectRequested_ = false;
+	model_->SetColor({1.0f, 1.0f, 1.0f, 1.0f});
+	model_->Update(worldTransform_, camera_);
+}
+
 void Enemy::SetIsDead(bool flag) {
 	if (flag && !isDead_) {
 		defeatEffectRequested_ = true;
+		respawnTimer_ = 0.0f;
 	}
 	isDead_ = flag;
 }
