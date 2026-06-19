@@ -91,7 +91,7 @@ AABB Enemy::GetAABB() {
 }
 
 void Enemy::OnCollision() {
-	isLockedOn_ = true;
+	SetIsLockedOn(true);
 }
 
 void Enemy::SetIsLockedOn(bool frag) {

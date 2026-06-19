@@ -1,6 +1,7 @@
 #include "GameScene.h"
 
 #include"../system/utility/random/RandomEngine.h"
+#include "logic/Collision.h"
 
 using namespace Bonjin;
 
@@ -37,6 +38,7 @@ void GameScene::Initialize(Camera* camera)
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(2, 1);
 	player_->Initialize(playerModel_.get(), camera_, playerPosition);
 	player_->SetMapChipField(mapChipField_.get());
+	player_->SetLockedOnEnemiesList(&lockedOnEnemies_);
 
 	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
 		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
@@ -71,9 +73,12 @@ void GameScene::Update(float deltaTime) {
 	testSkyBox_->Update(InitializeWorldTransform(), camera_);
 
 	player_->Update();
+	CheckAnchorEnemyCollision();
 
 	for (const auto& enemy : enemies_) {
-		enemy->Update();
+		if (!enemy->GetIsDead()) {
+			enemy->Update();
+		}
 	}
 
 	// プレイヤーを追従
@@ -124,10 +129,32 @@ void GameScene::Draw() {
 	player_->Draw();
 
 	for (const auto& enemy : enemies_) {
-		enemy->Draw();
+		if (!enemy->GetIsDead()) {
+			enemy->Draw();
+		}
 	}
 
 	testSkyBox_->Draw();
+}
+
+void GameScene::CheckAnchorEnemyCollision() {
+	if (!player_->HasAnchor()) {
+		return;
+	}
+
+	Anchor& anchor = player_->GetAnchor();
+	for (const auto& enemy : enemies_) {
+		if (enemy->GetIsDead() || enemy->GetIsLockedOn()) {
+			continue;
+		}
+
+		if (IsCollision(anchor.GetAABB(), enemy->GetAABB())) {
+			enemy->OnCollision();
+			lockedOnEnemies_.push_back(enemy.get());
+			anchor.OnCollision();
+			break;
+		}
+	}
 }
 
 void GameScene::DrawSceneImGui() {

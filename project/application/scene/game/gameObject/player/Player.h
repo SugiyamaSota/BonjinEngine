@@ -1,5 +1,6 @@
 #pragma once
 #include <cassert>
+#include <list>
 #include<memory>
 
 #include"../anchor/anchor.h"
@@ -181,8 +182,8 @@ public:
 	// ロックオン中の敵をすべて削除する処理（入力判定を含む)
 	void HandleLockOnRemovalInput();
 
-	// ロックオン中の敵をすべて削除する
-	//void RemoveLockedOnEnemies(std::list<Enemy*>& enemies);
+	// ロックオン中の敵をすべて倒す
+	void RemoveLockedOnEnemies(std::list<Enemy*>& enemies);
 
 	void UpdateWorldTransform(){ model_->Update(worldTransform_, camera_); }
 };

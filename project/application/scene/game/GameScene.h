@@ -49,6 +49,7 @@ namespace Bonjin
 
 		std::list<std::unique_ptr<Enemy>> enemies_;
 		std::list<std::unique_ptr<Object3D>> enemyModels_;
+		std::list<Enemy*> lockedOnEnemies_;
 
 		std::unique_ptr<MapChipField> mapChipField_ = nullptr;	
 		static const uint32_t kNumBlockVirtical = 11;
@@ -68,6 +69,11 @@ namespace Bonjin
 		/// ブロックとゴール生成
 		/// </summary>
 		void GenerateBlocksAndGoal();
+
+		/// <summary>
+		/// アンカーと敵の衝突を判定してロックオンする
+		/// </summary>
+		void CheckAnchorEnemyCollision();
 
 	};
 }

@@ -1,5 +1,6 @@
 #define NOMINMAX
 #include "Player.h"
+#include "../enemy/Enemy.h"
 #include"../../mapchip/MapChipField.h"
 #include <algorithm>
 #include <numbers>
@@ -567,13 +568,15 @@ void Player::OnCollision(Enemy* enemy) {
 	//knockbackTimer_ = kKnockbackTime;
 }
 
-// Player::RemoveLockedOnEnemiesメソッドの実装
-//void Player::RemoveLockedOnEnemies(std::list<Enemy*>& enemies) {
-//	for (Enemy* enemy : enemies) {
-//		enemy->SetIsDead(true); // 敵の死亡フラグを立てる
-//	}
-//	enemies.clear(); // ロックオンリストをクリア
-//}
+void Player::RemoveLockedOnEnemies(std::list<Enemy*>& enemies) {
+	for (Enemy* enemy : enemies) {
+		if (enemy != nullptr) {
+			enemy->SetIsDead(true);
+			enemy->SetIsLockedOn(false);
+		}
+	}
+	enemies.clear();
+}
 
 void Player::HandleLockOnRemovalInput() {
 	// リストへのポインタが設定されているか確認
@@ -584,7 +587,6 @@ void Player::HandleLockOnRemovalInput() {
 	// Lキーまたは対応するパッドボタンが押されたら、ロックオン中の敵をすべて削除する
 	// GameSceneで使われていた入力判定をそのまま使用
 	if (Input::GetInstance()->IsPadTrigger(3) || Input::GetInstance()->IsTrigger(DIK_L)) {
-		// GameScene が持っていたリストへのポインタを介して、削除ロジックを呼び出す
-		//RemoveLockedOnEnemies(*lockedOnEnemies_);
+		RemoveLockedOnEnemies(*lockedOnEnemies_);
 	}
 }
