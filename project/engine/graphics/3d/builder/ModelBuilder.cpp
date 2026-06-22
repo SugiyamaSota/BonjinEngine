@@ -171,12 +171,15 @@ ModelData ModelBuilder::CreateSphereModel(uint32_t subdivision) {
 			uint32_t p2 = start + (subdivision + 1);
 			uint32_t p3 = start + (subdivision + 1) + 1;
 
-			// 三角形1（外側が表面になる巻き順）
+
+			// 外側が表面になるよう、時計回りで三角形を構成
+			// 三角形1 (p0, p2, p1)
 			modelData.vertices.push_back(GetSphereVertex(p0, subdivision));
 			modelData.vertices.push_back(GetSphereVertex(p2, subdivision));
 			modelData.vertices.push_back(GetSphereVertex(p1, subdivision));
 
-			// 三角形2（外側が表面になる巻き順）
+
+			// 三角形2 (p1, p2, p3)
 			modelData.vertices.push_back(GetSphereVertex(p1, subdivision));
 			modelData.vertices.push_back(GetSphereVertex(p2, subdivision));
 			modelData.vertices.push_back(GetSphereVertex(p3, subdivision));
