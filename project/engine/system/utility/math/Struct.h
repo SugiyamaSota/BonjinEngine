@@ -54,7 +54,20 @@ struct MaterialData {
 	std::string textureFilepath;
 };
 
+struct EulerTransform {
+	Vector3 translate;
+	Vector3 rotate;
+	Vector3 scale;
+};
+
+struct QuaternionTransform {
+	Vector3 translate;
+	Quaternion rotate;
+	Vector3 scale;
+};
+
 struct Node {
+	QuaternionTransform transform;
 	Matrix4x4 localMatrix;
 	std::string name;
 	std::vector<Node> children;

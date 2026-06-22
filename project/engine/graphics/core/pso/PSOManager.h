@@ -16,6 +16,7 @@ enum class PrimitiveType {
 	kSprite,
 	kParticle,
 	kSkyBox,
+	kLine,
 	kPostEffectFullScreen,
 	kPostEffectBoxFilter,
 	kPostEffectGaussianFilter,

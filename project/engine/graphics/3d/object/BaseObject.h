@@ -24,6 +24,7 @@ public:
 	void SetColor(const Vector4& color) { if (materialData_) materialData_->color = color; }
 	void SetEnableLighting(bool enable) { if (materialData_) materialData_->enableLighting = enable; }
 	void SetEnableEnableEnvironmentMap(bool flag) { if (materialData_) materialData_->enableEnvironmentMap = flag; }
+	const ModelData& GetModelData() const { return modelData_; }
 
 protected:
 	BaseObject();
