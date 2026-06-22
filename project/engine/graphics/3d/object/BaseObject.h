@@ -24,6 +24,7 @@ public:
 	void SetColor(const Vector4& color) { if (materialData_) materialData_->color = color; }
 	void SetEnableLighting(bool enable) { if (materialData_) materialData_->enableLighting = enable; }
 	void SetEnableEnableEnvironmentMap(bool flag) { if (materialData_) materialData_->enableEnvironmentMap = flag; }
+	const ModelData& GetModelData() const { return modelData_; }
 
 protected:
 	BaseObject();
@@ -54,5 +55,5 @@ protected:
 	D3D12_FILL_MODE fillMode_ = D3D12_FILL_MODE_SOLID;
 	D3D12_CULL_MODE cullMode_ = D3D12_CULL_MODE_BACK;
 	BlendMode blendMode_ = BlendMode::kNone;
-	PrimitiveType primitiveType_ = PrimitiveType::kModel;
+	PrimitiveType primitiveType_ = PrimitiveType::kObject3D;
 };

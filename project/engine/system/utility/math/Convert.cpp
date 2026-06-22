@@ -106,6 +106,10 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 	return result;
 }
 
+Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Quaternion& rotate, const Vector3& translate) {
+	return MakeAffineMatrix(scale, MakeRotateMatrix(rotate), translate);
+}
+
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Matrix4x4& rotate, const Vector3& translate) {
 	Matrix4x4 result = MakeIdentity4x4();
 	Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);

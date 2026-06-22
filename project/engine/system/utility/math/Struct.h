@@ -1,6 +1,5 @@
 #pragma once
 #include<stdint.h>
-#include<map>
 #include<string>
 #include<vector>
 
@@ -55,35 +54,23 @@ struct MaterialData {
 	std::string textureFilepath;
 };
 
+struct EulerTransform {
+	Vector3 translate;
+	Vector3 rotate;
+	Vector3 scale;
+};
+
+struct QuaternionTransform {
+	Vector3 translate;
+	Quaternion rotate;
+	Vector3 scale;
+};
+
 struct Node {
+	QuaternionTransform transform;
 	Matrix4x4 localMatrix;
 	std::string name;
 	std::vector<Node> children;
-};
-
-template <typename tValue>
-struct Keyframe {
-	float time;
-	tValue value;
-};
-
-using KeyframeVector3 = Keyframe<Vector3>;
-using KeyframeQuaternion = Keyframe<Quaternion>;
-
-template <typename tValue>
-struct AnimationCurve {
-	std::vector<Keyframe<tValue>> keyframes;
-};
-
-struct NodeAnimation {
-	AnimationCurve<Vector3> translate;
-	AnimationCurve<Quaternion> rotate;
-	AnimationCurve<Vector3> scale;
-};
-
-struct Animation {
-	float duration = 0.0f;
-	std::map<std::string, NodeAnimation> nodeAnimations;
 };
 
 struct ModelData {
