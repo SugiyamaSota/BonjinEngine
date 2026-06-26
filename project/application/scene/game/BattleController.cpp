@@ -16,15 +16,24 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	mapChipField_ = std::make_unique<MapChipField>();
 	mapChipField_->LoadmapChipCsv(mapFilePath);
 
-	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
-		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
-			blockModel_[i][j] = std::make_unique<Object3D>();
-			blockModel_[i][j]->CreateModel(
+	const uint32_t vertical = mapChipField_->GetNumBlockVirtical();
+	const uint32_t horizontal = mapChipField_->GetNumBlockHorizontal();
+
+	blockModels_.resize(vertical);
+	blockWorldTransforms_.resize(vertical);
+	for (uint32_t i = 0; i < vertical; ++i) {
+		blockModels_[i].resize(horizontal);
+		blockWorldTransforms_[i].resize(horizontal);
+		for (uint32_t j = 0; j < horizontal; ++j) {
+			blockModels_[i][j] = std::make_unique<Object3D>();
+			blockModels_[i][j]->CreateModel(
 				ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
-			blockModel_[i][j]->SetEnableEnableEnvironmentMap(false);
-			blockWorldTransform_[i][j] = InitializeWorldTransform();
+			blockModels_[i][j]->SetEnableEnableEnvironmentMap(false);
+			blockWorldTransforms_[i][j] = InitializeWorldTransform();
 		}
 	}
+
+	isGoalReached_ = false;
 
 	GenerateBlocksAndGoal();
 
@@ -39,8 +48,8 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	player_->SetMapChipField(mapChipField_.get());
 	player_->SetLockedOnEnemiesList(&lockedOnEnemies_);
 
-	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
-		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
+	for (uint32_t i = 0; i < vertical; ++i) {
+		for (uint32_t j = 0; j < horizontal; ++j) {
 			if (mapChipField_->GetMapChipTypeByIndex(j, i) != MapChipType::kEnemy) {
 				continue;
 			}
@@ -87,6 +96,9 @@ void BattleController::Unload() {
 	enemyModels_.clear();
 	player_.reset();
 	playerModel_.reset();
+	goalModel_.reset();
+	blockModels_.clear();
+	blockWorldTransforms_.clear();
 	mapChipField_.reset();
 	skyBox_.reset();
 	particleManager_ = nullptr;
@@ -97,6 +109,21 @@ void BattleController::Update(float deltaTime) {
 	(void)deltaTime;
 	skyBox_->Update(InitializeWorldTransform(), camera_);
 	player_->Update();
+
+	if (goalModel_) {
+		goalModel_->Update(goalWorldTransform_, camera_);
+
+		// プレイヤーとゴールの当たり判定 (誤差対策にマージン付き)
+		AABB goalAABB;
+		float w = 2.2f;
+		float h = 2.2f;
+		goalAABB.min = { goalWorldTransform_.translate.x - w / 2.0f, goalWorldTransform_.translate.y - h / 2.0f, -2.0f };
+		goalAABB.max = { goalWorldTransform_.translate.x + w / 2.0f, goalWorldTransform_.translate.y + h / 2.0f, 2.0f };
+		if (IsCollision(player_->GetAABB(), goalAABB)) {
+			isGoalReached_ = true;
+		}
+	}
+
 	if (player_->ConsumeLandingEffectRequest()) {
 		Vector3 dustPosition = player_->GetPosition();
 		dustPosition.y -= 1.0f;
@@ -117,14 +144,16 @@ void BattleController::Update(float deltaTime) {
 		}
 	}
 
-	const IndexSet centerIndex = mapChipField_->GetMapChipIndexSetByCenter();
+	//const IndexSet centerIndex = mapChipField_->GetMapChipIndexSetByCenter();
 	camera_->SetTarget(
-		mapChipField_->GetMapChipPositionByIndex(centerIndex.xIndex, centerIndex.yIndex));
+		player_->GetWorldPosition());
 
-	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
-		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
+	const uint32_t vertical = mapChipField_->GetNumBlockVirtical();
+	const uint32_t horizontal = mapChipField_->GetNumBlockHorizontal();
+	for (uint32_t i = 0; i < vertical; ++i) {
+		for (uint32_t j = 0; j < horizontal; ++j) {
 			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
-				blockModel_[i][j]->Update(blockWorldTransform_[i][j], camera_);
+				blockModels_[i][j]->Update(blockWorldTransforms_[i][j], camera_);
 			}
 		}
 	}
@@ -133,12 +162,18 @@ void BattleController::Update(float deltaTime) {
 }
 
 void BattleController::Draw() {
-	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
-		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
+	const uint32_t vertical = mapChipField_->GetNumBlockVirtical();
+	const uint32_t horizontal = mapChipField_->GetNumBlockHorizontal();
+	for (uint32_t i = 0; i < vertical; ++i) {
+		for (uint32_t j = 0; j < horizontal; ++j) {
 			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
-				blockModel_[i][j]->Draw();
+				blockModels_[i][j]->Draw();
 			}
 		}
+	}
+
+	if (goalModel_) {
+		goalModel_->Draw();
 	}
 
 	player_->Draw();
@@ -156,6 +191,30 @@ void BattleController::DrawImGui() {
 	LightManager::GetInstance()->DrawImGui();
 	ImGui::Checkbox("Enemy Respawn", &isEnemyRespawnEnabled_);
 	ImGui::SliderFloat("Enemy Respawn Time", &enemyRespawnTime_, 0.5f, 10.0f, "%.1f sec");
+
+	if (ImGui::TreeNode("Goal Debug")) {
+		ImGui::Text("Goal Reached: %s", isGoalReached_ ? "TRUE" : "FALSE");
+		if (goalModel_) {
+			ImGui::Text("Goal Pos: (%.2f, %.2f, %.2f)", goalWorldTransform_.translate.x, goalWorldTransform_.translate.y, goalWorldTransform_.translate.z);
+			AABB pAABB = player_->GetAABB();
+			ImGui::Text("Player AABB min: (%.2f, %.2f, %.2f)", pAABB.min.x, pAABB.min.y, pAABB.min.z);
+			ImGui::Text("Player AABB max: (%.2f, %.2f, %.2f)", pAABB.max.x, pAABB.max.y, pAABB.max.z);
+
+			AABB gAABB;
+			float w = 2.2f;
+			float h = 2.2f;
+			gAABB.min = { goalWorldTransform_.translate.x - w / 2.0f, goalWorldTransform_.translate.y - h / 2.0f, -2.0f };
+			gAABB.max = { goalWorldTransform_.translate.x + w / 2.0f, goalWorldTransform_.translate.y + h / 2.0f, 2.0f };
+			ImGui::Text("Goal AABB min: (%.2f, %.2f, %.2f)", gAABB.min.x, gAABB.min.y, gAABB.min.z);
+			ImGui::Text("Goal AABB max: (%.2f, %.2f, %.2f)", gAABB.max.x, gAABB.max.y, gAABB.max.z);
+
+			bool collision = IsCollision(pAABB, gAABB);
+			ImGui::Text("Is Collision: %s", collision ? "TRUE" : "FALSE");
+		} else {
+			ImGui::Text("Goal Model is NULL (No Goal in Map)");
+		}
+		ImGui::TreePop();
+	}
 #endif
 }
 
@@ -167,13 +226,18 @@ void BattleController::GenerateBlocksAndGoal() {
 		for (uint32_t j = 0; j < horizontal; ++j) {
 			const MapChipType type = mapChipField_->GetMapChipTypeByIndex(j, i);
 			if (type == MapChipType::kBlock) {
-				blockWorldTransform_[i][j] = InitializeWorldTransform();
-				blockWorldTransform_[i][j].translate =
+				blockWorldTransforms_[i][j] = InitializeWorldTransform();
+				blockWorldTransforms_[i][j].translate =
 					mapChipField_->GetMapChipPositionByIndex(j, i);
 			} else if (type == MapChipType::kGoal) {
 				goalWorldTransform_ = InitializeWorldTransform();
 				goalWorldTransform_.translate =
 					mapChipField_->GetMapChipPositionByIndex(j, i);
+				goalModel_ = std::make_unique<Object3D>();
+				goalModel_->CreateModel(
+					ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
+				goalModel_->SetEnableEnableEnvironmentMap(false);
+				goalModel_->SetColor({0.0f, 1.0f, 0.0f, 1.0f}); // ゴールを緑色にする
 			}
 		}
 	}

@@ -12,6 +12,7 @@ namespace {
         {"1", MapChipType::kBlock},
         {"E", MapChipType::kEnemy},
         {"2", MapChipType::kGoal},
+        {"G", MapChipType::kGoal},
     };
 }
 

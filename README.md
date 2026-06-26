@@ -1,3 +1,51 @@
-[![DebugBuild](https://github.com/SugiyamaSota/CG2_00_01/actions/workflows/DebugBuild.yml/badge.svg)](https://github.com/SugiyamaSota/CG2_00_01/actions/workflows/DebugBuild.yml)
-[![ReleaseBuild](https://github.com/SugiyamaSota/CG2_00_01/actions/workflows/ReleaseBuild.yml/badge.svg)](https://github.com/SugiyamaSota/CG2_00_01/actions/workflows/ReleaseBuild.yml)
-[![DevelopmentBuild](https://github.com/SugiyamaSota/CG2_00_01/actions/workflows/DevelopmentBuild.yml/badge.svg)](https://github.com/SugiyamaSota/CG2_00_01/actions/workflows/DevelopmentBuild.yml)
+# エフェクト課題作品「Anchor Effect Demo」
+
+## 概要
+
+アンカーを使って敵をロックオンし、まとめて撃破する2Dアクションです。  
+ゲーム中の動作に合わせて、以下のパーティクルエフェクトを実装しました。
+
+- アンカー命中時：青い閃光と放射状の光線
+- 敵撃破時：オレンジ色の火花と拡大するリング
+- プレイヤー着地時：左右に広がる土煙
+
+## 起動方法
+
+1. 提出フォルダを展開します。
+2. `BonjinEngine.exe` を起動します。
+
+`resources` フォルダなどの同梱ファイルは、実行ファイルと同じフォルダから移動・削除しないでください。
+
+## 操作方法
+
+### キーボード
+
+| キー | 操作 |
+|---|---|
+| `A` / `D` | 左右移動 |
+| `Space` | ジャンプ |
+| `W` / `S` + `J` | 斜め方向へアンカーを発射 |
+| `J` | 向いている方向へアンカーを発射 |
+| `K` | 壁に刺さったアンカーの位置へ移動 |
+| `L` | ロックオンした敵をまとめて撃破 |
+| `Esc` | 終了 |
+
+ゲームパッドでは、左スティックで移動およびアンカーの発射方向を操作できます。
+
+## エフェクトの確認手順
+
+1. `A` / `D` で移動し、`Space` でジャンプすると、着地時に土煙が発生します。
+2. 敵の方向を向いて `J` を押し、アンカーを敵に当てると、青い命中エフェクトが発生して敵が赤くなります。
+3. 敵を1体以上ロックオンした状態で `L` を押すと、敵の位置に撃破エフェクトが発生します。
+
+## 動作環境
+
+- 対応OS：Windows 10 / 11（64bit）
+- 描画API：DirectX 12
+- 画面サイズ：1280 × 720
+
+## 制作情報
+
+- 使用言語：C++20 / HLSL
+- ビルド構成：Release / x64
+- 制作日：2026年6月

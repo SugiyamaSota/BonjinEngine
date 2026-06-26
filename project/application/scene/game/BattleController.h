@@ -3,6 +3,7 @@
 #include <list>
 #include <memory>
 #include <random>
+#include <vector>
 
 #include "gameObject/enemy/Enemy.h"
 #include "gameObject/player/Player.h"
@@ -28,11 +29,9 @@ public:
 	MapChipField* GetMapChipField() const { return mapChipField_.get(); }
 	void SetEnemyRespawnEnabled(bool enabled) { isEnemyRespawnEnabled_ = enabled; }
 	bool IsEnemyRespawnEnabled() const { return isEnemyRespawnEnabled_; }
+	bool IsGoalReached() const { return isGoalReached_; }
 
 private:
-	static const uint32_t kNumBlockVirtical = 11;
-	static const uint32_t kNumBlockHorizontal = 21;
-
 	Camera* camera_ = nullptr;
 	std::unique_ptr<Player> player_;
 	std::unique_ptr<Object3D> playerModel_;
@@ -40,14 +39,16 @@ private:
 	std::list<std::unique_ptr<Object3D>> enemyModels_;
 	std::list<Enemy*> lockedOnEnemies_;
 	std::unique_ptr<MapChipField> mapChipField_;
-	std::unique_ptr<Object3D> blockModel_[kNumBlockVirtical][kNumBlockHorizontal] = {};
-	WorldTransform blockWorldTransform_[kNumBlockVirtical][kNumBlockHorizontal] = {};
+	std::vector<std::vector<std::unique_ptr<Object3D>>> blockModels_;
+	std::vector<std::vector<WorldTransform>> blockWorldTransforms_;
+	std::unique_ptr<Object3D> goalModel_;
 	WorldTransform goalWorldTransform_{};
 	std::unique_ptr<SkyBox> skyBox_;
 	ParticleManager* particleManager_ = nullptr;
 	std::mt19937 randomEngine_{std::random_device{}()};
 	bool isEnemyRespawnEnabled_ = true;
 	float enemyRespawnTime_ = 3.0f;
+	bool isGoalReached_ = false;
 
 	void GenerateBlocksAndGoal();
 	void CheckAnchorEnemyCollision();

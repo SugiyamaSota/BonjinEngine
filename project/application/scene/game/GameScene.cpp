@@ -22,17 +22,19 @@ void GameScene::Unload() {
 void GameScene::Update(float deltaTime) {
 	battleController_->Update(deltaTime);
 
+	if (battleController_->IsGoalReached()) {
+		ChangePhase(GamePhase::kGoal);
+	}
+
 	switch (phase_) {
 	case GamePhase::kStart:
 		ChangePhase(GamePhase::kPlay);
 		break;
 	case GamePhase::kPlay:
-		if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
-			ChangePhase(GamePhase::kGoal);
-		}
+		
 		break;
 	case GamePhase::kGoal:
-		nextSceneType_ = SceneType::kGame;
+		nextSceneType_ = SceneType::kResult;
 		break;
 	}
 }
