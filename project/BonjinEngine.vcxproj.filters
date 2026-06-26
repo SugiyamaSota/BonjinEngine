@@ -88,6 +88,9 @@
     <Filter Include="engine\windows">
       <UniqueIdentifier>{19a6279b-b423-49c0-ac3d-e4c401fb9dff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine\animation">
+      <UniqueIdentifier>{0e73dc18-4f5c-4f57-9ed6-d590e5598327}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -243,6 +246,9 @@
     <ClCompile Include="engine\graphics\3d\camera\Camera.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="engine\graphics\3d\animation\Animation.cpp">
+      <Filter>engine\animation</Filter>
+    </ClCompile>
     <ClCompile Include="engine\graphics\3d\builder\ModelBuilder.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -253,6 +259,9 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="engine\graphics\core\pso\config\skyBox\SkyBoxConfig.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\graphics\core\pso\config\sprite\SpriteConfig.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="engine\graphics\core\pso\config\particle\ParticleConfig.cpp">
@@ -434,6 +443,9 @@
     <ClInclude Include="engine\graphics\3d\camera\Camera.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="engine\graphics\3d\animation\Animation.h">
+      <Filter>engine\animation</Filter>
+    </ClInclude>
     <ClInclude Include="engine\graphics\3d\builder\ModelBuilder.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -447,6 +459,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\graphics\core\pso\config\skyBox\SkyBoxConfig.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\graphics\core\pso\config\sprite\SpriteConfig.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\graphics\core\pso\config\particle\ParticleConfig.h">
@@ -470,5 +485,7 @@
   <ItemGroup>
     <FxCompile Include="resources\shader\Object3d.PS.hlsl" />
     <FxCompile Include="resources\shader\Object3d.VS.hlsl" />
+    <FxCompile Include="resources\shader\Sprite.PS.hlsl" />
+    <FxCompile Include="resources\shader\Sprite.VS.hlsl" />
   </ItemGroup>
 </Project>

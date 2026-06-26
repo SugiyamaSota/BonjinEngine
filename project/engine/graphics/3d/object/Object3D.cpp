@@ -76,7 +76,7 @@ void Object3D::Draw() {
     commandList->SetGraphicsRootConstantBufferView(5, LightManager::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
     commandList->SetGraphicsRootConstantBufferView(6, LightManager::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
 
-	if (primitiveType_ == PrimitiveType::kModel) {
+	if (primitiveType_ == PrimitiveType::kObject3D) {
         commandList->SetGraphicsRootDescriptorTable(7, TextureManager::GetInstance()->GetGPUHandle(envTextureHandle_));
     }
 

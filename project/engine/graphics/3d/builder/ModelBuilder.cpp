@@ -3,6 +3,8 @@
 #include <cmath>
 #include <fstream>
 
+#include "Convert.h"
+
 namespace {
 Quaternion Slerp(const Quaternion& start, const Quaternion& end, float t) {
 	Quaternion result{};
@@ -47,7 +49,9 @@ Quaternion Slerp(const Quaternion& start, const Quaternion& end, float t) {
 ModelData ModelBuilder::LoadModelFile(const std::string& directoryPath, const std::string& filename) {
 	Assimp::Importer importer;
 	std::string fullPath = directoryPath + '/' + filename;
-	const aiScene* scene = importer.ReadFile(fullPath, aiProcess_FlipWindingOrder | aiProcess_FlipUVs);
+	// X軸を反転して右手系から左手系へ変換するため、頂点の表裏も反転する。
+	// ここでさらにFlipWindingOrderを指定すると二重反転になり、裏面が表として描画される。
+	const aiScene* scene = importer.ReadFile(fullPath, aiProcess_FlipUVs);
 	assert(scene->HasMeshes());
 
 	ModelData modelData;
@@ -98,52 +102,6 @@ ModelData ModelBuilder::LoadModelFile(const std::string& directoryPath, const st
 	}
 
 	return modelData;
-}
-
-Animation ModelBuilder::LoadAnimationFile(const std::string& directoryPath, const std::string& filename) {
-	Animation animation;
-	Assimp::Importer importer;
-	std::string fullPath = directoryPath + '/' + filename;
-	const aiScene* scene = importer.ReadFile(fullPath.c_str(), 0);
-	assert(scene && scene->mNumAnimations != 0);
-
-	aiAnimation* animationAssimp = scene->mAnimations[0];
-	float ticksPerSecond = static_cast<float>(animationAssimp->mTicksPerSecond);
-	if (ticksPerSecond == 0.0f) {
-		ticksPerSecond = 1.0f;
-	}
-	animation.duration = static_cast<float>(animationAssimp->mDuration) / ticksPerSecond;
-
-	for (uint32_t channelIndex = 0; channelIndex < animationAssimp->mNumChannels; ++channelIndex) {
-		aiNodeAnim* nodeAnimationAssimp = animationAssimp->mChannels[channelIndex];
-		NodeAnimation& nodeAnimation = animation.nodeAnimations[nodeAnimationAssimp->mNodeName.C_Str()];
-
-		for (uint32_t keyIndex = 0; keyIndex < nodeAnimationAssimp->mNumPositionKeys; ++keyIndex) {
-			const aiVectorKey& keyAssimp = nodeAnimationAssimp->mPositionKeys[keyIndex];
-			KeyframeVector3 keyframe;
-			keyframe.time = static_cast<float>(keyAssimp.mTime) / ticksPerSecond;
-			keyframe.value = { -keyAssimp.mValue.x, keyAssimp.mValue.y, keyAssimp.mValue.z };
-			nodeAnimation.translate.keyframes.push_back(keyframe);
-		}
-
-		for (uint32_t keyIndex = 0; keyIndex < nodeAnimationAssimp->mNumRotationKeys; ++keyIndex) {
-			const aiQuatKey& keyAssimp = nodeAnimationAssimp->mRotationKeys[keyIndex];
-			KeyframeQuaternion keyframe;
-			keyframe.time = static_cast<float>(keyAssimp.mTime) / ticksPerSecond;
-			keyframe.value = { keyAssimp.mValue.x, -keyAssimp.mValue.y, -keyAssimp.mValue.z, keyAssimp.mValue.w };
-			nodeAnimation.rotate.keyframes.push_back(keyframe);
-		}
-
-		for (uint32_t keyIndex = 0; keyIndex < nodeAnimationAssimp->mNumScalingKeys; ++keyIndex) {
-			const aiVectorKey& keyAssimp = nodeAnimationAssimp->mScalingKeys[keyIndex];
-			KeyframeVector3 keyframe;
-			keyframe.time = static_cast<float>(keyAssimp.mTime) / ticksPerSecond;
-			keyframe.value = { keyAssimp.mValue.x, keyAssimp.mValue.y, keyAssimp.mValue.z };
-			nodeAnimation.scale.keyframes.push_back(keyframe);
-		}
-	}
-
-	return animation;
 }
 
 ModelData ModelBuilder::CreateModel(ModelType type) {
@@ -213,11 +171,13 @@ ModelData ModelBuilder::CreateSphereModel(uint32_t subdivision) {
 			uint32_t p2 = start + (subdivision + 1);
 			uint32_t p3 = start + (subdivision + 1) + 1;
 
+
 			// 外側が表面になるよう、時計回りで三角形を構成
 			// 三角形1 (p0, p2, p1)
 			modelData.vertices.push_back(GetSphereVertex(p0, subdivision));
 			modelData.vertices.push_back(GetSphereVertex(p2, subdivision));
 			modelData.vertices.push_back(GetSphereVertex(p1, subdivision));
+
 
 			// 三角形2 (p1, p2, p3)
 			modelData.vertices.push_back(GetSphereVertex(p1, subdivision));
@@ -553,40 +513,6 @@ MaterialData ModelBuilder::LoadMaterialTemplateFile(const std::string& directory
 	return materialData;
 }
 
-Vector3 ModelBuilder::CalculateValue(const std::vector<KeyframeVector3>& keyframes, float time) {
-	assert(!keyframes.empty());
-	if (keyframes.size() == 1 || time <= keyframes.front().time) {
-		return keyframes.front().value;
-	}
-
-	for (size_t index = 0; index < keyframes.size() - 1; ++index) {
-		size_t nextIndex = index + 1;
-		if (keyframes[index].time <= time && time <= keyframes[nextIndex].time) {
-			float t = (time - keyframes[index].time) / (keyframes[nextIndex].time - keyframes[index].time);
-			return Lerp(keyframes[index].value, keyframes[nextIndex].value, t);
-		}
-	}
-
-	return keyframes.back().value;
-}
-
-Quaternion ModelBuilder::CalculateValue(const std::vector<KeyframeQuaternion>& keyframes, float time) {
-	assert(!keyframes.empty());
-	if (keyframes.size() == 1 || time <= keyframes.front().time) {
-		return keyframes.front().value;
-	}
-
-	for (size_t index = 0; index < keyframes.size() - 1; ++index) {
-		size_t nextIndex = index + 1;
-		if (keyframes[index].time <= time && time <= keyframes[nextIndex].time) {
-			float t = (time - keyframes[index].time) / (keyframes[nextIndex].time - keyframes[index].time);
-			return Slerp(keyframes[index].value, keyframes[nextIndex].value, t);
-		}
-	}
-
-	return keyframes.back().value;
-}
-
 VertexData ModelBuilder::GetSphereVertex(uint32_t index, uint32_t subdivision) {
 	const float kPi = 3.1415926535f;
 	uint32_t lat = index / (subdivision + 1);
@@ -605,24 +531,32 @@ VertexData ModelBuilder::GetSphereVertex(uint32_t index, uint32_t subdivision) {
 Node ModelBuilder::ReadNode(aiNode* node) {
 	Node result;
 
-	aiMatrix4x4 aiLocalMatrix = node->mTransformation;
-	aiLocalMatrix.Transpose(); // Assimpは行優先、DirectXは列優先なので転置する
-	result.localMatrix.m[0][0] = aiLocalMatrix[0][0];
-	result.localMatrix.m[0][1] = aiLocalMatrix[0][1];
-	result.localMatrix.m[0][2] = aiLocalMatrix[0][2];
-	result.localMatrix.m[0][3] = aiLocalMatrix[0][3];
-	result.localMatrix.m[1][0] = aiLocalMatrix[1][0];
-	result.localMatrix.m[1][1] = aiLocalMatrix[1][1];
-	result.localMatrix.m[1][2] = aiLocalMatrix[1][2];
-	result.localMatrix.m[1][3] = aiLocalMatrix[1][3];
-	result.localMatrix.m[2][0] = aiLocalMatrix[2][0];
-	result.localMatrix.m[2][1] = aiLocalMatrix[2][1];
-	result.localMatrix.m[2][2] = aiLocalMatrix[2][2];
-	result.localMatrix.m[2][3] = aiLocalMatrix[2][3];
-	result.localMatrix.m[3][0] = aiLocalMatrix[3][0];
-	result.localMatrix.m[3][1] = aiLocalMatrix[3][1];
-	result.localMatrix.m[3][2] = aiLocalMatrix[3][2];
-	result.localMatrix.m[3][3] = aiLocalMatrix[3][3];
+	//aiMatrix4x4 aiLocalMatrix = node->mTransformation;
+	//aiLocalMatrix.Transpose(); // Assimpは行優先、DirectXは列優先なので転置する
+	//result.localMatrix.m[0][0] = aiLocalMatrix[0][0];
+	//result.localMatrix.m[0][1] = aiLocalMatrix[0][1];
+	//result.localMatrix.m[0][2] = aiLocalMatrix[0][2];
+	//result.localMatrix.m[0][3] = aiLocalMatrix[0][3];
+	//result.localMatrix.m[1][0] = aiLocalMatrix[1][0];
+	//result.localMatrix.m[1][1] = aiLocalMatrix[1][1];
+	//result.localMatrix.m[1][2] = aiLocalMatrix[1][2];
+	//result.localMatrix.m[1][3] = aiLocalMatrix[1][3];
+	//result.localMatrix.m[2][0] = aiLocalMatrix[2][0];
+	//result.localMatrix.m[2][1] = aiLocalMatrix[2][1];
+	//result.localMatrix.m[2][2] = aiLocalMatrix[2][2];
+	//result.localMatrix.m[2][3] = aiLocalMatrix[2][3];
+	//result.localMatrix.m[3][0] = aiLocalMatrix[3][0];
+	//result.localMatrix.m[3][1] = aiLocalMatrix[3][1];
+	//result.localMatrix.m[3][2] = aiLocalMatrix[3][2];
+	//result.localMatrix.m[3][3] = aiLocalMatrix[3][3];
+
+	aiVector3D scale, translate;
+	aiQuaternion rotate;
+	node->mTransformation.Decompose(scale, rotate, translate);
+	result.transform.scale = { scale.x, scale.y, scale.z };
+	result.transform.rotate = { rotate.x, -rotate.y, -rotate.z, rotate.w };
+	result.transform.translate = { -translate.x, translate.y, translate.z };
+	result.localMatrix = MakeAffineMatrix(result.transform.scale, result.transform.rotate, result.transform.translate);
 
 	result.name = node->mName.C_Str();
 	result.children.reserve(node->mNumChildren);

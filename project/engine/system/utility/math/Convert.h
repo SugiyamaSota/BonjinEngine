@@ -53,6 +53,8 @@ Matrix4x4 MakeRotateMatrix(const Quaternion& quaternion);
 /// <returns></returns>
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate);
 
+Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Quaternion& rotate, const Vector3& translate);
+
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Matrix4x4& rotate, const Vector3& translate);
 
 //透視射影行列

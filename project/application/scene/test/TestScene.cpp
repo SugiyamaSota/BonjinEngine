@@ -22,9 +22,13 @@ void TestScene::Initialize(Camera* camera)
 	testSkyBox_->CreateModel(ModelBuilder::ModelType::kSkyBox, "resources/textures/skyBox.dds");
 
 	testCube_ = std::make_unique<Object3D>();
-	testCube_->LoadModel("animatedCube", "AnimatedCube.gltf");
+	testCube_->LoadModel("human", "walk.gltf");
 	testCube_->SetEnableEnableEnvironmentMap(false);
-	cubeAnimation_ = ModelBuilder::LoadAnimationFile("resources/models/animatedCube", "AnimatedCube.gltf");
+	cubeAnimation_ = AnimationBuilder::LoadAnimationFile("resources/models/human", "walk.gltf");
+	cubeSkeleton_ = SkeletonBuilder::CreateSkeleton(testCube_->GetModelData().rootNode);
+	skeletonDebugRenderer_ = std::make_unique<SkeletonDebugRenderer>();
+	skeletonDebugRenderer_->Initialize(cubeSkeleton_.joints.size());
+	animatedModelWorldMatrix_ = MakeIdentity4x4();
 
 	testSprite_ = std::make_unique<Sprite>();
 	testSprite_->Initialize("uvChecker.png");
@@ -66,19 +70,13 @@ void TestScene::Update(float deltaTime) {
 		animationTime_ = std::fmod(animationTime_, cubeAnimation_.duration);
 	}
 
-	NodeAnimation& cubeAnimation = cubeAnimation_.nodeAnimations["AnimatedCube"];
-	Vector3 translate = cubeAnimation.translate.keyframes.empty()
-		? Vector3{ 0.0f, 0.0f, 0.0f }
-		: ModelBuilder::CalculateValue(cubeAnimation.translate.keyframes, animationTime_);
-	Quaternion rotate = cubeAnimation.rotate.keyframes.empty()
-		? Quaternion{ 0.0f, 0.0f, 0.0f, 1.0f }
-		: ModelBuilder::CalculateValue(cubeAnimation.rotate.keyframes, animationTime_);
-	Vector3 scale = cubeAnimation.scale.keyframes.empty()
-		? Vector3{ 1.0f, 1.0f, 1.0f }
-		: ModelBuilder::CalculateValue(cubeAnimation.scale.keyframes, animationTime_);
-	Matrix4x4 localMatrix = MakeAffineMatrix(scale, MakeRotateMatrix(rotate), translate);
-	Matrix4x4 worldMatrix = Multiply(localMatrix, MakeTranslateMatrix({ 2.5f, 0.0f, 0.0f }));
-	testCube_->Update(worldMatrix, camera_);
+	SkeletonBuilder::ApplyAnimation(cubeSkeleton_, cubeAnimation_, animationTime_);
+	animatedModelWorldMatrix_ = MakeAffineMatrix(
+		Vector3{ 1.0f, 1.0f, 1.0f },
+		Vector3{ 0.0f, 3.14159265f, 0.0f },
+		Vector3{ 2.5f, 0.0f, 0.0f });
+	testCube_->Update(animatedModelWorldMatrix_, camera_);
+	skeletonDebugRenderer_->Update(cubeSkeleton_, animatedModelWorldMatrix_, camera_);
 
 	testSprite_->Update();
 
@@ -121,6 +119,8 @@ void TestScene::Draw() {
 	testSprite_->Draw();
 
 	pm->Draw();
+
+	skeletonDebugRenderer_->Draw();
 }
 
 void TestScene::DrawSceneImGui() {

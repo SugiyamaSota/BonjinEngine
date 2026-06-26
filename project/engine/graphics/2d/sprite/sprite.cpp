@@ -22,8 +22,8 @@ namespace Bonjin {
         device_ = dxCommon_->GetDevice();
 
         pso_ = dxCommon_->GetPSO()->GetPipelineState(
-            device_, PrimitiveType::kModel, BlendMode::kNormal,
-            D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_BACK
+            device_, PrimitiveType::kSprite, BlendMode::kNormal,
+            D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE
         );
     }
 
@@ -125,7 +125,7 @@ namespace Bonjin {
     void Sprite::Draw() {
         auto commandList = dxCommon_->GetCommandList();
 
-        commandList->SetGraphicsRootSignature(dxCommon_->GetPSO()->GetRootSignature(PrimitiveType::kModel));
+        commandList->SetGraphicsRootSignature(dxCommon_->GetPSO()->GetRootSignature(PrimitiveType::kSprite));
         commandList->SetPipelineState(pso_);
         commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
