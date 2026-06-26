@@ -4,6 +4,7 @@
 #include "TitleScene.h"
 #include "GameScene.h"
 #include "../scene/tutorial/TutorialScene.h"
+#include "../scene/result/ResultScene.h"
 #include "TestScene.h"
 
 using namespace Bonjin;
@@ -21,6 +22,7 @@ void Core::Initialize() {
 	sceneManager->AddScene(SceneType::kGame, std::make_unique<GameScene>());
 	sceneManager->AddScene(SceneType::kTutorial, std::make_unique<TutorialScene>());
 	sceneManager->AddScene(SceneType::kTitle, std::make_unique<TitleScene>());
+	sceneManager->AddScene(SceneType::kResult, std::make_unique<ResultScene>());
 
 	sceneManager->ChangeScene(SceneType::kGame);
 }

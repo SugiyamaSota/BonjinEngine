@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -236,6 +236,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="engine\system\platform\windows\WinApp.cpp" />
     <ClCompile Include="engine\system\utility\time\Time.cpp" />
     <ClCompile Include="application\scene\title\TitleScene.cpp" />
+    <ClCompile Include="application\scene\result\ResultScene.cpp" />
     <ClCompile Include="engine\system\utility\random\RandomEngine.cpp" />
     <ClCompile Include="engine\system\manager\srv\SrvManager.cpp" />
     <ClCompile Include="engine\system\manager\particle\ParticleManager.cpp" />
@@ -305,6 +306,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\system\platform\windows\WinApp.h" />
     <ClInclude Include="engine\system\utility\time\Time.h" />
     <ClInclude Include="application\scene\title\TitleScene.h" />
+    <ClInclude Include="application\scene\result\ResultScene.h" />
     <ClInclude Include="engine\system\utility\random\RandomEngine.h" />
     <ClInclude Include="engine\system\manager\light\LightManager.h" />
     <ClInclude Include="engine\system\manager\srv\SrvManager.h" />
