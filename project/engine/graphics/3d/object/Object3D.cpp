@@ -80,7 +80,12 @@ void Object3D::Draw() {
         commandList->SetGraphicsRootDescriptorTable(7, TextureManager::GetInstance()->GetGPUHandle(envTextureHandle_));
     }
 
-    commandList->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
+    if (!modelData_.indices.empty()) {
+        commandList->IASetIndexBuffer(&indexBufferView_);
+        commandList->DrawIndexedInstanced(static_cast<UINT>(modelData_.indices.size()), 1, 0, 0, 0);
+    } else {
+        commandList->DrawInstanced(static_cast<UINT>(modelData_.vertices.size()), 1, 0, 0);
+    }
 }
 
 void Object3D::DrawImGui(const std::string& label) {

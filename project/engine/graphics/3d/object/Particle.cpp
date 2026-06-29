@@ -119,7 +119,12 @@ void Particle::Draw() {
 	// 光
 	common_->GetCommandList()->SetGraphicsRootConstantBufferView(3, LightManager::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
 	// 描画
-	common_->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), kNumInstance_, 0, 0);
+	if (!modelData_.indices.empty()) {
+		common_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
+		common_->GetCommandList()->DrawIndexedInstanced(static_cast<UINT>(modelData_.indices.size()), kNumInstance_, 0, 0, 0);
+	} else {
+		common_->GetCommandList()->DrawInstanced(static_cast<UINT>(modelData_.vertices.size()), kNumInstance_, 0, 0);
+	}
 }
 
 void Particle::Emit(const ParticleConfig& config) {

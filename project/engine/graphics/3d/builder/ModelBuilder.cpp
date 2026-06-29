@@ -63,28 +63,30 @@ ModelData ModelBuilder::LoadModelFile(const std::string& directoryPath, const st
 		assert(mesh->HasTextureCoords(0));
 		assert(mesh->HasNormals());
 
+		size_t vertexOffset = modelData.vertices.size();
+		modelData.vertices.resize(vertexOffset + mesh->mNumVertices);
+
+		for (uint32_t vertexIndex = 0; vertexIndex < mesh->mNumVertices; ++vertexIndex) {
+			aiVector3D position = mesh->mVertices[vertexIndex];
+			aiVector3D normal = mesh->mNormals[vertexIndex];
+			aiVector3D texcoord = mesh->mTextureCoords[0][vertexIndex];
+			
+			// 右手系->左手系への変換を忘れずに
+			modelData.vertices[vertexOffset + vertexIndex].position = { -position.x, position.y, position.z, 1.0f };
+			modelData.vertices[vertexOffset + vertexIndex].normal = { -normal.x, normal.y, normal.z };
+			modelData.vertices[vertexOffset + vertexIndex].texcoord = { texcoord.x, texcoord.y };
+		}
+
 		for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
 			const aiFace& face = mesh->mFaces[faceIndex];
 			assert(face.mNumIndices == 3); // 三角形であることを確認
 
 			for (uint32_t element = 0; element < face.mNumIndices; ++element) {
-
 				uint32_t vertexIndex = face.mIndices[element];
-				aiVector3D position = mesh->mVertices[vertexIndex];
-				aiVector3D normal = mesh->mNormals[vertexIndex];
-				aiVector3D texcoord = mesh->mTextureCoords[0][vertexIndex];
-				VertexData vertex;
-				vertex.position = { position.x, position.y, position.z, 1.0f };
-				vertex.normal = { normal.x, normal.y, normal.z };
-				vertex.texcoord = { texcoord.x, texcoord.y };
-
-				vertex.position.x *= -1.f;
-				vertex.normal.x *= -1.f;
-
-				modelData.vertices.push_back(vertex);
-
+				modelData.indices.push_back(static_cast<uint32_t>(vertexIndex + vertexOffset));
 			}
 		}
+	}
 
 		for (uint32_t materialIndex = 0; materialIndex < scene->mNumMaterials; ++materialIndex) {
 			aiMaterial* material = scene->mMaterials[materialIndex];
@@ -99,8 +101,7 @@ ModelData ModelBuilder::LoadModelFile(const std::string& directoryPath, const st
 				modelData.material.textureFilepath = directoryPath + '/' + std::string(texturePath.C_Str());
 			}
 		}
-	}
-
+	
 	return modelData;
 }
 
