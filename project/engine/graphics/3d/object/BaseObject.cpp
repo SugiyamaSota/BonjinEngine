@@ -15,6 +15,11 @@ void BaseObject::ReleaseResources() {
         vertexResource_->Unmap(0, nullptr);
         vertexResource_.Reset();
     }
+    // インデックスリソースの解放
+    if (indexResource_) {
+        indexResource_->Unmap(0, nullptr);
+        indexResource_.Reset();
+    }
     // マテリアルリソースの解放
     if (materialResource_) {
         materialResource_->Unmap(0, nullptr);
@@ -34,6 +39,7 @@ void BaseObject::LoadModel(const std::string& directoryName, const std::string& 
 
     // リソースのセットアップ
 	CreateVertexResource(modelData_.vertices);
+	CreateIndexResource(modelData_.indices);
 	CreateMaterialResource();
 
 	SetupResources();
@@ -50,6 +56,7 @@ void BaseObject::CreateModel(ModelBuilder::ModelType type, const std::string& te
 
     // 基底クラスのメソッドを利用してリソース作成
     CreateVertexResource(modelData_.vertices);
+    CreateIndexResource(modelData_.indices);
     CreateMaterialResource();
 
     // Object3D特有のリソース作成
@@ -73,6 +80,25 @@ void BaseObject::CreateVertexResource(const std::vector<VertexData>& vertices) {
     // データのマッピングとコピー
     vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
     std::memcpy(vertexData_, vertices.data(), sizeof(VertexData) * vertices.size());
+}
+
+void BaseObject::CreateIndexResource(const std::vector<uint32_t>& indices) {
+    if (indices.empty()) {
+        return;
+    }
+
+    // インデックスバッファの生成
+    indexResource_ = CreateBufferResource(device_, sizeof(uint32_t) * indices.size());
+
+    // ビューの設定
+    indexBufferView_.BufferLocation = indexResource_->GetGPUVirtualAddress();
+    indexBufferView_.SizeInBytes = static_cast<UINT>(sizeof(uint32_t) * indices.size());
+    indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
+
+    // データのマッピングとコピー
+    uint32_t* indexData = nullptr;
+    indexResource_->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
+    std::memcpy(indexData, indices.data(), sizeof(uint32_t) * indices.size());
 }
 
 void BaseObject::CreateMaterialResource() {

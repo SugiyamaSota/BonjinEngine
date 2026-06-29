@@ -31,6 +31,7 @@ protected:
 
 	// リソース生成の共通化
 	void CreateVertexResource(const std::vector<VertexData>& vertices);
+	void CreateIndexResource(const std::vector<uint32_t>& indices);
 	void CreateMaterialResource();
 	virtual void SetupResources() = 0;
 	void ReleaseResources();
@@ -44,6 +45,9 @@ protected:
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
 	VertexData* vertexData_ = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;
+	D3D12_INDEX_BUFFER_VIEW indexBufferView_{};
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
 	Material* materialData_ = nullptr;
