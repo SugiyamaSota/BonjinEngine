@@ -1,6 +1,7 @@
 #include "BattleController.h"
 
 #include "logic/Collision.h"
+#include "gameObject/anchor/anchor.h"
 #include <algorithm>
 #include <cmath>
 #include <numbers>
@@ -110,6 +111,13 @@ void BattleController::Update(float deltaTime) {
 	(void)deltaTime;
 	skyBox_->Update(InitializeWorldTransform(), camera_);
 	player_->Update();
+
+	if (player_->HasAnchor()) {
+		Anchor& anchor = player_->GetAnchor();
+		if (!anchor.GetStandBy() && !anchor.IsInstantResolved()) {
+			ResolveAnchorInstantLanding(anchor);
+		}
+	}
 
 	if (goalModel_) {
 		goalModel_->Update(goalWorldTransform_, camera_);
@@ -432,4 +440,72 @@ void BattleController::EmitLandingDustEffect(const Vector3& position) {
 		};
 		particleManager_->Emit("landingDust", dust);
 	}
+}
+
+void BattleController::ResolveAnchorInstantLanding(Anchor& anchor) {
+	Vector3 start = anchor.GetPosition();
+	Vector3 velocity = anchor.GetVelocity();
+	if (Length(velocity) <= 0.001f) {
+		return;
+	}
+	Vector3 dir = Normalize(velocity);
+
+	const float stepLen = 0.1f;
+	const float maxDist = 50.0f;
+	float currentDist = 0.0f;
+
+	Vector3 currentPos = start;
+	bool hit = false;
+
+	while (currentDist < maxDist) {
+		currentPos = Add(start, Multiply(currentDist, dir));
+
+		IndexSet index = mapChipField_->GetMapChipIndexSetByPosition(currentPos);
+		MapChipType type = mapChipField_->GetMapChipTypeByIndex(index.xIndex, index.yIndex);
+		if (type == MapChipType::kBlock) {
+			// めり込み防止のためにアンカーの半径分（0.5f）＋マージン（0.05f）を逆方向に引き戻す
+			const float pullBackDist = 0.55f;
+			Vector3 hitPos = Subtract(currentPos, Multiply(pullBackDist, dir));
+			anchor.SetPosition(hitPos);
+			anchor.SetStandBy(true);
+			hit = true;
+			break;
+		}
+
+		AABB tempAABB;
+		float w = 1.0f;
+		float h = 1.0f;
+		tempAABB.min = { currentPos.x - w / 2.0f, currentPos.y - h / 2.0f, -0.5f };
+		tempAABB.max = { currentPos.x + w / 2.0f, currentPos.y + h / 2.0f, 0.5f };
+
+		Enemy* hitEnemy = nullptr;
+		for (const auto& enemy : enemies_) {
+			if (enemy->GetIsDead() || enemy->GetIsLockedOn()) {
+				continue;
+			}
+			if (IsCollision(tempAABB, enemy->GetAABB())) {
+				hitEnemy = enemy.get();
+				break;
+			}
+		}
+
+		if (hitEnemy) {
+			anchor.SetPosition(currentPos);
+			anchor.OnCollision();
+			hitEnemy->OnCollision();
+			lockedOnEnemies_.push_back(hitEnemy);
+			EmitAnchorHitEffect(currentPos);
+			hit = true;
+			break;
+		}
+
+		currentDist += stepLen;
+	}
+
+	if (!hit) {
+		anchor.SetPosition(currentPos);
+		anchor.SetDead(true);
+	}
+
+	anchor.SetInstantResolved(true);
 }

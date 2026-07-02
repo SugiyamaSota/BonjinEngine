@@ -19,6 +19,7 @@ Anchor::Anchor(const Vector3& position, const Vector3& velocity, MapChipField* m
 	}
 	worldTransform_.translate = position;
 	isStandBy = false;
+	isInstantResolved_ = false;
 }
 
 Anchor::~Anchor() {

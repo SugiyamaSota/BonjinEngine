@@ -35,14 +35,19 @@ public:
     bool isCollisionMap();
 
     bool GetStandBy()const { return isStandBy; }
+    void SetStandBy(bool flag) { isStandBy = flag; }
 
     Vector3& GetPosition(){ return worldTransform_.translate; }
+    void SetPosition(const Vector3& pos) { worldTransform_.translate = pos; }
 
     const Vector3& GetVelocity() const { return velocity_; }
     float GetAngle() const { return worldTransform_.rotate.z; }
     AABB GetAABB();
     void OnCollision();
     bool IsDead() const { return isDead_; }
+    void SetDead(bool flag) { isDead_ = flag; }
+    bool IsInstantResolved() const { return isInstantResolved_; }
+    void SetInstantResolved(bool flag) { isInstantResolved_ = flag; }
 private:
     // 座標
     Vector3 position_;
@@ -77,6 +82,7 @@ private:
 
     // 破壊
     bool isDead_ = false;
+    bool isInstantResolved_ = false;
 
     Vector3 GetWorldPosition();
 

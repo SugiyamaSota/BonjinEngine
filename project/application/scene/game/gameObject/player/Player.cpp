@@ -203,29 +203,29 @@ void Player::Update() {
 	if (Input::GetInstance()->IsPadTrigger(1) || Input::GetInstance()->IsTrigger(DIK_K)) {
 		// アンカーが存在し、isStandByがtrueの場合
 		if (anchor_ && anchor_->GetStandBy()) {
-			// アンカーの位置を取得
+			// アンカーの座標からテレポート先座標を取得
 			Vector3 anchorPos = anchor_->GetPosition();
-
-			// テレポート先の座標を決定
 			Vector3 teleportPosition = anchorPos;
 
-			// === ここから修正 ===
-			// キャラクターの高さの半分だけ上方向に移動
-			teleportPosition.y = anchorPos.y + kHeight / 2.0f;
-			// === ここまで修正 ===
+			//// キャラクターの高さの半分だけ上方向に移動
+			//teleportPosition.y = anchorPos.y + kHeight / 2.0f;
+			//// === ここまで修正 ===
 
 			Vector3 anchorVelocity = anchor_->GetVelocity();
 
-			// プレイヤーの移動方向を判定
+			// 体が埋まらないようにX座標を調整
 			if (anchorVelocity.x > 0.0f) {
-				// 壁にめり込まないように、アンカーの位置からプレイヤーの幅の半分だけ右にずらす
 				teleportPosition.x -= kWidth / 2.0f;
-
-			} else {
-				// 壁にめり込まないように、アンカーの位置からプレイヤーの幅の半分だけ左にずらす
+			} else if (anchorVelocity.x < 0.0f) {
 				teleportPosition.x += kWidth / 2.0f;
-
 			}
+			// 体が埋まらないようにY座標を調整
+			if (anchorVelocity.y > 0.0f) {
+				teleportPosition.y -= kHeight / 2.0f;
+			} else if (anchorVelocity.y < 0.0f) {
+				teleportPosition.y += kHeight / 2.0f;
+			}
+
 			// プレイヤーを計算された座標にテレポート
 			worldTransform_.translate = teleportPosition;
 

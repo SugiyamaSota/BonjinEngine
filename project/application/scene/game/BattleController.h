@@ -51,6 +51,7 @@ private:
 	bool isGoalReached_ = false;
 
 	void GenerateBlocksAndGoal();
+	void ResolveAnchorInstantLanding(class Anchor& anchor);
 	void CheckAnchorEnemyCollision();
 	void EmitAnchorHitEffect(const Vector3& position);
 	void EmitEnemyDefeatEffect(const Vector3& position);
