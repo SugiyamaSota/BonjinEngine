@@ -1,6 +1,7 @@
 #include "Enemy.h"
 #include "../../logic/Collision.h"
 #include "../../mapchip/MapChipField.h"
+#include "../player/Player.h"
 #include <cmath>
 #include <numbers>
 #include <random>
@@ -29,39 +30,26 @@ void Enemy::Initialize(Object3D* model, Camera* camera, const Vector3& position)
 	isDead_ = false;
 	defeatEffectRequested_ = false;
 	respawnTimer_ = 0.0f;
+	state_ = EnemyState::kPatrol;
+	player_ = nullptr;
 
-	/*
-	lockedOnSprite_ = new Sprite();
-	lockedOnSprite_->Initialize("resources/textures/default.png");*/
-
-	/*Vector3 worldPos = GetWorldPosition();
-	Vector3 screenPos = camera_->Project(worldPos);*/
-	//lockedOnSprite_->Translate() = { screenPos.x,screenPos.y };
 }
 
 void Enemy::Update() {
-
-	// プレイヤーと共通のマップ衝突処理を使って移動する。
-	velocity_.y -= kGravityAcceleration;
-	if (velocity_.y < -kLimitFallSpeed) {
-		velocity_.y = -kLimitFallSpeed;
+	if (player_) {
+		UpdateStateTransition();
 	}
-	if (mapChipField_) {
-		const CollisionMapInfo collisionInfo =
-			ResolveMapCollision(*mapChipField_, worldTransform_.translate, velocity_, kWidth_, kHeight_);
-		worldTransform_.translate = Add(worldTransform_.translate, collisionInfo.movement_);
 
-		if (collisionInfo.isLandin_ || collisionInfo.isHotTop_) {
-			velocity_.y = 0.0f;
-		}
-		if (collisionInfo.isHitWall_) {
-			velocity_.x *= -1.0f;
-			lrDirection_ =
-				velocity_.x > 0.0f ? LRDirection::kRight : LRDirection::kLeft;
-		}
-	} else {
-		worldTransform_.translate = Add(worldTransform_.translate, velocity_);
+	switch (state_) {
+	case EnemyState::kPatrol:
+		PatrolBehavior();
+		break;
+	case EnemyState::kChase:
+		ChaseBehavior();
+		break;
 	}
+
+	ApplyPhysicsAndMovement();
 
 	// 旋回制御
 	TurningControl();
@@ -80,7 +68,112 @@ void Enemy::Update() {
 	// 行列の変換
 	model_->Update(worldTransform_, camera_);
 
-    //lockedOnSprite_->Update();
+	//lockedOnSprite_->Update();
+}
+
+bool Enemy::IsPlayerVisible() const {
+	if (!mapChipField_ || !player_) {
+		return false;
+	}
+
+	Vector3 start = GetWorldPosition();
+	Vector3 end = player_->GetWorldPosition();
+
+	Vector3 direction = Subtract(end, start);
+	float distance = Length(direction);
+	if (distance <= 0.05f) {
+		return true;
+	}
+
+	Vector3 dirNorm = Normalize(direction);
+	
+	const float step = 0.5f;
+	float currentDistance = step;
+
+	while (currentDistance < distance) {
+		Vector3 currentPos = Add(start, Multiply(currentDistance, dirNorm));
+		IndexSet index = mapChipField_->GetMapChipIndexSetByPosition(currentPos);
+		MapChipType type = mapChipField_->GetMapChipTypeByIndex(index.xIndex, index.yIndex);
+
+		if (type == MapChipType::kBlock) {
+			return false;
+		}
+
+		currentDistance += step;
+	}
+
+	return true;
+}
+
+void Enemy::UpdateStateTransition() {
+	Vector3 playerPos = player_->GetWorldPosition();
+	Vector3 myPos = GetWorldPosition();
+	
+	float distance = Length(Subtract(playerPos, myPos));
+
+	if (state_ == EnemyState::kPatrol) {
+		if (distance <= searchRadius_ && IsPlayerVisible()) {
+			chasingDirection_ = lrDirection_;
+			state_ = EnemyState::kChase;
+		}
+	} else if (state_ == EnemyState::kChase) {
+		if (distance > loseRadius_ || !IsPlayerVisible()) {
+			state_ = EnemyState::kPatrol;
+			lrDirection_ = chasingDirection_;
+			if (lrDirection_ == LRDirection::kRight) {
+				velocity_.x = kWalkSpeed;
+			} else {
+				velocity_.x = -kWalkSpeed;
+			}
+		}
+	}
+}
+
+void Enemy::PatrolBehavior() {
+	// 巡回時は何もしない（ApplyPhysicsAndMovementで反転処理などを行う）
+}
+
+void Enemy::ChaseBehavior() {
+	Vector3 playerPos = player_->GetWorldPosition();
+	Vector3 myPos = GetWorldPosition();
+
+	velocity_.x = 0.f;
+
+	if (playerPos.x < myPos.x) {
+		//velocity_.x = -kWalkSpeed;
+		lrDirection_ = LRDirection::kLeft;
+	} else {
+		//velocity_.x = kWalkSpeed;
+		lrDirection_ = LRDirection::kRight;
+	}
+}
+
+void Enemy::ApplyPhysicsAndMovement() {
+	velocity_.y -= kGravityAcceleration;
+	if (velocity_.y < -kLimitFallSpeed) {
+		velocity_.y = -kLimitFallSpeed;
+	}
+
+	if (mapChipField_) {
+		const CollisionMapInfo collisionInfo =
+			ResolveMapCollision(*mapChipField_, worldTransform_.translate, velocity_, kWidth_, kHeight_);
+		worldTransform_.translate = Add(worldTransform_.translate, collisionInfo.movement_);
+
+		if (collisionInfo.isLandin_ || collisionInfo.isHotTop_) {
+			velocity_.y = 0.0f;
+		}
+		if (collisionInfo.isHitWall_) {
+			if (state_ == EnemyState::kPatrol) {
+				velocity_.x *= -1.0f;
+				lrDirection_ =
+					velocity_.x > 0.0f ? LRDirection::kRight : LRDirection::kLeft;
+			} else {
+				velocity_.x = 0.0f;
+			}
+		}
+	} else {
+		worldTransform_.translate = Add(worldTransform_.translate, velocity_);
+	}
 }
 
 
@@ -103,7 +196,7 @@ void Enemy::TurningControl() {
 	}
 }
 
-Vector3 Enemy::GetWorldPosition() {
+Vector3 Enemy::GetWorldPosition() const {
 	return worldTransform_.translate;
 }
 
@@ -156,6 +249,7 @@ void Enemy::UpdateRespawn(float deltaTime, float respawnTime, bool isRespawnEnab
 	isDead_ = false;
 	isLockedOn_ = false;
 	defeatEffectRequested_ = false;
+	state_ = EnemyState::kPatrol;
 	model_->SetColor({1.0f, 1.0f, 1.0f, 1.0f});
 	model_->Update(worldTransform_, camera_);
 }

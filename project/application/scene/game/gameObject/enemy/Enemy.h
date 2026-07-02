@@ -5,6 +5,12 @@
 #include "Sprite.h"
 
 class MapChipField;
+class Player;
+
+enum class EnemyState {
+	kPatrol, // 巡回
+	kChase,  // 追跡
+};
 
 class Enemy {
 public:
@@ -36,7 +42,7 @@ public:
     /// ワールド座標を取得
     /// </summary>
     /// <returns>ワールド座標</returns>
-    Vector3 GetWorldPosition();
+    Vector3 GetWorldPosition() const;
 
     /// <summary>
     /// AABB(Axis-Aligned Bounding Box)を取得
@@ -75,6 +81,33 @@ public:
     /// </summary>
     void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
 
+    /// <summary>
+    /// プレイヤーを設定
+    /// </summary>
+    void SetPlayer(Player* player) { player_ = player; }
+
+    /// <summary>
+    /// 状態ゲッター
+    /// </summary>
+    EnemyState GetState() const { return state_; }
+
+    /// <summary>
+    /// プレイヤーゲッター
+    /// </summary>
+    Player* GetPlayer() const { return player_; }
+
+    /// <summary>
+    /// 検知距離ゲッターセッター
+    /// </summary>
+    float GetSearchRadius() const { return searchRadius_; }
+    void SetSearchRadius(float radius) { searchRadius_ = radius; }
+
+    /// <summary>
+    /// 見失い距離ゲッターセッター
+    /// </summary>
+    float GetLoseRadius() const { return loseRadius_; }
+    void SetLoseRadius(float radius) { loseRadius_ = radius; }
+
 private:
     // --- メンバー変数 ---
 
@@ -85,6 +118,11 @@ private:
     MapChipField* mapChipField_ = nullptr; // マップチップフィールド
 
     // 状態
+    EnemyState state_ = EnemyState::kPatrol; // 行動状態
+    Player* player_ = nullptr;               // プレイヤーへのポインタ
+    float searchRadius_ = 10.0f;             // プレイヤー探知距離
+    float loseRadius_ = 12.0f;               // プレイヤー見失い距離
+
     bool isLockedOn_ = false;         // ロックオン状態
     bool isDead_ = false;             // 死亡状態
     bool defeatEffectRequested_ = false; // 撃破エフェクトの発生要求
@@ -109,7 +147,7 @@ private:
     static inline const float kWalkMotionAngleEnd = 50.0f;    // 首を振る終了角度
     static inline const float kPi = 3.14159265359f; // 円周率
 
-    //Bonjin::Sprite* lockedOnSprite_ = nullptr;
+    LRDirection chasingDirection_ = LRDirection::kLeft; // モデルの向き
 
 private:
     // --- プライベート関数 ---
@@ -118,4 +156,29 @@ private:
     /// モデルの向きを制御
     /// </summary>
     void TurningControl();
+
+    /// <summary>
+    /// プレイヤーが直視できる位置にいるか判定 (壁越しの場合はfalse)
+    /// </summary>
+    bool IsPlayerVisible() const;
+
+    /// <summary>
+    /// 状態遷移の更新
+    /// </summary>
+    void UpdateStateTransition();
+
+    /// <summary>
+    /// 巡回行動
+    /// </summary>
+    void PatrolBehavior();
+
+    /// <summary>
+    /// 追跡行動
+    /// </summary>
+    void ChaseBehavior();
+
+    /// <summary>
+    /// 物理と移動の適用
+    /// </summary>
+    void ApplyPhysicsAndMovement();
 };

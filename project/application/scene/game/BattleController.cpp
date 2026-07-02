@@ -64,6 +64,7 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 			const Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(j, i);
 			enemies_.back()->Initialize(enemyModels_.back().get(), camera_, enemyPosition);
 			enemies_.back()->SetMapChipField(mapChipField_.get());
+			enemies_.back()->SetPlayer(player_.get());
 		}
 	}
 
@@ -212,6 +213,48 @@ void BattleController::DrawImGui() {
 			ImGui::Text("Is Collision: %s", collision ? "TRUE" : "FALSE");
 		} else {
 			ImGui::Text("Goal Model is NULL (No Goal in Map)");
+		}
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Enemies Debug")) {
+		int index = 0;
+		for (const auto& enemy : enemies_) {
+			ImGui::PushID(index);
+			std::string nodeName = "Enemy " + std::to_string(index);
+			if (enemy->GetIsDead()) {
+				nodeName += " [DEAD]";
+			} else {
+				nodeName += (enemy->GetState() == EnemyState::kPatrol) ? " [Patrol]" : " [CHASE]";
+			}
+
+			if (ImGui::TreeNode(nodeName.c_str())) {
+				if (!enemy->GetIsDead()) {
+					Vector3 pos = enemy->GetWorldPosition();
+					ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+					
+					if (enemy->GetPlayer()) {
+						Vector3 pPos = enemy->GetPlayer()->GetWorldPosition();
+						float dist = Length(Subtract(pPos, pos));
+						ImGui::Text("Distance to Player: %.2f", dist);
+					}
+
+					float sRad = enemy->GetSearchRadius();
+					if (ImGui::SliderFloat("Search Radius", &sRad, 1.0f, 30.0f, "%.1f")) {
+						enemy->SetSearchRadius(sRad);
+					}
+
+					float lRad = enemy->GetLoseRadius();
+					if (ImGui::SliderFloat("Lose Radius", &lRad, 1.0f, 30.0f, "%.1f")) {
+						enemy->SetLoseRadius(lRad);
+					}
+				} else {
+					ImGui::Text("Dead...");
+				}
+				ImGui::TreePop();
+			}
+			ImGui::PopID();
+			index++;
 		}
 		ImGui::TreePop();
 	}
