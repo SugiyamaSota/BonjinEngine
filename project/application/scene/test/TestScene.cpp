@@ -24,10 +24,12 @@ void TestScene::Initialize(Camera* camera)
 	testCube_ = std::make_unique<Object3D>();
 	testCube_->LoadModel("human", "walk.gltf");
 	testCube_->SetEnableEnableEnvironmentMap(false);
+	testCube_->SetCullMode(D3D12_CULL_MODE_FRONT);
 	cubeAnimation_ = AnimationBuilder::LoadAnimationFile("resources/models/human", "walk.gltf");
-	cubeSkeleton_ = SkeletonBuilder::CreateSkeleton(testCube_->GetModelData().rootNode);
 	skeletonDebugRenderer_ = std::make_unique<SkeletonDebugRenderer>();
-	skeletonDebugRenderer_->Initialize(cubeSkeleton_.joints.size());
+	if (testCube_->GetSkeleton().has_value()) {
+		skeletonDebugRenderer_->Initialize(testCube_->GetSkeleton()->joints.size());
+	}
 	animatedModelWorldMatrix_ = MakeIdentity4x4();
 
 	testSprite_ = std::make_unique<Sprite>();
@@ -70,13 +72,17 @@ void TestScene::Update(float deltaTime) {
 		animationTime_ = std::fmod(animationTime_, cubeAnimation_.duration);
 	}
 
-	SkeletonBuilder::ApplyAnimation(cubeSkeleton_, cubeAnimation_, animationTime_);
+	if (testCube_->GetSkeleton().has_value()) {
+		SkeletonBuilder::ApplyAnimation(*testCube_->GetSkeleton(), cubeAnimation_, animationTime_);
+	}
 	animatedModelWorldMatrix_ = MakeAffineMatrix(
 		Vector3{ 1.0f, 1.0f, 1.0f },
 		Vector3{ 0.0f, 3.14159265f, 0.0f },
 		Vector3{ 2.5f, 0.0f, 0.0f });
 	testCube_->Update(animatedModelWorldMatrix_, camera_);
-	skeletonDebugRenderer_->Update(cubeSkeleton_, animatedModelWorldMatrix_, camera_);
+	if (testCube_->GetSkeleton().has_value()) {
+		skeletonDebugRenderer_->Update(*testCube_->GetSkeleton(), animatedModelWorldMatrix_, camera_);
+	}
 
 	testSprite_->Update();
 

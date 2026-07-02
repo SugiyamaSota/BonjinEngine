@@ -3,6 +3,7 @@
 
 // 各形状のconfigクラスのインクルード
 #include "config/Object3D/Object3DConfig.h"
+#include "config/Object3D/SkinningObject3DConfig.h"
 #include "config/particle/ParticleConfig.h"
 #include "config/sprite/SpriteConfig.h"
 #include "config/skyBox/SkyBoxConfig.h"
@@ -31,6 +32,7 @@ PSOManager::PSOManager() {
 	configs_[static_cast<size_t>(PrimitiveType::kPostEffectRadialBlur)] = std::make_unique<CopyImageConfig>(L"resources/shader/RadialBlur.PS.hlsl");
 	configs_[static_cast<size_t>(PrimitiveType::kPostEffectDissolve)] = std::make_unique<CopyImageConfig>(L"resources/shader/Dissolve.PS.hlsl");
 	configs_[static_cast<size_t>(PrimitiveType::kPostEffectRandomNoise)] = std::make_unique<CopyImageConfig>(L"resources/shader/RandomNoise.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kSkinningObject3D)] = std::make_unique<SkinningObject3DConfig>();
 
 }
 
