@@ -1,5 +1,7 @@
 #pragma once
 #include "BaseObject.h" 
+#include "Skeleton.h"
+#include <optional>
 
 class Object3D : public BaseObject
 {
@@ -17,6 +19,10 @@ public:
     /// デバッグ描画処理関数
     /// </summary>
     void DrawImGui(const std::string& label) override;
+
+    // スキニングデータへのアクセス
+    std::optional<Skeleton>& GetSkeleton() { return skeleton_; }
+    std::optional<SkinCluster>& GetSkinCluster() { return skinCluster_; }
 
 private:
 
@@ -37,4 +43,8 @@ private:
     Matrix4x4 viewMatrix_;
     Matrix4x4 projectionMatrix_;
     Matrix4x4 viewProjectionMatrix_;
+
+    // スキニングデータ
+    std::optional<Skeleton> skeleton_;
+    std::optional<SkinCluster> skinCluster_;
 };
