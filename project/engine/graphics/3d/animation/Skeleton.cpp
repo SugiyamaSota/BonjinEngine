@@ -1,5 +1,6 @@
 #include "Skeleton.h"
 
+#include <cassert>
 #include "Animation.h"
 #include "Convert.h"
 #include "Matrix.h"
@@ -78,4 +79,79 @@ int32_t SkeletonBuilder::CreateJoint(
 	}
 
 	return joint.index;
+}
+
+#include "SrvManager.h"
+#include "function/function.h"
+#include <algorithm>
+
+SkinCluster SkeletonBuilder::CreateSkinCluster(
+	ID3D12Device* device,
+	const Skeleton& skeleton,
+	const ModelData& modelData) {
+
+	SkinCluster skinCluster;
+
+	// 1. palette用のResourceを確保
+	skinCluster.paletteResource = CreateBufferResource(device, sizeof(WellForGPU) * skeleton.joints.size());
+	WellForGPU* mappedPalette = nullptr;
+	skinCluster.paletteResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedPalette));
+	skinCluster.mappedPalette = { mappedPalette, skeleton.joints.size() };
+
+	// SrvManagerからSRVインデックスを確保してSRVを作成
+	uint32_t srvIndex = SrvManager::GetInstance()->Allocate();
+	skinCluster.paletteSrvHandle.first = SrvManager::GetInstance()->GetCPUHandle(srvIndex);
+	skinCluster.paletteSrvHandle.second = SrvManager::GetInstance()->GetGPUHandle(srvIndex);
+	SrvManager::GetInstance()->CreateSrv(srvIndex, skinCluster.paletteResource.Get(), SrvType::StructuredBuffer, static_cast<uint32_t>(skeleton.joints.size()), sizeof(WellForGPU));
+
+	// 2. influence用のResourceを確保
+	skinCluster.influenceResource = CreateBufferResource(device, sizeof(VertexInfluence) * modelData.vertices.size());
+	VertexInfluence* mappedInfluence = nullptr;
+	skinCluster.influenceResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedInfluence));
+	std::memset(mappedInfluence, 0, sizeof(VertexInfluence) * modelData.vertices.size());
+	skinCluster.mappedInfluence = { mappedInfluence, modelData.vertices.size() };
+
+	// 3. Influence用のVBVを作成
+	skinCluster.influenceBufferView.BufferLocation = skinCluster.influenceResource->GetGPUVirtualAddress();
+	skinCluster.influenceBufferView.SizeInBytes = UINT(sizeof(VertexInfluence) * modelData.vertices.size());
+	skinCluster.influenceBufferView.StrideInBytes = sizeof(VertexInfluence);
+
+	// 4. InverseBindPoseMatrixの保存領域を作成して、単位行列で埋める
+	skinCluster.inverseBindPoseMatrices.resize(skeleton.joints.size());
+	std::generate(skinCluster.inverseBindPoseMatrices.begin(), skinCluster.inverseBindPoseMatrices.end(), MakeIdentity4x4);
+
+	// 5. ModelDataのSkinCluster情報を解析してInfluenceの中身を埋める
+	for (const auto& jointWeight : modelData.skinClusterData) {
+		auto it = skeleton.jointMap.find(jointWeight.first);
+		if (it == skeleton.jointMap.end()) {
+			continue;
+		}
+		skinCluster.inverseBindPoseMatrices[it->second] = jointWeight.second.inverseBindPoseMatrix;
+		for (const auto& vertexWeight : jointWeight.second.vertexWeights) {
+			auto& currentInfluence = skinCluster.mappedInfluence[vertexWeight.vertexIndex];
+			for (uint32_t index = 0; index < kNumMaxInfluence; ++index) {
+				if (currentInfluence.weights[index] == 0.0f) {
+					currentInfluence.weights[index] = vertexWeight.weight;
+					currentInfluence.jointIndices[index] = it->second;
+					break;
+				}
+			}
+		}
+	}
+
+	return skinCluster;
+}
+
+void SkeletonBuilder::Update(
+	SkinCluster& skinCluster,
+	const Skeleton& skeleton) {
+	for (size_t jointIndex = 0; jointIndex < skeleton.joints.size(); ++jointIndex) {
+		assert(jointIndex < skinCluster.inverseBindPoseMatrices.size());
+		
+		skinCluster.mappedPalette[jointIndex].skeletonSpaceMatrix =
+			Multiply(skinCluster.inverseBindPoseMatrices[jointIndex], skeleton.joints[jointIndex].skeletonSpaceMatrix);
+		
+		skinCluster.mappedPalette[jointIndex].skeletonSpaceInverseTransposeMatrix =
+			Transpose(Inverse(skinCluster.mappedPalette[jointIndex].skeletonSpaceMatrix));
+	}
 }

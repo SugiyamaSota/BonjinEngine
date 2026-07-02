@@ -242,6 +242,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="engine\system\manager\particle\ParticleManager.cpp" />
     <ClCompile Include="engine\graphics\3d\object\SkyBox.cpp" />
     <ClCompile Include="engine\graphics\core\pso\config\Object3D\Object3DConfig.cpp" />
+    <ClCompile Include="engine\graphics\core\pso\config\Object3D\SkinningObject3DConfig.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\core\Core.h" />
@@ -313,6 +314,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\system\manager\particle\ParticleManager.h" />
     <ClInclude Include="engine\graphics\3d\object\SkyBox.h" />
     <ClInclude Include="engine\graphics\core\pso\config\Object3D\Object3DConfig.h" />
+    <ClInclude Include="engine\graphics\core\pso\config\Object3D\SkinningObject3DConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
