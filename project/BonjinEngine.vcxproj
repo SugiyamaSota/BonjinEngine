@@ -84,7 +84,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/3d/animation;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/2d/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/utility</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/3d/animation;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/2d/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/utility;$(ProjectDir)engine\graphics/2d/line;$(ProjectDir)engine\graphics/3d/line</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -112,7 +112,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/3d/animation;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/2d/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/utility</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/3d/animation;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/2d/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/utility;$(ProjectDir)engine\graphics/2d/line;$(ProjectDir)engine\graphics/3d/line</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
@@ -144,7 +144,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/3d/animation;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/2d/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/utility</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/3d/animation;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/2d/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/utility;$(ProjectDir)engine\graphics/2d/line;$(ProjectDir)engine\graphics/3d/line</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -243,6 +243,8 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="engine\graphics\3d\object\SkyBox.cpp" />
     <ClCompile Include="engine\graphics\core\pso\config\Object3D\Object3DConfig.cpp" />
     <ClCompile Include="engine\graphics\core\pso\config\Object3D\SkinningObject3DConfig.cpp" />
+    <ClCompile Include="engine\graphics\2d\line\Line2D.cpp" />
+    <ClCompile Include="engine\graphics\3d\line\Line3D.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\core\Core.h" />
@@ -315,6 +317,8 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\graphics\3d\object\SkyBox.h" />
     <ClInclude Include="engine\graphics\core\pso\config\Object3D\Object3DConfig.h" />
     <ClInclude Include="engine\graphics\core\pso\config\Object3D\SkinningObject3DConfig.h" />
+    <ClInclude Include="engine\graphics\2d\line\Line2D.h" />
+    <ClInclude Include="engine\graphics\3d\line\Line3D.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
