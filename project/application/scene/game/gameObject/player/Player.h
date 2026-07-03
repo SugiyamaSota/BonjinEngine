@@ -68,7 +68,9 @@ private:
 
 	// ロックオンされた敵のリストへのポインタ
 	std::list<Enemy*>* lockedOnEnemies_ = nullptr;
-	
+
+	// HP
+	int hp_ = 3;
 public:
 	/// <summary>
 	/// 初期化
@@ -124,6 +126,12 @@ public:
 	void SetLockedOnEnemiesList(std::list<Enemy*>* enemiesList) {
 		lockedOnEnemies_ = enemiesList;
 	}
+
+	// HP関連
+	int GetHp() const { return hp_; }
+	void SetHp(int hp) { hp_ = hp; }
+	void ApplyDamage(int damage) { hp_ = (hp_ > damage) ? hp_ - damage : 0; }
+	bool GetIsDead() const { return hp_ <= 0; }
 
 	// ロックオン中の敵をすべて削除する処理（入力判定を含む)
 	void HandleLockOnRemovalInput();

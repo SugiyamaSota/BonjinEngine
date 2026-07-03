@@ -60,6 +60,15 @@ void Enemy::Update() {
 	// 弾の更新
 	for (auto it = bullets_.begin(); it != bullets_.end();) {
 		(*it)->Update();
+
+		// プレイヤーとの衝突判定
+		if (!(*it)->IsDead() && player_ && !player_->GetIsDead()) {
+			if (IsCollision((*it)->GetAABB(), player_->GetAABB())) {
+				(*it)->SetDead(true);
+				player_->ApplyDamage(1);
+			}
+		}
+
 		if ((*it)->IsDead()) {
 			it = bullets_.erase(it);
 		} else {

@@ -24,6 +24,7 @@ public:
 	void Draw();
 
 	bool IsDead() const { return isDead_; }
+	void SetDead(bool flag) { isDead_ = flag; }
 	Vector3 GetPosition() const { return worldTransform_.translate; }
 	AABB GetAABB() const;
 };

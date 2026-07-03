@@ -24,6 +24,8 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 	width_ = kWidth;
 	height_ = kHeight;
 
+	hp_ = 3;
+
 	anchorLine_ = std::make_unique<Bonjin::Line3D>();
 	anchorLine_->Initialize();
 }
@@ -338,6 +340,7 @@ void Player::DrawImGui() {
 		Vector3 pos = GetPosition();
 		ImGui::Text("Player Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
 		ImGui::Text("On Ground: %s", onGround_ ? "true" : "false");
+		ImGui::InputInt("Player HP", &hp_);
 		bool hasAnchor = HasAnchor();
 		ImGui::Text("Has Anchor: %s", hasAnchor ? "true" : "false");
 
