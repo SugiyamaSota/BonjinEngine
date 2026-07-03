@@ -54,7 +54,7 @@ private:
 	long kPadDeadZone_ = 750;
 
 	// --- アンカー関連 ---
-	static inline const float kAnchorSpeed = 0.3f; // アンカーの初速の大きさ
+	float kAnchorSpeed = 0.1f; // アンカーの初速の大きさ
 	static inline const long kAnchorDeadZone = 750; // アンカー発射時のスティック入力のデッドゾーン
 
 	// --- アンカー ---

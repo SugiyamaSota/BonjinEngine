@@ -202,11 +202,32 @@ void BattleController::Draw() {
 void BattleController::DrawImGui() {
 #ifdef USE_IMGUI
 	LightManager::GetInstance()->DrawImGui();
-	if (player_) {
-		player_->DrawImGui();
-	}
 	ImGui::Checkbox("Enemy Respawn", &isEnemyRespawnEnabled_);
 	ImGui::SliderFloat("Enemy Respawn Time", &enemyRespawnTime_, 0.5f, 10.0f, "%.1f sec");
+
+	if (ImGui::BeginTabBar("Game Tabs")) {
+		if (player_) {
+			player_->DrawImGui();
+		}
+
+		if (ImGui::BeginTabItem("enemy")) {
+			int count = 0;
+			for (const auto& enemy : enemies_) {
+				if (!enemy->GetIsDead()) {
+					std::string label = "Enemy [" + std::to_string(count) + "]";
+					if (ImGui::TreeNode(label.c_str())) {
+						Vector3 enemyPos = enemy->GetPosition();
+						ImGui::Text("Position: (%.2f, %.2f, %.2f)", enemyPos.x, enemyPos.y, enemyPos.z);
+						ImGui::Text("On Ground: %s", enemy->IsOnGround() ? "true" : "false");
+						ImGui::TreePop();
+					}
+					count++;
+				}
+			}
+			ImGui::EndTabItem();
+		}
+		ImGui::EndTabBar();
+	}
 
 	if (ImGui::TreeNode("Goal Debug")) {
 		ImGui::Text("Goal Reached: %s", isGoalReached_ ? "TRUE" : "FALSE");

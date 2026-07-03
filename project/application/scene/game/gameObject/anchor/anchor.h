@@ -41,6 +41,7 @@ public:
     void SetPosition(const Vector3& pos) { worldTransform_.translate = pos; }
 
     const Vector3& GetVelocity() const { return velocity_; }
+    Vector3& GetVelocity() { return velocity_; }
     float GetAngle() const { return worldTransform_.rotate.z; }
     AABB GetAABB();
     void OnCollision();

@@ -334,9 +334,25 @@ void Player::OnMapCollision(const CollisionMapInfo& collisionMapinfo) {
 
 void Player::DrawImGui() {
 #ifdef USE_IMGUI
-	if (ImGui::TreeNode("Player")) {
-		ImGui::ColorEdit4("Line Color", &lineColor_.x);
-		ImGui::TreePop();
+	if (ImGui::BeginTabItem("player")) {
+		Vector3 pos = GetPosition();
+		ImGui::Text("Player Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+		ImGui::Text("On Ground: %s", onGround_ ? "true" : "false");
+		bool hasAnchor = HasAnchor();
+		ImGui::Text("Has Anchor: %s", hasAnchor ? "true" : "false");
+
+		if (hasAnchor) {
+			Anchor& anchor = GetAnchor();
+			Vector3 anchorPos = anchor.GetPosition();
+			ImGui::Text("Anchor Position: (%.2f, %.2f, %.2f)", anchorPos.x, anchorPos.y, anchorPos.z);
+
+			ImGui::ColorEdit4("Anchor (Line) Color", &lineColor_.x);
+
+			if (ImGui::Button("Force Delete Anchor")) {
+				anchor_ = nullptr;
+			}
+		}
+		ImGui::EndTabItem();
 	}
 #endif
 }
