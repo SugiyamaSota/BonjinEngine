@@ -32,7 +32,13 @@ void Enemy::Initialize(Object3D* model, Camera* camera, const Vector3& position)
 	respawnTimer_ = 0.0f;
 	state_ = EnemyState::kPatrol;
 	player_ = nullptr;
+	lrDirection_ = LRDirection::kLeft;
 
+	width_ = kWidth_;
+	height_ = kHeight_;
+
+	shootTimer_ = 0.0f;
+	bullets_.clear();
 }
 
 void Enemy::Update() {
@@ -50,6 +56,16 @@ void Enemy::Update() {
 	}
 
 	ApplyPhysicsAndMovement();
+
+	// 弾の更新
+	for (auto it = bullets_.begin(); it != bullets_.end();) {
+		(*it)->Update();
+		if ((*it)->IsDead()) {
+			it = bullets_.erase(it);
+		} else {
+			++it;
+		}
+	}
 
 	// 旋回制御
 	TurningControl();
@@ -146,41 +162,32 @@ void Enemy::ChaseBehavior() {
 		//velocity_.x = kWalkSpeed;
 		lrDirection_ = LRDirection::kRight;
 	}
+
+	// 追跡中、一定間隔で弾を発射
+	shootTimer_ -= 1.0f / 60.0f; // 60fps想定
+	if (shootTimer_ <= 0.0f) {
+		Vector3 direction = Subtract(playerPos, myPos);
+		if (Length(direction) > 0.05f) {
+			Vector3 bulletVelocity = Multiply(kBulletSpeed, Normalize(direction));
+			bulletVelocity.z = 0.0f; // 2D平面上の動きにするためZ軸は固定
+			bullets_.push_back(std::make_unique<EnemyBullet>(myPos, bulletVelocity, camera_, mapChipField_));
+		}
+		shootTimer_ = kShootInterval;
+	}
 }
 
 void Enemy::ApplyPhysicsAndMovement() {
-	velocity_.y -= kGravityAcceleration;
-	if (velocity_.y < -kLimitFallSpeed) {
-		velocity_.y = -kLimitFallSpeed;
-	}
-
-	if (mapChipField_) {
-		const CollisionMapInfo collisionInfo =
-			ResolveMapCollision(*mapChipField_, worldTransform_.translate, velocity_, kWidth_, kHeight_);
-		worldTransform_.translate = Add(worldTransform_.translate, collisionInfo.movement_);
-
-		if (collisionInfo.isLandin_ || collisionInfo.isHotTop_) {
-			velocity_.y = 0.0f;
-		}
-		if (collisionInfo.isHitWall_) {
-			if (state_ == EnemyState::kPatrol) {
-				velocity_.x *= -1.0f;
-				lrDirection_ =
-					velocity_.x > 0.0f ? LRDirection::kRight : LRDirection::kLeft;
-			} else {
-				velocity_.x = 0.0f;
-			}
-		}
-	} else {
-		worldTransform_.translate = Add(worldTransform_.translate, velocity_);
-	}
+	UpdatePhysicsAndMapCollision();
 }
 
 
 void Enemy::Draw() { 
 	model_->Draw(); 
-	
-	
+
+	// 弾の描画
+	for (auto& bullet : bullets_) {
+		bullet->Draw();
+	}
 }
 
 void Enemy::TurningControl() {
@@ -250,6 +257,8 @@ void Enemy::UpdateRespawn(float deltaTime, float respawnTime, bool isRespawnEnab
 	isLockedOn_ = false;
 	defeatEffectRequested_ = false;
 	state_ = EnemyState::kPatrol;
+	shootTimer_ = 0.0f;
+	bullets_.clear();
 	model_->SetColor({1.0f, 1.0f, 1.0f, 1.0f});
 	model_->Update(worldTransform_, camera_);
 }
@@ -269,4 +278,18 @@ bool Enemy::ConsumeDefeatEffectRequest() {
 
 	defeatEffectRequested_ = false;
 	return true;
+}
+
+void Enemy::OnMapCollision(const CollisionMapInfo& collisionMapinfo) {
+	BaseCharacter::OnMapCollision(collisionMapinfo);
+
+	if (collisionMapinfo.isHitWall_) {
+		if (state_ == EnemyState::kPatrol) {
+			velocity_.x *= -1.0f;
+			lrDirection_ =
+				velocity_.x > 0.0f ? LRDirection::kRight : LRDirection::kLeft;
+		} else {
+			velocity_.x = 0.0f;
+		}
+	}
 }

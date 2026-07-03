@@ -21,6 +21,9 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 
 	onGround_ = false;
 
+	width_ = kWidth;
+	height_ = kHeight;
+
 	anchorLine_ = std::make_unique<Bonjin::Line3D>();
 	anchorLine_->Initialize();
 }
@@ -115,9 +118,6 @@ void Player::Move() {
 			velocity_.x = std::clamp(velocity_.x, -kLimitRunSpeed, kLimitRunSpeed);
 		}
 		// === ここまで空中での移動処理を修正 ===
-
-		velocity_ = Add(velocity_, Vector3(0, -kGravityAcceleration, 0));
-		velocity_.y = std::max(velocity_.y, -kLimitFallSpeed);
 	}
 }
 
@@ -138,29 +138,8 @@ void Player::Update() {
 		}
 	}
 
-	// 2.移動量を加味した衝突判定
-	const CollisionMapInfo collisionMapinfo =
-		ResolveMapCollision(*mapChipField_, worldTransform_.translate, velocity_, kWidth, kHeight);
-
-	// 3.判定結果を反映して移動
-	worldTransform_.translate = Add(collisionMapinfo.movement_, worldTransform_.translate);
-
-	// 4.天井に当たっている場合
-	if (collisionMapinfo.isHotTop_) {
-		velocity_.y = 0.0f;
-	}
-	if (collisionMapinfo.isHitWall_) {
-		velocity_.x *= (1.0f - kAttenuationWall);
-	}
-
-	// 着地フラグ
-	if (collisionMapinfo.isLandin_) {
-		onGround_ = true;
-		velocity_.y = 0.0f;
-	} else if (velocity_.y > 0.0f ||
-		!IsGroundedOnMap(*mapChipField_, worldTransform_.translate, kWidth, kHeight)) {
-		onGround_ = false;
-	}
+	// 2.物理とマップ衝突判定の更新
+	UpdatePhysicsAndMapCollision();
 
 	if (!wasOnGround && onGround_) {
 		landingEffectRequested_ = true;
@@ -342,6 +321,14 @@ void Player::HandleLockOnRemovalInput() {
 	// GameSceneで使われていた入力判定をそのまま使用
 	if (Input::GetInstance()->IsPadTrigger(3) || Input::GetInstance()->IsTrigger(DIK_L)) {
 		RemoveLockedOnEnemies(*lockedOnEnemies_);
+	}
+}
+
+void Player::OnMapCollision(const CollisionMapInfo& collisionMapinfo) {
+	BaseCharacter::OnMapCollision(collisionMapinfo);
+
+	if (collisionMapinfo.isHitWall_) {
+		velocity_.x *= (1.0f - kAttenuationWall);
 	}
 }
 

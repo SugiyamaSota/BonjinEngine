@@ -1,5 +1,7 @@
 #pragma once
 #include "../../logic/Data.h"
+#include "../BaseCharacter.h"
+#include "EnemyBullet.h"
 
 #include "Object3D.h"
 #include "Sprite.h"
@@ -12,7 +14,7 @@ enum class EnemyState {
 	kChase,  // 追跡
 };
 
-class Enemy {
+class Enemy : public BaseCharacter {
 public:
     /// <summary>
     /// 初期化
@@ -77,11 +79,6 @@ public:
     void SetIsDead(bool flag);
 
     /// <summary>
-    /// 衝突判定に使用するマップを設定
-    /// </summary>
-    void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
-
-    /// <summary>
     /// プレイヤーを設定
     /// </summary>
     void SetPlayer(Player* player) { player_ = player; }
@@ -108,14 +105,11 @@ public:
     float GetLoseRadius() const { return loseRadius_; }
     void SetLoseRadius(float radius) { loseRadius_ = radius; }
 
+protected:
+    void OnMapCollision(const CollisionMapInfo& collisionMapinfo) override;
+
 private:
     // --- メンバー変数 ---
-
-    // 共通
-    WorldTransform worldTransform_{}; // ワールドトランスフォーム
-    Camera* camera_ = nullptr;        // カメラ
-    Object3D* model_ = nullptr;        // 3Dモデル
-    MapChipField* mapChipField_ = nullptr; // マップチップフィールド
 
     // 状態
     EnemyState state_ = EnemyState::kPatrol; // 行動状態
@@ -134,13 +128,9 @@ private:
     static inline const float kHeight_ = 2.0f;    // 高さ
 
     // 移動
-    Vector3 velocity_ = {};                       // 現在の速度
     static inline const float kWalkSpeed = 0.05f; // 歩行速度
-    static inline const float kGravityAcceleration = 0.0098f;
-    static inline const float kLimitFallSpeed = 2.0f;
 
     // アニメーション
-    LRDirection lrDirection_ = LRDirection::kLeft; // モデルの向き
     float walkTimer_ = 0.0f;                       // 歩行アニメーションのタイマー
     static inline const float kWalkTimer = 2.0f;   // 歩行アニメーションの周期
     static inline const float kWalkMotionAngleStart = -25.0f; // 首を振る開始角度
@@ -148,6 +138,12 @@ private:
     static inline const float kPi = 3.14159265359f; // 円周率
 
     LRDirection chasingDirection_ = LRDirection::kLeft; // モデルの向き
+
+    // 弾関連
+    std::list<std::unique_ptr<EnemyBullet>> bullets_;
+    static inline const float kShootInterval = 2.0f; // 発射間隔（秒）
+    static inline const float kBulletSpeed = 0.15f;  // 弾速
+    float shootTimer_ = 0.0f;
 
 private:
     // --- プライベート関数 ---

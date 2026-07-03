@@ -164,7 +164,9 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
   <ItemGroup>
     <ClCompile Include="application\scene\game\gameObject\anchor\anchor.cpp" />
     <ClCompile Include="application\scene\game\gameObject\enemy\Enemy.cpp" />
+    <ClCompile Include="application\scene\game\gameObject\enemy\EnemyBullet.cpp" />
     <ClCompile Include="application\scene\game\gameObject\player\Player.cpp" />
+    <ClCompile Include="application\scene\game\gameObject\BaseCharacter.cpp" />
     <ClCompile Include="application\scene\game\GameScene.cpp" />
     <ClCompile Include="application\scene\game\BattleController.cpp" />
     <ClCompile Include="application\scene\tutorial\TutorialScene.cpp" />
@@ -250,7 +252,9 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="application\core\Core.h" />
     <ClInclude Include="application\scene\game\gameObject\anchor\anchor.h" />
     <ClInclude Include="application\scene\game\gameObject\enemy\Enemy.h" />
+    <ClInclude Include="application\scene\game\gameObject\enemy\EnemyBullet.h" />
     <ClInclude Include="application\scene\game\gameObject\player\Player.h" />
+    <ClInclude Include="application\scene\game\gameObject\BaseCharacter.h" />
     <ClInclude Include="application\scene\game\logic\Collision.h" />
     <ClInclude Include="application\scene\game\logic\Data.h" />
     <ClInclude Include="application\scene\game\mapchip\MapChipField.h" />

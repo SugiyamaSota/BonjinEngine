@@ -1,12 +1,13 @@
 #pragma once
 #include <cassert>
 #include <list>
-#include<memory>
+#include <memory>
 
-#include"../anchor/anchor.h"
-#include"../../logic/Data.h"
+#include "../anchor/anchor.h"
+#include "../../logic/Data.h"
+#include "../BaseCharacter.h"
 
-#include"Object3D.h"
+#include "Object3D.h"
 #include "Line3D.h"
 
 class MapChipField;
@@ -16,48 +17,23 @@ class Camera;
 /// <summary>
 /// 自キャラ
 /// </summary>
-class Player {
+class Player : public BaseCharacter {
 private:
-	// ワールドトランスフォーム
-	WorldTransform worldTransform_;
-
-	// カメラ
-	Camera* camera_ = nullptr;
-
-	// 3Dモデル
-	Object3D* model_ = nullptr;
-
-	// 移動速度
-	Vector3 velocity_ = {};
 	static inline const float kAcceleration = 0.010f;
 	static inline const float kAttenuation = 0.8f;
 	static inline const float kLimitRunSpeed = 0.15f;
 
 	static inline const float kAccelerationInAir = 0.010f;
 
-	// 向き
-	LRDirection lrDirection_ = LRDirection::kRight;
-
 	//旋回関連
 	float turnFirstRotationY_ = 0.0f;
 	float turnTimer_ = 0.0f;
 	static inline const float kTimeTurn = 0.3f;
 
-	//重力加速度
-	static inline const float kGravityAcceleration = 0.0098f;
-	//最大落下速度
-	static inline const float kLimitFallSpeed = 2.0f;
 	//ジャンプ初速
 	static inline const float kJumpAcceleration = 0.32f;
 
-	//マップチップフィールド
-	MapChipField* mapChipField_ = nullptr;
-
 	// --- 当たり判定 ---
-	// サイズ
-	static inline const float kWidth = 1.9f;
-	static inline const float kHeight = 1.9f;
-
 	// 衝突後処理の数値
 	static inline const float kAttenuationTop = 0.5f;
 	static inline const float kAttenuationWall = 0.5f;
@@ -65,13 +41,14 @@ private:
 	static inline const float kKnockbackUpPower = 0.15f;
 	static inline const float kKnockbackPower = 0.15f;
 
-	//接地状態フラグ
-	bool onGround_ = true;
 	bool landingEffectRequested_ = false;
 
 	bool isKnockedBack_ = false;
 	float knockbackTimer_ = 0.0f;
 	static inline const float kKnockbackTime = 1.0f;
+
+	static inline const float kWidth = 1.9f;
+	static inline const float kHeight = 1.9f;
 
 	// Padのデッドゾーン
 	long kPadDeadZone_ = 750;
@@ -119,10 +96,10 @@ public:
 	/// </summary>
 	void Move();
 
-	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
-	const Vector3& GetVelocity() const { return velocity_; }
-	WorldTransform& GetWorldTransform() { return worldTransform_; }
-	Vector3 GetPosition()const { return worldTransform_.translate; }
+protected:
+	void OnMapCollision(const CollisionMapInfo& collisionMapinfo) override;
+
+public:
 	Vector3 GetWorldPosition();
 	AABB GetAABB();
 	void OnCollision(Enemy* enemy);

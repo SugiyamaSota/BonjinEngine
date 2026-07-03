@@ -225,6 +225,9 @@
     <ClCompile Include="application\scene\game\gameObject\player\Player.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="application\scene\game\gameObject\BaseCharacter.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="application\scene\game\gameObject\anchor\anchor.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -283,6 +286,9 @@
       <Filter>engine\draw\line</Filter>
     </ClCompile>
     <ClCompile Include="application\scene\game\gameObject\enemy\Enemy.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\scene\game\gameObject\enemy\EnemyBullet.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -434,6 +440,9 @@
     <ClInclude Include="application\scene\game\gameObject\player\Player.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="application\scene\game\gameObject\BaseCharacter.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="application\scene\game\gameObject\anchor\anchor.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -495,6 +504,9 @@
       <Filter>engine\draw\line</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\game\gameObject\enemy\Enemy.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\scene\game\gameObject\enemy\EnemyBullet.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
