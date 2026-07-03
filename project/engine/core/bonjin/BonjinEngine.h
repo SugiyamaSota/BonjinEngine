@@ -9,6 +9,8 @@
 #include"math/Matrix.h"
 #include"math/Convert.h"
 #include"sprite.h"
+#include"Line2D.h"
+#include"Line3D.h"
 #include"color/Color.h"
 #include"windows/WinApp.h"
 #include"time/Time.h"
