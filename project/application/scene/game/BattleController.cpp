@@ -193,11 +193,18 @@ void BattleController::Draw() {
 	}
 	skyBox_->Draw();
 	particleManager_->Draw();
+
+	if (player_) {
+		player_->DrawAnchorLine();
+	}
 }
 
 void BattleController::DrawImGui() {
 #ifdef USE_IMGUI
 	LightManager::GetInstance()->DrawImGui();
+	if (player_) {
+		player_->DrawImGui();
+	}
 	ImGui::Checkbox("Enemy Respawn", &isEnemyRespawnEnabled_);
 	ImGui::SliderFloat("Enemy Respawn Time", &enemyRespawnTime_, 0.5f, 10.0f, "%.1f sec");
 

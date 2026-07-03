@@ -33,19 +33,24 @@ public:
 
 private:
 	Camera* camera_ = nullptr;
+
 	std::unique_ptr<Player> player_;
 	std::unique_ptr<Object3D> playerModel_;
+
 	std::list<std::unique_ptr<Enemy>> enemies_;
 	std::list<std::unique_ptr<Object3D>> enemyModels_;
 	std::list<Enemy*> lockedOnEnemies_;
+
 	std::unique_ptr<MapChipField> mapChipField_;
 	std::vector<std::vector<std::unique_ptr<Object3D>>> blockModels_;
 	std::vector<std::vector<WorldTransform>> blockWorldTransforms_;
 	std::unique_ptr<Object3D> goalModel_;
 	WorldTransform goalWorldTransform_{};
 	std::unique_ptr<SkyBox> skyBox_;
+
 	ParticleManager* particleManager_ = nullptr;
 	std::mt19937 randomEngine_{std::random_device{}()};
+
 	bool isEnemyRespawnEnabled_ = true;
 	float enemyRespawnTime_ = 3.0f;
 	bool isGoalReached_ = false;

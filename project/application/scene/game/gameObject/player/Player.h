@@ -7,6 +7,7 @@
 #include"../../logic/Data.h"
 
 #include"Object3D.h"
+#include "Line3D.h"
 
 class MapChipField;
 class Enemy;
@@ -81,6 +82,8 @@ private:
 
 	// --- アンカー ---
 	std::unique_ptr<Anchor> anchor_;
+	std::unique_ptr<Bonjin::Line3D> anchorLine_;
+	Vector4 lineColor_ = { 0.5f, 0.85f, 1.f, 0.5f };
 	/// <summary>
 	/// アンカーの射出
 	/// </summary>
@@ -105,6 +108,11 @@ public:
 	/// 描画処理
 	/// </summary>
 	void Draw();
+
+	/// <summary>
+	/// アンカーラインの描画処理（描画順序を最後に調整するため個別化）
+	/// </summary>
+	void DrawAnchorLine();
 
 	/// <summary>
 	/// 移動処理
@@ -145,6 +153,8 @@ public:
 
 	// ロックオン中の敵をすべて倒す
 	void RemoveLockedOnEnemies(std::list<Enemy*>& enemies);
+
+	void DrawImGui();
 
 	void UpdateWorldTransform(){ model_->Update(worldTransform_, camera_); }
 };

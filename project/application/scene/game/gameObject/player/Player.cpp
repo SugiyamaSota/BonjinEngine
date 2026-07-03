@@ -1,6 +1,7 @@
 #define NOMINMAX
 #include "Player.h"
 #include "../enemy/Enemy.h"
+#include "ImGuiManager.h"
 #include"../../mapchip/MapChipField.h"
 #include "../../logic/Collision.h"
 #include <algorithm>
@@ -20,6 +21,8 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 
 	onGround_ = false;
 
+	anchorLine_ = std::make_unique<Bonjin::Line3D>();
+	anchorLine_->Initialize();
 }
 
 void Player::Move() {
@@ -199,6 +202,12 @@ void Player::Update() {
 		}
 	}
 
+	// アンカーとプレイヤーをつなぐラインの更新
+	if (anchor_ != nullptr) {
+
+		anchorLine_->Update(GetPosition(), anchor_->GetPosition(), camera_, lineColor_);
+	}
+
 	// Yボタンでテレポート
 	if (Input::GetInstance()->IsPadTrigger(1) || Input::GetInstance()->IsTrigger(DIK_K)) {
 		// アンカーが存在し、isStandByがtrueの場合
@@ -238,8 +247,15 @@ void Player::Update() {
 void Player::Draw() {
 	// 自キャラの描画処理
 	model_->Draw();
-	if (anchor_ != nullptr) {
+	if (anchor_ != nullptr) 
+	{
 		anchor_->Draw();
+	}
+}
+
+void Player::DrawAnchorLine() {
+	if (anchor_ != nullptr) {
+		anchorLine_->Draw();
 	}
 }
 
@@ -294,32 +310,7 @@ AABB Player::GetAABB() {
 }
 
 void Player::OnCollision(Enemy* enemy) {
-	//// ノックバック中は再ノックバックさせない
-	//if (isKnockedBack_) {
-	//	return;
-	//}
-
-	//// 速度をゼロにリセット
-	//velocity_ = { 0.0f, 0.0f, 0.0f };
-
-	//// 敵とプレイヤーの相対位置を計算
-	//Vector3 toEnemy = Subtract(enemy->GetWorldPosition(), worldTransform_.translate);
-
-	//// 水平方向のみ正規化して方向を求める
-	//toEnemy.y = 0.0f;
-	//toEnemy = Normalize(toEnemy);
-
-	//// プレイヤーが敵に当たったときに受ける衝撃ベクトルを計算
-	//Vector3 impactVector = {};
-	//impactVector.x = -toEnemy.x * kKnockbackPower; // 敵と逆方向に飛ばす
-	//impactVector.y = kKnockbackUpPower; // 上方向に少し浮かせる
-
-	//// プレイヤーの速度に衝撃ベクトルを加算
-	//velocity_ = Add(velocity_, impactVector);
-
-	//// ノックバック状態を開始
-	//isKnockedBack_ = true;
-	//knockbackTimer_ = kKnockbackTime;
+	
 }
 
 bool Player::ConsumeLandingEffectRequest() {
@@ -352,4 +343,13 @@ void Player::HandleLockOnRemovalInput() {
 	if (Input::GetInstance()->IsPadTrigger(3) || Input::GetInstance()->IsTrigger(DIK_L)) {
 		RemoveLockedOnEnemies(*lockedOnEnemies_);
 	}
+}
+
+void Player::DrawImGui() {
+#ifdef USE_IMGUI
+	if (ImGui::TreeNode("Player")) {
+		ImGui::ColorEdit4("Line Color", &lineColor_.x);
+		ImGui::TreePop();
+	}
+#endif
 }
