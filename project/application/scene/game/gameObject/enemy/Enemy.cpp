@@ -2,6 +2,7 @@
 #include "../../logic/Collision.h"
 #include "../../mapchip/MapChipField.h"
 #include "../player/Player.h"
+#include "ParticleManager.h"
 #include <cmath>
 #include <numbers>
 #include <random>
@@ -39,6 +40,10 @@ void Enemy::Initialize(Object3D* model, Camera* camera, const Vector3& position)
 
 	shootTimer_ = 0.0f;
 	bullets_.clear();
+
+	isCharging_ = false;
+	chargeTimer_ = 0.0f;
+	uvScrollTimer_ = 0.0f;
 }
 
 void Enemy::Update() {
@@ -56,6 +61,31 @@ void Enemy::Update() {
 	}
 
 	ApplyPhysicsAndMovement();
+
+	// チャージ更新
+	if (isCharging_) {
+		chargeTimer_ -= 1.0f / 60.0f; // 60fps想定
+
+		// UVスクロール・スケールアニメーションの更新
+		uvScrollTimer_ += 1.0f / 60.0f;
+		Vector3 uvScale = { 10.0f, 1.0f, 1.0f }; // U方向に10倍スケール
+		Vector3 uvTranslate = { -uvScrollTimer_ * 1.5f, 0.0f, 0.0f }; // U方向スクロール
+		Matrix4x4 uvTransform = MakeAffineMatrix(uvScale, Vector3{ 0.0f, 0.0f, 0.0f }, uvTranslate);
+		ParticleManager::GetInstance()->SetUVTransform("enemyChargeRing", uvTransform);
+
+		if (chargeTimer_ <= 0.0f) {
+			isCharging_ = false;
+			Vector3 playerPos = player_->GetWorldPosition();
+			Vector3 myPos = GetWorldPosition();
+			Vector3 direction = Subtract(playerPos, myPos);
+			if (Length(direction) > 0.05f) {
+				Vector3 bulletVelocity = Multiply(kBulletSpeed, Normalize(direction));
+				bulletVelocity.z = 0.0f;
+				bullets_.push_back(std::make_unique<EnemyBullet>(myPos, bulletVelocity, camera_, mapChipField_));
+			}
+			shootTimer_ = kShootInterval;
+		}
+	}
 
 	// 弾の更新
 	for (auto it = bullets_.begin(); it != bullets_.end();) {
@@ -172,16 +202,36 @@ void Enemy::ChaseBehavior() {
 		lrDirection_ = LRDirection::kRight;
 	}
 
-	// 追跡中、一定間隔で弾を発射
-	shootTimer_ -= 1.0f / 60.0f; // 60fps想定
-	if (shootTimer_ <= 0.0f) {
-		Vector3 direction = Subtract(playerPos, myPos);
-		if (Length(direction) > 0.05f) {
-			Vector3 bulletVelocity = Multiply(kBulletSpeed, Normalize(direction));
-			bulletVelocity.z = 0.0f; // 2D平面上の動きにするためZ軸は固定
-			bullets_.push_back(std::make_unique<EnemyBullet>(myPos, bulletVelocity, camera_, mapChipField_));
+	// 追跡中、一定間隔でチャージを開始
+	if (!isCharging_) {
+		shootTimer_ -= 1.0f / 60.0f; // 60fps想定
+		if (shootTimer_ <= 0.0f) {
+			isCharging_ = true;
+			chargeTimer_ = kChargeTime;
+
+			// チャージ用のパーティクルをエミット
+			uvScrollTimer_ = 0.0f;
+			ParticleConfig config;
+			config.position = myPos;
+			config.scale = { kMaxChargeRingScale, kMaxChargeRingScale, 1.0f };
+			config.rotate = { 0.0f, 0.0f, 0.0f };
+			config.color = { 1.0f, 0.0f, 0.0f, 0.5f }; // 赤色の半透明
+			config.lifeTime = kChargeTime;
+
+			// 毎フレーム敵の現在位置に追従しながら収縮する更新処理を設定
+			config.updateFunc = [this](ParticleData& data, float deltaTime) {
+				float ratio = (data.lifeTime - data.currentTime) / data.lifeTime;
+				ratio = (ratio < 0.0f) ? 0.0f : (ratio > 1.0f ? 1.0f : ratio);
+
+				float currentScale = ratio * kMaxChargeRingScale;
+				data.transform.scale = { currentScale, currentScale, 1.0f };
+
+				Vector3 pos = this->GetWorldPosition();
+				data.transform.translate = { pos.x, pos.y, pos.z - 0.05f };
+			};
+
+			ParticleManager::GetInstance()->Emit("enemyChargeRing", config);
 		}
-		shootTimer_ = kShootInterval;
 	}
 }
 
@@ -268,6 +318,9 @@ void Enemy::UpdateRespawn(float deltaTime, float respawnTime, bool isRespawnEnab
 	state_ = EnemyState::kPatrol;
 	shootTimer_ = 0.0f;
 	bullets_.clear();
+	isCharging_ = false;
+	chargeTimer_ = 0.0f;
+	uvScrollTimer_ = 0.0f;
 	model_->SetColor({1.0f, 1.0f, 1.0f, 1.0f});
 	model_->Update(worldTransform_, camera_);
 }

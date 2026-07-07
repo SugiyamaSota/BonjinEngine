@@ -145,6 +145,13 @@ private:
     static inline const float kBulletSpeed = 0.15f;  // 弾速
     float shootTimer_ = 0.0f;
 
+    // チャージ関連
+    bool isCharging_ = false;
+    float chargeTimer_ = 0.0f;
+    float uvScrollTimer_ = 0.0f;
+    static inline const float kChargeTime = 0.75f;
+    static inline const float kMaxChargeRingScale = 3.0f;
+
 private:
     // --- プライベート関数 ---
 

@@ -84,6 +84,8 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	particleManager_->CreateParticleGroup(
 		"enemyDefeatRing", ModelBuilder::ModelType::kRing, "resources/textures/gradationLine.png");
 	particleManager_->CreateParticleGroup(
+		"enemyChargeRing", ModelBuilder::ModelType::kRing, "resources/textures/gradationLine.png");
+	particleManager_->CreateParticleGroup(
 		"landingDust", ModelBuilder::ModelType::kPlane, "resources/textures/circle.png");
 	particleManager_->Clear("anchorHitRay");
 	particleManager_->Clear("anchorHitFlash");

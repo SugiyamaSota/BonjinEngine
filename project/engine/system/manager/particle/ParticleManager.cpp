@@ -56,3 +56,9 @@ void ParticleManager::Clear(const std::string& name) {
 		particleGroups_[name]->Clear();
 	}
 }
+
+void ParticleManager::SetUVTransform(const std::string& name, const Matrix4x4& transform) {
+	if (particleGroups_.contains(name)) {
+		particleGroups_[name]->SetUVTransform(transform);
+	}
+}
