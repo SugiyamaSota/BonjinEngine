@@ -8,8 +8,8 @@ void GameScene::Initialize(Camera* camera)
 {
 
 	// 今のシーンと遷移後シーン(初期値は同じ)
-	currentSceneType_ = SceneType::kGame;
-	nextSceneType_ = SceneType::kGame;
+	currentSceneType_ = "GameScene";
+	nextSceneType_ = "GameScene";
 
 	this->camera_ = camera;
 
@@ -36,7 +36,7 @@ void GameScene::Update(float deltaTime) {
 
 	case GamePhase::kGoal:
 
-		nextSceneType_ = SceneType::kGame;
+		nextSceneType_ = "GameScene";
 
 		break;
 	}

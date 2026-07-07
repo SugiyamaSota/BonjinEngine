@@ -8,8 +8,8 @@ void TestScene::Initialize(Camera* camera)
 {
 
 	// 今のシーンと遷移後シーン(初期値は同じ)
-	currentSceneType_ = SceneType::kTest;
-	nextSceneType_ = SceneType::kTest;
+	currentSceneType_ = "TestScene";
+	nextSceneType_ = "TestScene";
 
 	this->camera_ = camera;
 
@@ -108,7 +108,7 @@ void TestScene::Update(float deltaTime) {
 
 	case TestPhase::kGoal:
 
-		nextSceneType_ = SceneType::kTest;
+		nextSceneType_ = "TestScene";
 
 		break;
 	}
