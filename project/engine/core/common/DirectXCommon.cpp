@@ -233,7 +233,9 @@ void DirectXCommon::PostDraw()
 
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+#ifndef USE_IMGUI
 	commandList_->DrawInstanced(3, 1, 0, 0); // フルスクリーン三角形で描画
+#endif
 }
 
 void DirectXCommon::SetFullScreenGray(bool isGray) {

@@ -8,21 +8,24 @@ void TestScene::Initialize(Camera* camera)
 {
 
 	// 今のシーンと遷移後シーン(初期値は同じ)
-	currentSceneType_ = SceneType::kTest;
-	nextSceneType_ = SceneType::kTest;
+	currentSceneType_ = "TestScene";
+	nextSceneType_ = "TestScene";
 
 	this->camera_ = camera;
 
 	testModel_ = std::make_unique<Object3D>();
 	testModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/uvChecker.png");
+	testModel_->SetName("Sphere (testModel_)");
 	//testModel_->LoadModel("teapot", "teapot.obj");
 
 
 	testSkyBox_ = std::make_unique<SkyBox>();
 	testSkyBox_->CreateModel(ModelBuilder::ModelType::kSkyBox, "resources/textures/skyBox.dds");
+	testSkyBox_->SetName("SkyBox (testSkyBox_)");
 
 	testCube_ = std::make_unique<Object3D>();
 	testCube_->LoadModel("human", "walk.gltf");
+	testCube_->SetName("Human (testCube_)");
 	testCube_->SetEnableEnableEnvironmentMap(false);
 	testCube_->SetCullMode(D3D12_CULL_MODE_FRONT);
 	cubeAnimation_ = AnimationBuilder::LoadAnimationFile("resources/models/human", "walk.gltf");
@@ -108,7 +111,7 @@ void TestScene::Update(float deltaTime) {
 
 	case TestPhase::kGoal:
 
-		nextSceneType_ = SceneType::kTest;
+		nextSceneType_ = "TestScene";
 
 		break;
 	}
@@ -133,10 +136,6 @@ void TestScene::DrawSceneImGui() {
 #ifdef USE_IMGUI
 
 	LightManager::GetInstance()->DrawImGui();
-
-
-	testModel_->DrawImGui("TestModel");
-
 
 #endif
 }

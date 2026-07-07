@@ -3,8 +3,8 @@
 using namespace Bonjin;
 
 void TitleScene::Initialize(Camera* camera) {
-	currentSceneType_ = SceneType::kTitle;
-	nextSceneType_ = SceneType::kTitle;
+	currentSceneType_ = "TitleScene";
+	nextSceneType_ = "TitleScene";
 
 	this->camera_ = camera;
 
@@ -32,7 +32,7 @@ void TitleScene::Update(float deltaTime) {
 
     case TitlePhase::kFadeOut:
 
-        nextSceneType_ = SceneType::kGame;
+        nextSceneType_ = "GameScene";
 
         break;
     }

@@ -55,6 +55,10 @@ namespace Bonjin
         void SetNoiseAlpha(float alpha);
         float GetNoiseAlpha() const;
 
+        IScene* GetCurrentScene() const { return currentScene_; }
+        const std::map<SceneType, std::unique_ptr<IScene>>& GetScenes() const { return scenes_; }
+        bool HasPendingSceneChange() const { return hasPendingSceneChange_; }
+
     private:
 
         // シングルトン関連の禁止
@@ -67,7 +71,7 @@ namespace Bonjin
         std::map<SceneType, std::unique_ptr<IScene>> scenes_;
         bool hasPendingSceneChange_ = false;
         bool hasPendingSceneRestart_ = false;
-        SceneType pendingSceneType_ = SceneType::kTitle;
+        SceneType pendingSceneType_ = "TitleScene";
 
         std::unique_ptr<Camera> camera_ = nullptr;
 

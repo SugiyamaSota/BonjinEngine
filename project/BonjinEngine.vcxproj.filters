@@ -195,6 +195,9 @@
     <ClCompile Include="engine\system\manager\imgui\ImGuiManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="engine\system\manager\imgui\ImGuiEditorWindows.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="engine\system\manager\model\ModelManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -402,6 +405,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\system\manager\imgui\ImGuiManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\system\manager\imgui\ImGuiEditorWindows.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\system\manager\model\ModelManager.h">

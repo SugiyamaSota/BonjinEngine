@@ -2,11 +2,12 @@
 
 using namespace Bonjin;
 
-void GameScene::Initialize(Camera* camera) {
-	currentSceneType_ = SceneType::kGame;
-	nextSceneType_ = currentSceneType_;
-	phase_ = GamePhase::kStart;
-	camera_ = camera;
+void GameScene::Initialize(Camera* camera)
+{
+
+	// 今のシーンと遷移後シーン(初期値は同じ)
+	currentSceneType_ = "GameScene";
+	nextSceneType_ = "GameScene";
 
 	battleController_ = std::make_unique<BattleController>();
 	battleController_->Initialize(camera_, "resources/maps/tutorial.csv");
@@ -34,7 +35,9 @@ void GameScene::Update(float deltaTime) {
 		
 		break;
 	case GamePhase::kGoal:
-		nextSceneType_ = SceneType::kResult;
+
+		nextSceneType_ = "ResultScene";
+
 		break;
 	}
 }
