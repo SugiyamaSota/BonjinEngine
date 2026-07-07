@@ -1,12 +1,15 @@
 #pragma once
 #include "ModelBuilder.h"
 #include <wrl/client.h>
+#include <string>
+
+namespace Bonjin {
+	class IScene;
+}
 
 class BaseObject {
 public:
-	virtual ~BaseObject() {
-		ReleaseResources();
-	}
+	virtual ~BaseObject();
 
 	void LoadModel(const std::string& directoryName, const std::string& fileName);
 	void CreateModel(ModelBuilder::ModelType type, const std::string& textureFilepath);
@@ -15,6 +18,10 @@ public:
 	virtual void Draw() = 0;
 
 	virtual void DrawImGui(const std::string& label);
+
+	// オブジェクト名
+	const std::string& GetName() const { return name_; }
+	void SetName(const std::string& name) { name_ = name; }
 
 	// 共通のセッター
 	void SetFillMode(D3D12_FILL_MODE fillMode) { fillMode_ = fillMode; }
@@ -60,4 +67,7 @@ protected:
 	D3D12_CULL_MODE cullMode_ = D3D12_CULL_MODE_BACK;
 	BlendMode blendMode_ = BlendMode::kNone;
 	PrimitiveType primitiveType_ = PrimitiveType::kObject3D;
+
+	std::string name_ = "Object3D";
+	Bonjin::IScene* parentScene_ = nullptr;
 };

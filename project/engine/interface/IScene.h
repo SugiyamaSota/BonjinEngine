@@ -2,11 +2,13 @@
 #include "../bonjin/BonjinEngine.h"
 
 #include <string>
-#include<memory>
+#include <memory>
+#include <vector>
+
+class BaseObject;
 
 namespace Bonjin
 {
-
 	// シーンの種類を識別するための型エイリアス
 	using SceneType = std::string;
 
@@ -19,6 +21,11 @@ namespace Bonjin
 		/// 仮想デストラクタ
 		/// </summary>
 		virtual ~IScene() = default;
+
+		// オブジェクトの登録と取得
+		void RegisterObject(BaseObject* obj);
+		void UnregisterObject(BaseObject* obj);
+		const std::vector<BaseObject*>& GetSceneObjects() const { return sceneObjects_; }
 
 		/// <summary>
 		/// 初期化
@@ -77,6 +84,9 @@ namespace Bonjin
 
 		// 次に遷移したいシーンタイプ
 		SceneType nextSceneType_ = "TitleScene";
+
+		// シーン内の登録オブジェクト一覧
+		std::vector<BaseObject*> sceneObjects_;
 
 	};
 }

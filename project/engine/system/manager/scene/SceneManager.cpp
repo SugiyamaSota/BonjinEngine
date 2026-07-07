@@ -2,6 +2,7 @@
 #include "time/Time.h" // デルタタイムを取得するため（Timeクラスのパスは適宜修正）
 #include "DirectXCommon.h"
 #include "SrvManager.h"
+#include "ImGuiEditorWindows.h"
 
 using namespace Bonjin;
 
@@ -95,126 +96,9 @@ void SceneManager::DrawImGui() {
 	}
 
 #ifdef USE_IMGUI
-	if (ImGui::Begin("System Settings")) {
-		const char* postEffectNames[] = {
-			"FullScreen",
-			"BoxFilter",
-			"GaussianFilter",
-			"LuminanceBasedOutline",
-			"DepthBasedOutline",
-			"RadialBlur",
-			"Dissolve",
-			"RandomNoise"
-		};
-
-		int currentPostEffect = static_cast<int>(GetPostEffect());
-		if (ImGui::Combo("PostEffect", &currentPostEffect, postEffectNames, _countof(postEffectNames))) {
-			SetPostEffect(static_cast<DirectXCommon::PostEffect>(currentPostEffect));
-		}
-
-		if (ImGui::BeginCombo("Scene", currentScene_->GetScenename())) {
-			for (const auto& [sceneType, scene] : scenes_) {
-				const bool isSelected = scene.get() == currentScene_;
-				if (ImGui::Selectable(scene->GetScenename(), isSelected)) {
-					RequestSceneChange(sceneType);
-				}
-				if (isSelected) {
-					ImGui::SetItemDefaultFocus();
-				}
-			}
-			ImGui::EndCombo();
-		}
-
-		if (ImGui::Button("Restart Scene (F5)")) {
-			RequestSceneRestart();
-		}
-
-		bool isGray = IsFullScreenGray();
-		if (ImGui::Checkbox("FullScreen Gray", &isGray)) {
-			SetFullScreenGray(isGray);
-		}
-
-		bool isVignette = IsFullScreenVignette();
-		if (ImGui::Checkbox("FullScreen Vignette", &isVignette)) {
-			SetFullScreenVignette(isVignette);
-		}
-
-		Vector2 radialBlurCenter = GetRadialBlurCenter();
-		float center[2] = { radialBlurCenter.x, radialBlurCenter.y };
-		if (ImGui::SliderFloat2("RadialBlur Center", center, 0.0f, 1.0f)) {
-			SetRadialBlurCenter({ center[0], center[1] });
-		}
-
-		float radialBlurWidth = GetRadialBlurWidth();
-		if (ImGui::SliderFloat("RadialBlur Width", &radialBlurWidth, 0.0f, 0.05f)) {
-			SetRadialBlurWidth(radialBlurWidth);
-		}
-
-		float dissolveThreshold = GetDissolveThreshold();
-		if (ImGui::SliderFloat("Dissolve Threshold", &dissolveThreshold, 0.0f, 1.0f)) {
-			SetDissolveThreshold(dissolveThreshold);
-		}
-
-		float dissolveEdgeWidth = GetDissolveEdgeWidth();
-		if (ImGui::SliderFloat("Dissolve Edge Width", &dissolveEdgeWidth, 0.0f, 0.2f)) {
-			SetDissolveEdgeWidth(dissolveEdgeWidth);
-		}
-
-		Vector3 dissolveEdgeColor = GetDissolveEdgeColor();
-		float edgeColor[3] = { dissolveEdgeColor.x, dissolveEdgeColor.y, dissolveEdgeColor.z };
-		if (ImGui::ColorEdit3("Dissolve Edge Color", edgeColor)) {
-			SetDissolveEdgeColor({ edgeColor[0], edgeColor[1], edgeColor[2] });
-		}
-
-		float noiseAlpha = GetNoiseAlpha();
-		if (ImGui::SliderFloat("Noise Alpha", &noiseAlpha, 0.0f, 1.0f)) {
-			SetNoiseAlpha(noiseAlpha);
-		}
-	}
-	ImGui::End();
-
-	// --- ゲーム画面 ＆ シーン切り替え統合ウィンドウ ---
-	if (ImGui::Begin("Game View")) {
-		if (ImGui::BeginTabBar("SceneTabs")) {
-			// シーンが切り替わった瞬間を検知するための静的変数
-			static SceneType lastSceneType = "Exit";
-			SceneType currentType = currentScene_->GetCurrentSceneType();
-			bool needForceSelect = (lastSceneType != currentType);
-			lastSceneType = currentType;
-
-			// タブを描画し、選択されたタブの内部にゲーム画面を描画するラムダ関数
-			auto drawTab = [this, currentType, needForceSelect](const char* label, SceneType targetType) {
-				bool isCurrent = (currentType == targetType);
-				// シーンが切り替わった最初の1フレームのみ強制選択フラグを立てる
-				ImGuiTabItemFlags flags = (isCurrent && needForceSelect) ? ImGuiTabItemFlags_SetSelected : 0;
-				
-				if (ImGui::BeginTabItem(label, nullptr, flags)) {
-					// 強制同期中(!needForceSelect)以外で、別タブが選択されたら遷移
-					if (!isCurrent && !needForceSelect && !hasPendingSceneChange_) {
-						RequestSceneChange(targetType);
-					}
-
-					// タブのコンテンツ領域内にゲーム画像を描画
-					ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-					DirectXCommon* dxCommon = DirectXCommon::GetInstance();
-					RenderTexture* renderTexture = dxCommon->GetRenderTexture();
-					if (renderTexture) {
-						D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = SrvManager::GetInstance()->GetGPUHandle(renderTexture->GetSrvIndex());
-						ImGui::Image(static_cast<ImTextureID>(srvHandle.ptr), viewportPanelSize);
-					}
-
-					ImGui::EndTabItem();
-				}
-			};
-
-			for (const auto& [sceneType, scene] : scenes_) {
-				drawTab(scene->GetScenename(), sceneType);
-			}
-
-			ImGui::EndTabBar();
-		}
-	}
-	ImGui::End();
+	ImGuiEditorWindows::DrawSystemSettings(this);
+	ImGuiEditorWindows::DrawGameView(this);
+	ImGuiEditorWindows::DrawHierarchy(currentScene_);
 
 	currentScene_->DrawImGui();
 #endif
