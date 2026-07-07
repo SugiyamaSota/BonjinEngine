@@ -11,6 +11,7 @@
 #include "Object3D.h"
 #include "ParticleManager.h"
 #include "SkyBox.h"
+#include "gameObject/camera/CameraController.h"
 
 namespace Bonjin {
 
@@ -33,6 +34,7 @@ public:
 
 private:
 	Camera* camera_ = nullptr;
+	std::unique_ptr<CameraController> cameraController_;
 
 	std::unique_ptr<Player> player_;
 	std::unique_ptr<Object3D> playerModel_;
