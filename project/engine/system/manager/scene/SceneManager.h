@@ -31,6 +31,9 @@ namespace Bonjin
         // 💡 シーン切り替えロジック
         void ChangeScene(SceneType nextSceneType);
         void RequestSceneChange(SceneType nextSceneType);
+        void RestartCurrentScene();
+        void RequestSceneRestart();
+
 
         Camera* GetCamera() const { return camera_.get(); }
 
@@ -53,6 +56,10 @@ namespace Bonjin
         void SetNoiseAlpha(float alpha);
         float GetNoiseAlpha() const;
 
+        IScene* GetCurrentScene() const { return currentScene_; }
+        const std::map<SceneType, std::unique_ptr<IScene>>& GetScenes() const { return scenes_; }
+        bool HasPendingSceneChange() const { return hasPendingSceneChange_; }
+
     private:
 
         // シングルトン関連の禁止
@@ -64,7 +71,8 @@ namespace Bonjin
         // 💡 登録されたすべてのシーンを保持するマップ
         std::map<SceneType, std::unique_ptr<IScene>> scenes_;
         bool hasPendingSceneChange_ = false;
-        SceneType pendingSceneType_ = SceneType::kTitle;
+        bool hasPendingSceneRestart_ = false;
+        SceneType pendingSceneType_ = "TitleScene";
 
         std::unique_ptr<Camera> camera_ = nullptr;
 

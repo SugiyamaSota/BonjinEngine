@@ -1,5 +1,14 @@
 #include "BaseObject.h"
+#include "../../../interface/IScene.h"
+#include "SceneManager.h"
 #include <cassert>
+
+BaseObject::~BaseObject() {
+	ReleaseResources();
+	if (parentScene_) {
+		parentScene_->UnregisterObject(this);
+	}
+}
 
 // コンストラクタで基本的なインスタンスを取得
 BaseObject::BaseObject() {
@@ -7,6 +16,11 @@ BaseObject::BaseObject() {
     device_ = common_->GetDevice();
 
 	envTextureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/skyBox.dds");
+
+	parentScene_ = Bonjin::SceneManager::GetInstance()->GetCurrentScene();
+	if (parentScene_) {
+		parentScene_->RegisterObject(this);
+	}
 }
 
 void BaseObject::ReleaseResources() {
