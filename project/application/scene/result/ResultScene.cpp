@@ -3,7 +3,7 @@
 using namespace Bonjin;
 
 void ResultScene::Initialize(Camera* camera) {
-	currentSceneType_ = SceneType::kResult;
+	currentSceneType_ = "ResultScene";
 	nextSceneType_ = currentSceneType_;
 	phase_ = ResultPhase::kFadeIn;
 	camera_ = camera;
@@ -37,7 +37,7 @@ void ResultScene::Update(float deltaTime) {
 		}
 		break;
 	case ResultPhase::kFadeOut:
-		nextSceneType_ = SceneType::kTitle;
+		nextSceneType_ = "TitleScene";
 		break;
 	}
 }

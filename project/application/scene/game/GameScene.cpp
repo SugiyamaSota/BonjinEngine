@@ -4,6 +4,8 @@ using namespace Bonjin;
 
 void GameScene::Initialize(Camera* camera)
 {
+	camera_ = camera;
+	phase_ = GamePhase::kStart;
 
 	// 今のシーンと遷移後シーン(初期値は同じ)
 	currentSceneType_ = "GameScene";

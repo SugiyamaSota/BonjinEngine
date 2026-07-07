@@ -20,9 +20,12 @@ void Core::Initialize() {
 	sceneManager->Initialize();
 	sceneManager->AddScene("TestScene", std::make_unique<TestScene>());
 	sceneManager->AddScene("GameScene", std::make_unique<GameScene>());
+	sceneManager->AddScene("TutorialScene", std::make_unique<TutorialScene>());
+	sceneManager->AddScene("ResultScene", std::make_unique<ResultScene>());
 	sceneManager->AddScene("TitleScene", std::make_unique<TitleScene>());
 
-	sceneManager->ChangeScene("TestScene");
+	sceneManager->ChangeScene("GameScene");
+
 }
 
 void Core::Run() {

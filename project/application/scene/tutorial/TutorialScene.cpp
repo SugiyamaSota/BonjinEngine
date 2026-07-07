@@ -3,7 +3,7 @@
 using namespace Bonjin;
 
 void TutorialScene::Initialize(Camera* camera) {
-	currentSceneType_ = SceneType::kTutorial;
+	currentSceneType_ = "TutorialScene";
 	nextSceneType_ = currentSceneType_;
 	phase_ = TutorialPhase::kStart;
 	camera_ = camera;
@@ -30,7 +30,7 @@ void TutorialScene::Update(float deltaTime) {
 		// チュートリアル固有の進行条件をここへ追加する。
 		break;
 	case TutorialPhase::kComplete:
-		nextSceneType_ = SceneType::kGame;
+		nextSceneType_ = "GameScene";
 		break;
 	}
 }
