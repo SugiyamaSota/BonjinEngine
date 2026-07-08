@@ -44,3 +44,11 @@ SceneType TutorialScene::GetNextScene() const {
 	return nextSceneType_;
 }
 
+void TutorialScene::DrawSceneImGui() {
+#ifdef USE_IMGUI
+	if (battleController_) {
+		battleController_->DrawImGui();
+	}
+#endif
+}
+

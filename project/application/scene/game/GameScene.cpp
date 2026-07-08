@@ -51,3 +51,11 @@ void GameScene::Draw() {
 SceneType GameScene::GetNextScene() const {
 	return nextSceneType_;
 }
+
+void GameScene::DrawSceneImGui() {
+#ifdef USE_IMGUI
+	if (battleController_) {
+		battleController_->DrawImGui();
+	}
+#endif
+}
