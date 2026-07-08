@@ -207,28 +207,16 @@ void BattleController::DrawImGui() {
 	ImGui::Checkbox("Enemy Respawn", &isEnemyRespawnEnabled_);
 	ImGui::SliderFloat("Enemy Respawn Time", &enemyRespawnTime_, 0.5f, 10.0f, "%.1f sec");
 
-	if (ImGui::BeginTabBar("Game Tabs")) {
-		if (player_) {
-			player_->DrawImGui();
-		}
+	if (player_) {
+		player_->DrawImGui();
+	}
 
-		if (ImGui::BeginTabItem("enemy")) {
-			int count = 0;
-			for (const auto& enemy : enemies_) {
-				if (!enemy->GetIsDead()) {
-					std::string label = "Enemy [" + std::to_string(count) + "]";
-					if (ImGui::TreeNode(label.c_str())) {
-						Vector3 enemyPos = enemy->GetPosition();
-						ImGui::Text("Position: (%.2f, %.2f, %.2f)", enemyPos.x, enemyPos.y, enemyPos.z);
-						ImGui::Text("On Ground: %s", enemy->IsOnGround() ? "true" : "false");
-						ImGui::TreePop();
-					}
-					count++;
-				}
-			}
-			ImGui::EndTabItem();
+	if (ImGui::TreeNode("Enemies")) {
+		int index = 0;
+		for (const auto& enemy : enemies_) {
+			enemy->DrawImGui(index++);
 		}
-		ImGui::EndTabBar();
+		ImGui::TreePop();
 	}
 
 	if (ImGui::TreeNode("Goal Debug")) {
@@ -251,48 +239,6 @@ void BattleController::DrawImGui() {
 			ImGui::Text("Is Collision: %s", collision ? "TRUE" : "FALSE");
 		} else {
 			ImGui::Text("Goal Model is NULL (No Goal in Map)");
-		}
-		ImGui::TreePop();
-	}
-
-	if (ImGui::TreeNode("Enemies Debug")) {
-		int index = 0;
-		for (const auto& enemy : enemies_) {
-			ImGui::PushID(index);
-			std::string nodeName = "Enemy " + std::to_string(index);
-			if (enemy->GetIsDead()) {
-				nodeName += " [DEAD]";
-			} else {
-				nodeName += (enemy->GetState() == EnemyState::kPatrol) ? " [Patrol]" : " [CHASE]";
-			}
-
-			if (ImGui::TreeNode(nodeName.c_str())) {
-				if (!enemy->GetIsDead()) {
-					Vector3 pos = enemy->GetWorldPosition();
-					ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
-					
-					if (enemy->GetPlayer()) {
-						Vector3 pPos = enemy->GetPlayer()->GetWorldPosition();
-						float dist = Length(Subtract(pPos, pos));
-						ImGui::Text("Distance to Player: %.2f", dist);
-					}
-
-					float sRad = enemy->GetSearchRadius();
-					if (ImGui::SliderFloat("Search Radius", &sRad, 1.0f, 30.0f, "%.1f")) {
-						enemy->SetSearchRadius(sRad);
-					}
-
-					float lRad = enemy->GetLoseRadius();
-					if (ImGui::SliderFloat("Lose Radius", &lRad, 1.0f, 30.0f, "%.1f")) {
-						enemy->SetLoseRadius(lRad);
-					}
-				} else {
-					ImGui::Text("Dead...");
-				}
-				ImGui::TreePop();
-			}
-			ImGui::PopID();
-			index++;
 		}
 		ImGui::TreePop();
 	}

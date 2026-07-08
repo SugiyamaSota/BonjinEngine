@@ -1,4 +1,5 @@
 #include "Enemy.h"
+#include "ImGuiManager.h"
 #include "../../logic/Collision.h"
 #include "../../mapchip/MapChipField.h"
 #include "../player/Player.h"
@@ -354,4 +355,44 @@ void Enemy::OnMapCollision(const CollisionMapInfo& collisionMapinfo) {
 			velocity_.x = 0.0f;
 		}
 	}
+}
+
+void Enemy::DrawImGui(int index) {
+#ifdef USE_IMGUI
+	ImGui::PushID(index);
+	std::string nodeName = "Enemy " + std::to_string(index);
+	if (isDead_) {
+		nodeName += " [DEAD]";
+	} else {
+		nodeName += (state_ == EnemyState::kPatrol) ? " [Patrol]" : " [CHASE]";
+	}
+
+	if (ImGui::TreeNode(nodeName.c_str())) {
+		if (!isDead_) {
+			Vector3 pos = GetWorldPosition();
+			ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+			ImGui::Text("On Ground: %s", IsOnGround() ? "true" : "false");
+			
+			if (player_) {
+				Vector3 pPos = player_->GetWorldPosition();
+				float dist = Length(Subtract(pPos, pos));
+				ImGui::Text("Distance to Player: %.2f", dist);
+			}
+
+			float sRad = searchRadius_;
+			if (ImGui::SliderFloat("Search Radius", &sRad, 1.0f, 30.0f, "%.1f")) {
+				searchRadius_ = sRad;
+			}
+
+			float lRad = loseRadius_;
+			if (ImGui::SliderFloat("Lose Radius", &lRad, 1.0f, 30.0f, "%.1f")) {
+				loseRadius_ = lRad;
+			}
+		} else {
+			ImGui::Text("Dead...");
+		}
+		ImGui::TreePop();
+	}
+	ImGui::PopID();
+#endif
 }

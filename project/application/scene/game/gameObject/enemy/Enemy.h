@@ -36,6 +36,11 @@ public:
     void Draw();
 
     /// <summary>
+    /// ImGui描画処理
+    /// </summary>
+    void DrawImGui(int index);
+
+    /// <summary>
     /// 当たり判定時の処理
     /// </summary>
     void OnCollision();

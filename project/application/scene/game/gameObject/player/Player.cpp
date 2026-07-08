@@ -336,7 +336,7 @@ void Player::OnMapCollision(const CollisionMapInfo& collisionMapinfo) {
 
 void Player::DrawImGui() {
 #ifdef USE_IMGUI
-	if (ImGui::BeginTabItem("player")) {
+	if (ImGui::TreeNode("Player")) {
 		Vector3 pos = GetPosition();
 		ImGui::Text("Player Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
 		ImGui::Text("On Ground: %s", onGround_ ? "true" : "false");
@@ -355,7 +355,7 @@ void Player::DrawImGui() {
 				anchor_ = nullptr;
 			}
 		}
-		ImGui::EndTabItem();
+		ImGui::TreePop();
 	}
 #endif
 }
