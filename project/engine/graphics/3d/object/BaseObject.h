@@ -22,6 +22,7 @@ public:
 	// オブジェクト名
 	const std::string& GetName() const { return name_; }
 	void SetName(const std::string& name) { name_ = name; }
+	void SetParentScene(Bonjin::IScene* parent) { parentScene_ = parent; }
 
 	// 共通のセッター
 	void SetFillMode(D3D12_FILL_MODE fillMode) { fillMode_ = fillMode; }

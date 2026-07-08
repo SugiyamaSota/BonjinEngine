@@ -26,8 +26,6 @@ namespace Bonjin
 
         void Draw() override;
 
-        void DrawSceneImGui()override;
-
         SceneType GetNextScene() const override;
 
         const char* GetScenename()const override

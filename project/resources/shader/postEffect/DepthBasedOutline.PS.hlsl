@@ -7,12 +7,7 @@ Texture2D<float32_t> gDepthTexture : register(t1); // ★追加：深度テク�
 SamplerState gSampler : register(s0); // 通常の線形サンプラー
 SamplerState gSamplerPoint : register(s1); // ★追加：ポイントサンプラー（深度のボケ防止）
 
-// --- 定数バッファ ---
-struct Material
-{
-    float32_t4x4 projectionInverse; // ★追加：NDC空間からView空間へ変換するための逆行列
-};
-ConstantBuffer<Material> gMaterial : register(b0); // ★追加
+
 
 static const float32_t2 kIndex3x3[3][3] =
 {

@@ -26,6 +26,7 @@ enum class PrimitiveType {
 	kPostEffectDissolve,
 	kPostEffectRandomNoise,
 	kSkinningObject3D,
+	kPostEffectHSVFilter,
 	kCount,
 };
 

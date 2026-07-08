@@ -22,7 +22,8 @@ public:
 		kDepthBasedOutline,
 		kRadialBlur,
 		kDissolve,
-		kRandomNoise
+		kRandomNoise,
+		kHSVFilter
 	};
 
 	/// --- インスタンス関連 ---
@@ -54,6 +55,12 @@ public:
 	float GetDissolveEdgeWidth() const { return fullScreenMaterial_.dissolveEdgeWidth; }
 	void SetNoiseAlpha(float alpha);
 	float GetNoiseAlpha() const { return fullScreenMaterial_.noiseAlpha; }
+	void SetHSVHueShift(float hueShift);
+	float GetHSVHueShift() const { return fullScreenMaterial_.hsvHueShift; }
+	void SetHSVSaturationMultiplier(float satMult);
+	float GetHSVSaturationMultiplier() const { return fullScreenMaterial_.hsvSaturationMultiplier; }
+	void SetHSVValueMultiplier(float valMult);
+	float GetHSVValueMultiplier() const { return fullScreenMaterial_.hsvValueMultiplier; }
 
 	/// --- 汎用関数 ---
 	// デストラクタ
@@ -115,6 +122,7 @@ public:
 
 	// RenderTexture
 	RenderTexture* GetRenderTexture() const { return renderTexture_.get(); }
+	RenderTexture* GetPostEffectTexture() const { return postEffectTexture_.get(); }
 
 private:
 	// コンストラクタ
@@ -142,7 +150,7 @@ private:
 	// ディスクリプタヒープ
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap_ = nullptr;
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_{};
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[3];
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[4];
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_ = nullptr;
 
 	// ディスクリプタサイズ
@@ -179,6 +187,7 @@ private:
 	void UpdateFixFPS();    // FPS固定更新
 
 	std::unique_ptr<RenderTexture> renderTexture_ = nullptr;
+	std::unique_ptr<RenderTexture> postEffectTexture_ = nullptr;
 
 	std::unique_ptr<DepthStencil> depthStencil_ = nullptr;
 
@@ -194,7 +203,10 @@ private:
 		float dissolveEdgeWidth;
 		float time;
 		float noiseAlpha;
-		float padding3[2];
+		float hsvHueShift;
+		float hsvSaturationMultiplier;
+		float hsvValueMultiplier;
+		float padding3[3];
 	};
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> fullScreenCB_ = nullptr;

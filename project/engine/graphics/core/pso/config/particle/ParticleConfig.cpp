@@ -4,9 +4,9 @@
 
 const wchar_t* ParticleConfigEx::GetShaderPath(ShaderStage stage) const {
 	if (stage == ShaderStage::kVertex) {
-		return L"resources/shader/Particle.VS.hlsl";
+		return L"resources/shader/particle/Particle.VS.hlsl";
 	} else {
-		return L"resources/shader/Particle.PS.hlsl";
+		return L"resources/shader/particle/Particle.PS.hlsl";
 	}
 }
 

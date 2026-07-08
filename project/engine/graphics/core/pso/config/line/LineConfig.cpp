@@ -4,9 +4,9 @@
 
 const wchar_t* LineConfig::GetShaderPath(ShaderStage stage) const {
 	if (stage == ShaderStage::kVertex) {
-		return L"resources/shader/Line.VS.hlsl";
+		return L"resources/shader/line/Line.VS.hlsl";
 	}
-	return L"resources/shader/Line.PS.hlsl";
+	return L"resources/shader/line/Line.PS.hlsl";
 }
 
 Microsoft::WRL::ComPtr<ID3D12RootSignature> LineConfig::CreateRootSignature(ID3D12Device* device) {

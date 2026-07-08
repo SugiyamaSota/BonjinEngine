@@ -4,9 +4,9 @@
 
 const wchar_t* SkinningObject3DConfig::GetShaderPath(ShaderStage stage) const {
 	if (stage == ShaderStage::kVertex) {
-		return L"resources/shader/SkinningObject3d.VS.hlsl";
+		return L"resources/shader/object3d/SkinningObject3d.VS.hlsl";
 	} else {
-		return L"resources/shader/Object3d.PS.hlsl";
+		return L"resources/shader/object3d/Object3d.PS.hlsl";
 	}
 }
 

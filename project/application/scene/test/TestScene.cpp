@@ -132,13 +132,7 @@ void TestScene::Draw() {
 	skeletonDebugRenderer_->Draw();
 }
 
-void TestScene::DrawSceneImGui() {
-#ifdef USE_IMGUI
 
-	LightManager::GetInstance()->DrawImGui();
-
-#endif
-}
 
 SceneType TestScene::GetNextScene() const {
 	return nextSceneType_;

@@ -3,6 +3,10 @@
 #include"BonjinEngine.h"
 #include "SrvManager.h"
 
+#ifdef USE_IMGUI
+#include "../../externals/imgui/imgui_internal.h"
+#endif
+
 ImGuiManager* ImGuiManager::GetInstance() {
 	static ImGuiManager instance;
 	return &instance;
@@ -55,7 +59,34 @@ void ImGuiManager::NewFrame() {
 	ImGui::NewFrame();
 
 	// 全画面対応のドックスペースをメインビューポートに作成
-	ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
+	ImGuiID dockspace_id = ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
+
+	static bool firstTime = true;
+	if (firstTime) {
+		firstTime = false;
+
+		// 既存のレイアウトをクリアして再構築
+		ImGui::DockBuilderRemoveNode(dockspace_id);
+		ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_DockSpace);
+		ImGui::DockBuilderSetNodeSize(dockspace_id, ImGui::GetMainViewport()->Size);
+
+		// 分割
+		ImGuiID dock_id_left;
+		ImGuiID dock_id_right;
+		ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.25f, &dock_id_left, &dock_id_right);
+
+		ImGuiID dock_id_top_right;
+		ImGuiID dock_id_bottom_right;
+		// 右半分を上下に分割 (下部35%)
+		ImGui::DockBuilderSplitNode(dock_id_right, ImGuiDir_Down, 0.35f, &dock_id_bottom_right, &dock_id_top_right);
+
+		// 各ウィンドウをドッキング
+		ImGui::DockBuilderDockWindow("System Settings", dock_id_left);
+		ImGui::DockBuilderDockWindow("Game View", dock_id_top_right);
+		ImGui::DockBuilderDockWindow("Hierarchy", dock_id_bottom_right);
+
+		ImGui::DockBuilderFinish(dockspace_id);
+	}
 #endif
 }
 
