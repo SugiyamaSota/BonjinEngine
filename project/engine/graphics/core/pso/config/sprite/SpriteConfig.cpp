@@ -4,9 +4,9 @@
 
 const wchar_t* SpriteConfig::GetShaderPath(ShaderStage stage) const {
 	if (stage == ShaderStage::kVertex) {
-		return L"resources/shader/Sprite.VS.hlsl";
+		return L"resources/shader/sprite/Sprite.VS.hlsl";
 	}
-	return L"resources/shader/Sprite.PS.hlsl";
+	return L"resources/shader/sprite/Sprite.PS.hlsl";
 }
 
 Microsoft::WRL::ComPtr<ID3D12RootSignature> SpriteConfig::CreateRootSignature(ID3D12Device* device) {

@@ -34,8 +34,6 @@ namespace Bonjin
 
 		SceneType GetNextScene() const override;
 
-		void DrawSceneImGui() override;
-
 		const char* GetScenename()const override {
 			return "TestScene";
 		}

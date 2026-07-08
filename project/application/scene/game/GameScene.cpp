@@ -52,6 +52,13 @@ SceneType GameScene::GetNextScene() const {
 	return nextSceneType_;
 }
 
-void GameScene::DrawSceneImGui() {
-	battleController_->DrawImGui();
+
+
+SceneType GameScene::GetNextScene() const {
+	return nextSceneType_;
+}#endif
+}
+
+SceneType GameScene::GetNextScene() const {
+	return nextSceneType_;
 }

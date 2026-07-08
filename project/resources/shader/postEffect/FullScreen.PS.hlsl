@@ -3,14 +3,7 @@
 Texture2D<float32_t4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
 
-struct Material
-{
-    float32_t4x4 projectionInverse;
-    int32_t isGray;
-    int32_t isVignette;
-    float32_t2 padding;
-};
-ConstantBuffer<Material> gMaterial : register(b0);
+
 
 struct PixelShaderOutPut
 {

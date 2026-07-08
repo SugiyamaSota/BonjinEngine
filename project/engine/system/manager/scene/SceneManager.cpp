@@ -97,10 +97,8 @@ void SceneManager::DrawImGui() {
 
 #ifdef USE_IMGUI
 	ImGuiEditorWindows::DrawSystemSettings(this);
-	ImGuiEditorWindows::DrawGameView(this);
 	ImGuiEditorWindows::DrawHierarchy(currentScene_);
-
-	currentScene_->DrawImGui();
+	ImGuiEditorWindows::DrawGameView(this);
 #endif
 }
 
@@ -218,4 +216,28 @@ void SceneManager::SetNoiseAlpha(float alpha) {
 
 float SceneManager::GetNoiseAlpha() const {
 	return DirectXCommon::GetInstance()->GetNoiseAlpha();
+}
+
+void SceneManager::SetHSVHueShift(float hueShift) {
+	DirectXCommon::GetInstance()->SetHSVHueShift(hueShift);
+}
+
+float SceneManager::GetHSVHueShift() const {
+	return DirectXCommon::GetInstance()->GetHSVHueShift();
+}
+
+void SceneManager::SetHSVSaturationMultiplier(float satMult) {
+	DirectXCommon::GetInstance()->SetHSVSaturationMultiplier(satMult);
+}
+
+float SceneManager::GetHSVSaturationMultiplier() const {
+	return DirectXCommon::GetInstance()->GetHSVSaturationMultiplier();
+}
+
+void SceneManager::SetHSVValueMultiplier(float valMult) {
+	DirectXCommon::GetInstance()->SetHSVValueMultiplier(valMult);
+}
+
+float SceneManager::GetHSVValueMultiplier() const {
+	return DirectXCommon::GetInstance()->GetHSVValueMultiplier();
 }
