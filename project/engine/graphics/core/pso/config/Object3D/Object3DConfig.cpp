@@ -4,9 +4,9 @@
 
 const wchar_t* Object3DConfig::GetShaderPath(ShaderStage stage) const {
 	if (stage == ShaderStage::kVertex) {
-		return L"resources/shader/Object3d.VS.hlsl";
+		return L"resources/shader/object3d/Object3d.VS.hlsl";
 	} else {
-		return L"resources/shader/Object3d.PS.hlsl";
+		return L"resources/shader/object3d/Object3d.PS.hlsl";
 	}
 }
 

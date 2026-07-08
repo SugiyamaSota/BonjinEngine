@@ -24,16 +24,16 @@ PSOManager::PSOManager() {
 	configs_[static_cast<size_t>(PrimitiveType::kLine)] = std::make_unique<LineConfig>();            // debug line
 
 	// 各種ポストエフェクトのConfig
-	configs_[static_cast<size_t>(PrimitiveType::kPostEffectFullScreen)] = std::make_unique<CopyImageConfig>(L"resources/shader/FullScreen.PS.hlsl");
-	configs_[static_cast<size_t>(PrimitiveType::kPostEffectBoxFilter)] = std::make_unique<CopyImageConfig>(L"resources/shader/BoxFilter.PS.hlsl");
-	configs_[static_cast<size_t>(PrimitiveType::kPostEffectGaussianFilter)] = std::make_unique<CopyImageConfig>(L"resources/shader/GaussianFilter.PS.hlsl");
-	configs_[static_cast<size_t>(PrimitiveType::kPostEffectLuminanceOutline)] = std::make_unique<CopyImageConfig>(L"resources/shader/LuminanceBasedOutline.PS.hlsl");
-	configs_[static_cast<size_t>(PrimitiveType::kPostEffectDepthOutline)] = std::make_unique<CopyImageConfig>(L"resources/shader/DepthBasedOutline.PS.hlsl");
-	configs_[static_cast<size_t>(PrimitiveType::kPostEffectRadialBlur)] = std::make_unique<CopyImageConfig>(L"resources/shader/RadialBlur.PS.hlsl");
-	configs_[static_cast<size_t>(PrimitiveType::kPostEffectDissolve)] = std::make_unique<CopyImageConfig>(L"resources/shader/Dissolve.PS.hlsl");
-	configs_[static_cast<size_t>(PrimitiveType::kPostEffectRandomNoise)] = std::make_unique<CopyImageConfig>(L"resources/shader/RandomNoise.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectFullScreen)] = std::make_unique<CopyImageConfig>(L"resources/shader/postEffect/FullScreen.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectBoxFilter)] = std::make_unique<CopyImageConfig>(L"resources/shader/postEffect/BoxFilter.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectGaussianFilter)] = std::make_unique<CopyImageConfig>(L"resources/shader/postEffect/GaussianFilter.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectLuminanceOutline)] = std::make_unique<CopyImageConfig>(L"resources/shader/postEffect/LuminanceBasedOutline.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectDepthOutline)] = std::make_unique<CopyImageConfig>(L"resources/shader/postEffect/DepthBasedOutline.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectRadialBlur)] = std::make_unique<CopyImageConfig>(L"resources/shader/postEffect/RadialBlur.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectDissolve)] = std::make_unique<CopyImageConfig>(L"resources/shader/postEffect/Dissolve.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectRandomNoise)] = std::make_unique<CopyImageConfig>(L"resources/shader/postEffect/RandomNoise.PS.hlsl");
 	configs_[static_cast<size_t>(PrimitiveType::kSkinningObject3D)] = std::make_unique<SkinningObject3DConfig>();
-	configs_[static_cast<size_t>(PrimitiveType::kPostEffectHSVFilter)] = std::make_unique<CopyImageConfig>(L"resources/shader/HSVFilter.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectHSVFilter)] = std::make_unique<CopyImageConfig>(L"resources/shader/postEffect/HSVFilter.PS.hlsl");
 
 }
 

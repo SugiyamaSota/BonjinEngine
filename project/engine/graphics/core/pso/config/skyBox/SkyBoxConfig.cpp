@@ -4,9 +4,9 @@
 
 const wchar_t* SkyBoxConfig::GetShaderPath(ShaderStage stage) const {
 	if (stage == ShaderStage::kVertex) {
-		return L"resources/shader/SkyBox.VS.hlsl";
+		return L"resources/shader/skybox/SkyBox.VS.hlsl";
 	} else {
-		return L"resources/shader/SkyBox.PS.hlsl";
+		return L"resources/shader/skybox/SkyBox.PS.hlsl";
 	}
 }
 

@@ -6,7 +6,7 @@ CopyImageConfig::CopyImageConfig(const wchar_t* psPath) : psPath_(psPath) {}
 
 const wchar_t* CopyImageConfig::GetShaderPath(ShaderStage stage) const {
 	if (stage == ShaderStage::kVertex) {
-		return L"resources/shader/FullScreen.VS.hlsl";
+		return L"resources/shader/postEffect/FullScreen.VS.hlsl";
 	} else {
 		return psPath_;
 	}
