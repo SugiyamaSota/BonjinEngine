@@ -10,6 +10,7 @@
 using namespace Bonjin;
 
 void ImGuiEditorWindows::DrawSystemSettings(SceneManager* sceneManager) {
+#ifdef USE_IMGUI
 	if (ImGui::Begin("System Settings")) {
 		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
 		ImGui::Separator();
@@ -122,9 +123,11 @@ void ImGuiEditorWindows::DrawSystemSettings(SceneManager* sceneManager) {
 		LightManager::GetInstance()->DrawImGui();
 	}
 	ImGui::End();
+#endif
 }
 
 void ImGuiEditorWindows::DrawGameView(SceneManager* sceneManager) {
+#ifdef USE_IMGUI
 	if (ImGui::Begin("Game View")) {
 		if (ImGui::BeginTabBar("SceneTabs")) {
 			static SceneType lastSceneType = "Exit";
@@ -161,9 +164,11 @@ void ImGuiEditorWindows::DrawGameView(SceneManager* sceneManager) {
 		}
 	}
 	ImGui::End();
+#endif
 }
 
 void ImGuiEditorWindows::DrawHierarchy(IScene* currentScene) {
+#ifdef USE_IMGUI
 	if (ImGui::Begin("Hierarchy")) {
 		for (BaseObject* obj : currentScene->GetSceneObjects()) {
 			if (ImGui::TreeNode(obj, "%s", obj->GetName().c_str())) {
@@ -173,4 +178,5 @@ void ImGuiEditorWindows::DrawHierarchy(IScene* currentScene) {
 		}
 	}
 	ImGui::End();
+#endif
 }
