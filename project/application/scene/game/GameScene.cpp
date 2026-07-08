@@ -46,13 +46,7 @@ void GameScene::Draw() {
 
 }
 
-void GameScene::DrawSceneImGui() {
-#ifdef USE_IMGUI
 
-	LightManager::GetInstance()->DrawImGui();
-
-#endif
-}
 
 SceneType GameScene::GetNextScene() const {
 	return nextSceneType_;

@@ -37,8 +37,8 @@ void DirectXCommon::Initialize() {
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(debugController.GetAddressOf())))) {
 		//デバックレイヤーを有効化する
 		debugController->EnableDebugLayer();
-		//さらにGPUでもチェックを行う
-		debugController->SetEnableGPUBasedValidation(TRUE);
+		//さらにGPUでもチェックを行う (※非常に重いため通常はコメントアウト)
+		//debugController->SetEnableGPUBasedValidation(TRUE);
 	}
 #endif
 
@@ -102,6 +102,28 @@ void DirectXCommon::Initialize() {
 	*fullScreenData_ = fullScreenMaterial_;
 	dissolveMaskTextureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/noise0.png");
 
+	// RenderTextureとpostEffectTextureを初期ステートであるPIXEL_SHADER_RESOURCEに遷移させておく
+	D3D12_RESOURCE_BARRIER initBarriers[2] = {};
+	initBarriers[0] = renderTexture_->CreateTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	initBarriers[1] = postEffectTexture_->CreateTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	commandList_->ResourceBarrier(2, initBarriers);
+
+	// コマンドリストを閉じて実行、同期待ちを行う
+	commandList_->Close();
+	ID3D12CommandList* cmdLists[] = { commandList_.Get() };
+	commandQueue_->ExecuteCommandLists(1, cmdLists);
+	
+	// フェンスで同期を取る
+	fenceValue_++;
+	commandQueue_->Signal(fence_.Get(), fenceValue_);
+	if (fence_->GetCompletedValue() < fenceValue_) {
+		fence_->SetEventOnCompletion(fenceValue_, fenceEvent_);
+		WaitForSingleObject(fenceEvent_, INFINITE);
+	}
+
+	// コマンドリストをリセットして次のフレームに備える
+	commandAllocator_->Reset();
+	commandList_->Reset(commandAllocator_.Get(), nullptr);
 }
 
 DirectXCommon::~DirectXCommon() {

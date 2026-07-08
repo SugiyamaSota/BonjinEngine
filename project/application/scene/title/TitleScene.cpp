@@ -41,10 +41,7 @@ void TitleScene::Update(float deltaTime) {
 void TitleScene::Draw() {
 }
 
-void TitleScene::DrawSceneImGui() {
 
-
-}
 
 SceneType TitleScene::GetNextScene() const {
 	return nextSceneType_;

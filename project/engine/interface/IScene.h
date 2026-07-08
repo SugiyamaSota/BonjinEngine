@@ -59,15 +59,7 @@ namespace Bonjin
 		/// </summary>
 		virtual SceneType GetNextScene() const = 0;
 
-		/// <summary>
-		/// シーンごとのImGui処理
-		/// </summary>
-		virtual void DrawSceneImGui() = 0;
 
-		/// <summary>
-		/// ImGui処理
-		/// </summary>
-		virtual void DrawImGui();
 
 		/// <summary>
 		/// シーン名の登録兼取得

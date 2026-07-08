@@ -97,10 +97,8 @@ void SceneManager::DrawImGui() {
 
 #ifdef USE_IMGUI
 	ImGuiEditorWindows::DrawSystemSettings(this);
-	ImGuiEditorWindows::DrawGameView(this);
 	ImGuiEditorWindows::DrawHierarchy(currentScene_);
-
-	currentScene_->DrawImGui();
+	ImGuiEditorWindows::DrawGameView(this);
 #endif
 }
 
