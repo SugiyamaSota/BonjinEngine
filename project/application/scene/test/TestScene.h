@@ -1,7 +1,10 @@
 #pragma once
 #include "../interface/BaseScene.h" // ISceneをインクルード
 
+#include "Animation.h"
+#include "Skeleton.h"
 #include "Object3D.h"
+#include "SkeletonDebugRenderer.h"
 #include "SkyBox.h"
 #include "Sprite.h"
 #include"ParticleManager.h"
@@ -47,6 +50,11 @@ namespace Bonjin
 
 		// テストモデルcube
 		std::unique_ptr<Object3D> testCube_ = nullptr;
+		Animation cubeAnimation_{};
+		Skeleton cubeSkeleton_{};
+		std::unique_ptr<SkeletonDebugRenderer> skeletonDebugRenderer_ = nullptr;
+		Matrix4x4 animatedModelWorldMatrix_{};
+		float animationTime_ = 0.0f;
 
 		std::unique_ptr<Sprite> testSprite_ = nullptr;
 

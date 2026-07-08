@@ -2,6 +2,9 @@
 #include<stdint.h>
 #include<string>
 #include<vector>
+#include<map>
+#include<array>
+#include<span>
 
 struct Vector2 {
 	float x, y;
@@ -12,6 +15,10 @@ struct Vector3 {
 };
 
 struct Vector4 {
+	float x, y, z, w;
+};
+
+struct Quaternion {
 	float x, y, z, w;
 };
 
@@ -50,14 +57,50 @@ struct MaterialData {
 	std::string textureFilepath;
 };
 
+struct EulerTransform {
+	Vector3 translate;
+	Vector3 rotate;
+	Vector3 scale;
+};
+
+struct QuaternionTransform {
+	Vector3 translate;
+	Quaternion rotate;
+	Vector3 scale;
+};
+
 struct Node {
+	QuaternionTransform transform;
 	Matrix4x4 localMatrix;
 	std::string name;
 	std::vector<Node> children;
 };
 
+struct VertexWeightData {
+	float weight;
+	uint32_t vertexIndex;
+};
+
+struct JointWeightData {
+	Matrix4x4 inverseBindPoseMatrix;
+	std::vector<VertexWeightData> vertexWeights;
+};
+
+const uint32_t kNumMaxInfluence = 4;
+struct VertexInfluence {
+	std::array<float, kNumMaxInfluence> weights;
+	std::array<int32_t, kNumMaxInfluence> jointIndices;
+};
+
+struct WellForGPU {
+	Matrix4x4 skeletonSpaceMatrix;
+	Matrix4x4 skeletonSpaceInverseTransposeMatrix;
+};
+
 struct ModelData {
+	std::map<std::string, JointWeightData> skinClusterData;
 	std::vector<VertexData> vertices;
+	std::vector<uint32_t> indices;
 	MaterialData material;
 	Node rootNode;
 };

@@ -12,8 +12,18 @@ Object3D::~Object3D() {
     if (wvpResource_) wvpResource_->Unmap(0, nullptr);
     if (cameraResource_) cameraResource_->Unmap(0, nullptr);
 
+    if (skinCluster_.has_value()) {
+        if (skinCluster_->influenceResource) skinCluster_->influenceResource->Unmap(0, nullptr);
+        if (skinCluster_->paletteResource) skinCluster_->paletteResource->Unmap(0, nullptr);
+    }
+
     wvpResource_.Reset();
     cameraResource_.Reset();
+
+    if (skinCluster_.has_value()) {
+        skinCluster_->influenceResource.Reset();
+        skinCluster_->paletteResource.Reset();
+    }
 
     wvpData_ = nullptr;
     cameraData_ = nullptr;
@@ -29,6 +39,14 @@ void Object3D::SetupResources() {
     cameraResource_ = CreateBufferResource(device_, sizeof(CameraForGPU));
     cameraResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
     cameraData_->worldPosition = Vector3(0.f, 0.f, 0.f);
+
+    if (!modelData_.skinClusterData.empty()) {
+        skeleton_ = SkeletonBuilder::CreateSkeleton(modelData_.rootNode);
+        skinCluster_ = SkeletonBuilder::CreateSkinCluster(device_, *skeleton_, modelData_);
+    } else {
+        skeleton_ = std::nullopt;
+        skinCluster_ = std::nullopt;
+    }
 }
 
 void Object3D::Update(WorldTransform worldTransform, Camera* camera) {
@@ -40,25 +58,49 @@ void Object3D::Update(WorldTransform worldTransform, Camera* camera) {
 
     Matrix4x4 worldMat = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
 
+    Update(worldMat, camera);
+}
+
+void Object3D::Update(const Matrix4x4& worldMatrix, Camera* camera) {
+    Matrix4x4 worldMat = worldMatrix;
+
     wvpData_->World = worldMat;
     wvpData_->WVP = Multiply(worldMat, camera->GetViewProjectionMatrix());
     wvpData_->WorldInverseTranspose = Inverse(Transpose(worldMat));
 
     cameraData_->worldPosition = camera->GetWorldPosition();
+
+    if (skinCluster_.has_value() && skeleton_.has_value()) {
+        SkeletonBuilder::Update(*skinCluster_, *skeleton_);
+    }
 }
 
 void Object3D::Draw() {
     auto commandList = common_->GetCommandList();
 
+    PrimitiveType drawType = primitiveType_;
+    if (skinCluster_.has_value() && drawType == PrimitiveType::kObject3D) {
+        drawType = PrimitiveType::kSkinningObject3D;
+    }
+
     ID3D12PipelineState* pso = common_->GetPSO()->GetPipelineState(
-        device_, primitiveType_, blendMode_, fillMode_, cullMode_
+        device_, drawType, blendMode_, fillMode_, cullMode_
     );
 
-    commandList->SetGraphicsRootSignature(common_->GetPSO()->GetRootSignature(primitiveType_));
+    commandList->SetGraphicsRootSignature(common_->GetPSO()->GetRootSignature(drawType));
     commandList->SetPipelineState(pso);
 
-    // Object3D 特有のバインド
-    commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
+    // VBVの設定 (スキニング時は複数VBVを設定)
+    if (skinCluster_.has_value() && drawType == PrimitiveType::kSkinningObject3D) {
+        D3D12_VERTEX_BUFFER_VIEW vbvs[2] = {
+            vertexBufferView_,
+            skinCluster_->influenceBufferView
+        };
+        commandList->IASetVertexBuffers(0, 2, vbvs);
+    } else {
+        commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
+    }
+
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
     commandList->SetGraphicsRootConstantBufferView(1, wvpResource_->GetGPUVirtualAddress());
@@ -70,11 +112,21 @@ void Object3D::Draw() {
     commandList->SetGraphicsRootConstantBufferView(5, LightManager::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
     commandList->SetGraphicsRootConstantBufferView(6, LightManager::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
 
-	if (primitiveType_ == PrimitiveType::kModel) {
+    if (drawType == PrimitiveType::kObject3D || drawType == PrimitiveType::kSkinningObject3D) {
         commandList->SetGraphicsRootDescriptorTable(7, TextureManager::GetInstance()->GetGPUHandle(envTextureHandle_));
     }
 
-    commandList->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
+    // スキニング時は MatrixPalette もバインドする
+    if (skinCluster_.has_value() && drawType == PrimitiveType::kSkinningObject3D) {
+        commandList->SetGraphicsRootDescriptorTable(8, skinCluster_->paletteSrvHandle.second);
+    }
+
+    if (!modelData_.indices.empty()) {
+        commandList->IASetIndexBuffer(&indexBufferView_);
+        commandList->DrawIndexedInstanced(static_cast<UINT>(modelData_.indices.size()), 1, 0, 0, 0);
+    } else {
+        commandList->DrawInstanced(static_cast<UINT>(modelData_.vertices.size()), 1, 0, 0);
+    }
 }
 
 void Object3D::DrawImGui(const std::string& label) {

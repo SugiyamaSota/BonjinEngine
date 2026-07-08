@@ -16,11 +16,11 @@ void Core::Initialize() {
 	// シーンマネージャーのセットアップ
 	auto sceneManager = SceneManager::GetInstance();
 	sceneManager->Initialize();
-	sceneManager->AddScene(SceneType::kTest, std::make_unique<TestScene>());
-	sceneManager->AddScene(SceneType::kGame, std::make_unique<GameScene>());
-	sceneManager->AddScene(SceneType::kTitle, std::make_unique<TitleScene>());
+	sceneManager->AddScene("TestScene", std::make_unique<TestScene>());
+	sceneManager->AddScene("GameScene", std::make_unique<GameScene>());
+	sceneManager->AddScene("TitleScene", std::make_unique<TitleScene>());
 
-	sceneManager->ChangeScene(SceneType::kTest);
+	sceneManager->ChangeScene("TestScene");
 }
 
 void Core::Run() {

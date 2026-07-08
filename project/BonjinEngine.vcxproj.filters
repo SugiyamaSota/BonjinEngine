@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="ソース ファイル">
@@ -87,6 +87,9 @@
     </Filter>
     <Filter Include="engine\windows">
       <UniqueIdentifier>{19a6279b-b423-49c0-ac3d-e4c401fb9dff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\animation">
+      <UniqueIdentifier>{0e73dc18-4f5c-4f57-9ed6-d590e5598327}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -183,6 +186,9 @@
     <ClCompile Include="engine\system\manager\imgui\ImGuiManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="engine\system\manager\imgui\ImGuiEditorWindows.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="engine\system\manager\model\ModelManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -222,6 +228,9 @@
     <ClCompile Include="engine\graphics\3d\camera\Camera.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="engine\graphics\3d\animation\Animation.cpp">
+      <Filter>engine\animation</Filter>
+    </ClCompile>
     <ClCompile Include="engine\graphics\3d\builder\ModelBuilder.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -231,7 +240,13 @@
     <ClCompile Include="engine\graphics\core\pso\config\Object3D\Object3DConfig.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="engine\graphics\core\pso\config\Object3D\SkinningObject3DConfig.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="engine\graphics\core\pso\config\skyBox\SkyBoxConfig.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\graphics\core\pso\config\sprite\SpriteConfig.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="engine\graphics\core\pso\config\particle\ParticleConfig.cpp">
@@ -239,6 +254,12 @@
     </ClCompile>
     <ClCompile Include="engine\graphics\core\pso\config\copyImage\CopyImageConfig.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\graphics\2d\line\Line2D.cpp">
+      <Filter>engine\draw\line</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\graphics\3d\line\Line3D.cpp">
+      <Filter>engine\draw\line</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -344,6 +365,9 @@
     <ClInclude Include="engine\system\manager\imgui\ImGuiManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="engine\system\manager\imgui\ImGuiEditorWindows.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="engine\system\manager\model\ModelManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -386,6 +410,9 @@
     <ClInclude Include="engine\graphics\3d\camera\Camera.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="engine\graphics\3d\animation\Animation.h">
+      <Filter>engine\animation</Filter>
+    </ClInclude>
     <ClInclude Include="engine\graphics\3d\builder\ModelBuilder.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -395,10 +422,16 @@
     <ClInclude Include="engine\graphics\core\pso\config\Object3D\Object3DConfig.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="engine\graphics\core\pso\config\Object3D\SkinningObject3DConfig.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="engine\graphics\core\pso\config\IPipelineConfig.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\graphics\core\pso\config\skyBox\SkyBoxConfig.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\graphics\core\pso\config\sprite\SpriteConfig.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\graphics\core\pso\config\particle\ParticleConfig.h">
@@ -406,6 +439,12 @@
     </ClInclude>
     <ClInclude Include="engine\graphics\core\pso\config\copyImage\CopyImageConfig.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\graphics\2d\line\Line2D.h">
+      <Filter>engine\draw\line</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\graphics\3d\line\Line3D.h">
+      <Filter>engine\draw\line</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -419,5 +458,7 @@
   <ItemGroup>
     <FxCompile Include="resources\shader\Object3d.PS.hlsl" />
     <FxCompile Include="resources\shader\Object3d.VS.hlsl" />
+    <FxCompile Include="resources\shader\Sprite.PS.hlsl" />
+    <FxCompile Include="resources\shader\Sprite.VS.hlsl" />
   </ItemGroup>
 </Project>

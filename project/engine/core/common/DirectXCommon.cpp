@@ -83,8 +83,8 @@ void DirectXCommon::Initialize() {
 
 	// FullScreen/DepthOutline 用の定数バッファを生成
 	fullScreenMaterial_.projectionInverse = MakeIdentity4x4();
-	fullScreenMaterial_.isGray = true;
-	fullScreenMaterial_.isVignette = true;
+	fullScreenMaterial_.isGray = false;
+	fullScreenMaterial_.isVignette = false;
 	fullScreenMaterial_.radialBlurCenter = { 0.5f, 0.5f };
 	fullScreenMaterial_.radialBlurWidth = 0.01f;
 	fullScreenMaterial_.dissolveThreshold = 0.5f;
@@ -239,7 +239,9 @@ void DirectXCommon::PostDraw()
 
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+#ifndef USE_IMGUI
 	commandList_->DrawInstanced(3, 1, 0, 0); // フルスクリーン三角形で描画
+#endif
 }
 
 void DirectXCommon::SetFullScreenGray(bool isGray) {

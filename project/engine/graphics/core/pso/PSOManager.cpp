@@ -3,9 +3,12 @@
 
 // 各形状のconfigクラスのインクルード
 #include "config/Object3D/Object3DConfig.h"
+#include "config/Object3D/SkinningObject3DConfig.h"
 #include "config/particle/ParticleConfig.h"
+#include "config/sprite/SpriteConfig.h"
 #include "config/skyBox/SkyBoxConfig.h"
 #include "config/copyImage/CopyImageConfig.h"
+#include "config/line/LineConfig.h"
 
 
 
@@ -14,9 +17,11 @@ PSOManager::PSOManager() {
 	shaderCompiler_.InitializeDxc();
 
 	// pso生成時にconfigを取得
-	configs_[static_cast<size_t>(PrimitiveType::kModel)] = std::make_unique<Object3DConfig>();      // object3D
+	configs_[static_cast<size_t>(PrimitiveType::kObject3D)] = std::make_unique<Object3DConfig>();   // object3D
+	configs_[static_cast<size_t>(PrimitiveType::kSprite)] = std::make_unique<SpriteConfig>();       // sprite
 	configs_[static_cast<size_t>(PrimitiveType::kParticle)] = std::make_unique<ParticleConfigEx>(); // particle
 	configs_[static_cast<size_t>(PrimitiveType::kSkyBox)] = std::make_unique<SkyBoxConfig>();       // skyBox
+	configs_[static_cast<size_t>(PrimitiveType::kLine)] = std::make_unique<LineConfig>();            // debug line
 
 	// 各種ポストエフェクトのConfig
 	configs_[static_cast<size_t>(PrimitiveType::kPostEffectFullScreen)] = std::make_unique<CopyImageConfig>(L"resources/shader/FullScreen.PS.hlsl");
@@ -27,6 +32,7 @@ PSOManager::PSOManager() {
 	configs_[static_cast<size_t>(PrimitiveType::kPostEffectRadialBlur)] = std::make_unique<CopyImageConfig>(L"resources/shader/RadialBlur.PS.hlsl");
 	configs_[static_cast<size_t>(PrimitiveType::kPostEffectDissolve)] = std::make_unique<CopyImageConfig>(L"resources/shader/Dissolve.PS.hlsl");
 	configs_[static_cast<size_t>(PrimitiveType::kPostEffectRandomNoise)] = std::make_unique<CopyImageConfig>(L"resources/shader/RandomNoise.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kSkinningObject3D)] = std::make_unique<SkinningObject3DConfig>();
 	configs_[static_cast<size_t>(PrimitiveType::kPostEffectHSVFilter)] = std::make_unique<CopyImageConfig>(L"resources/shader/HSVFilter.PS.hlsl");
 
 }

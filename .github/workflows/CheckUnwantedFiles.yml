@@ -43,10 +43,11 @@ jobs:
           unset NAME_CONDITIONS[0]
 
           # 1回のfind実行で全体を検索
-          # 1. .gitを除外
+          # 1. .gitと、バイナリを意図的に同梱しているexternalsを除外
           # 2. 不要なディレクトリを検索し、見つけたらパスを出力し、その中身を枝刈り
           # 3. または不要なファイルを検索し、パスを出力
-          UNWANTED_LIST=$(find . -path "./.git" -prune -o \
+          UNWANTED_LIST=$(find . \
+            \( -path "./.git" -o -path "./project/externals" \) -prune -o \
             \( \( "${DIR_CONDITIONS[@]}" \) -a -type d -print -prune \) -o \
             \( \( "${NAME_CONDITIONS[@]}" \) -a -type f -print \) \
           )

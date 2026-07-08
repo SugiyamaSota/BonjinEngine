@@ -120,6 +120,8 @@ public:
 	// PSO
 	PSOManager* GetPSO()const { return pso.get(); }
 
+	// RenderTexture
+	RenderTexture* GetRenderTexture() const { return renderTexture_.get(); }
 
 private:
 	// コンストラクタ

@@ -1,11 +1,57 @@
 #include "ModelBuilder.h"
 
+#include <cmath>
 #include <fstream>
+
+#include "Convert.h"
+
+namespace {
+Quaternion Slerp(const Quaternion& start, const Quaternion& end, float t) {
+	Quaternion result{};
+	Quaternion to = end;
+	float dot = start.x * to.x + start.y * to.y + start.z * to.z + start.w * to.w;
+
+	if (dot < 0.0f) {
+		dot = -dot;
+		to.x = -to.x;
+		to.y = -to.y;
+		to.z = -to.z;
+		to.w = -to.w;
+	}
+
+	if (dot >= 1.0f - 0.0005f) {
+		result.x = start.x + (to.x - start.x) * t;
+		result.y = start.y + (to.y - start.y) * t;
+		result.z = start.z + (to.z - start.z) * t;
+		result.w = start.w + (to.w - start.w) * t;
+		float length = std::sqrt(result.x * result.x + result.y * result.y + result.z * result.z + result.w * result.w);
+		assert(length != 0.0f);
+		result.x /= length;
+		result.y /= length;
+		result.z /= length;
+		result.w /= length;
+		return result;
+	}
+
+	float theta = std::acos(dot);
+	float sinTheta = std::sin(theta);
+	float scale0 = std::sin((1.0f - t) * theta) / sinTheta;
+	float scale1 = std::sin(t * theta) / sinTheta;
+
+	result.x = scale0 * start.x + scale1 * to.x;
+	result.y = scale0 * start.y + scale1 * to.y;
+	result.z = scale0 * start.z + scale1 * to.z;
+	result.w = scale0 * start.w + scale1 * to.w;
+	return result;
+}
+}
 
 ModelData ModelBuilder::LoadModelFile(const std::string& directoryPath, const std::string& filename) {
 	Assimp::Importer importer;
 	std::string fullPath = directoryPath + '/' + filename;
-	const aiScene* scene = importer.ReadFile(fullPath, aiProcess_FlipWindingOrder | aiProcess_FlipUVs);
+	// X軸を反転して右手系から左手系へ変換するため、頂点の表裏も反転する。
+	// ここでさらにFlipWindingOrderを指定すると二重反転になり、裏面が表として描画される。
+	const aiScene* scene = importer.ReadFile(fullPath, aiProcess_FlipUVs);
 	assert(scene->HasMeshes());
 
 	ModelData modelData;
@@ -17,40 +63,63 @@ ModelData ModelBuilder::LoadModelFile(const std::string& directoryPath, const st
 		assert(mesh->HasTextureCoords(0));
 		assert(mesh->HasNormals());
 
+		size_t vertexOffset = modelData.vertices.size();
+		modelData.vertices.resize(vertexOffset + mesh->mNumVertices);
+
+		for (uint32_t vertexIndex = 0; vertexIndex < mesh->mNumVertices; ++vertexIndex) {
+			aiVector3D position = mesh->mVertices[vertexIndex];
+			aiVector3D normal = mesh->mNormals[vertexIndex];
+			aiVector3D texcoord = mesh->mTextureCoords[0][vertexIndex];
+			
+			// 右手系->左手系への変換を忘れずに
+			modelData.vertices[vertexOffset + vertexIndex].position = { -position.x, position.y, position.z, 1.0f };
+			modelData.vertices[vertexOffset + vertexIndex].normal = { -normal.x, normal.y, normal.z };
+			modelData.vertices[vertexOffset + vertexIndex].texcoord = { texcoord.x, texcoord.y };
+		}
+
 		for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
 			const aiFace& face = mesh->mFaces[faceIndex];
 			assert(face.mNumIndices == 3); // 三角形であることを確認
 
 			for (uint32_t element = 0; element < face.mNumIndices; ++element) {
-
 				uint32_t vertexIndex = face.mIndices[element];
-				aiVector3D position = mesh->mVertices[vertexIndex];
-				aiVector3D normal = mesh->mNormals[vertexIndex];
-				aiVector3D texcoord = mesh->mTextureCoords[0][vertexIndex];
-				VertexData vertex;
-				vertex.position = { position.x, position.y, position.z, 1.0f };
-				vertex.normal = { normal.x, normal.y, normal.z };
-				vertex.texcoord = { texcoord.x, texcoord.y };
-
-				vertex.position.x *= -1.f;
-				vertex.normal.x *= -1.f;
-
-				modelData.vertices.push_back(vertex);
-
+				modelData.indices.push_back(static_cast<uint32_t>(vertexIndex + vertexOffset));
 			}
 		}
 
 		for (uint32_t materialIndex = 0; materialIndex < scene->mNumMaterials; ++materialIndex) {
 			aiMaterial* material = scene->mMaterials[materialIndex];
 
-			if(material->GetTextureCount(aiTextureType_DIFFUSE)!=0) {
+			if (material->GetTextureCount(aiTextureType_DIFFUSE) != 0) {
 				aiString texturePath;
 				material->GetTexture(aiTextureType_DIFFUSE, 0, &texturePath);
 				modelData.material.textureFilepath = directoryPath + '/' + std::string(texturePath.C_Str());
+			} else if (material->GetTextureCount(aiTextureType_BASE_COLOR) != 0) {
+				aiString texturePath;
+				material->GetTexture(aiTextureType_BASE_COLOR, 0, &texturePath);
+				modelData.material.textureFilepath = directoryPath + '/' + std::string(texturePath.C_Str());
+			}
+		}
+
+		for(uint32_t boneIndex=0;boneIndex<mesh->mNumBones;++boneIndex){
+			aiBone* bone = mesh->mBones[boneIndex];
+			std::string jointName=bone->mName.C_Str();
+			JointWeightData& jointWeightData=modelData.skinClusterData[jointName];
+			
+			aiMatrix4x4 bindPoseMatrixAssimp = bone->mOffsetMatrix;
+			aiVector3D scale,translate;
+			aiQuaternion rotate;
+			bindPoseMatrixAssimp.Decompose(scale,rotate,translate);
+			Matrix4x4 bindPoseMatrix=MakeAffineMatrix(
+				Vector3{scale.x,scale.y,scale.z},Quaternion{rotate.x,-rotate.y,-rotate.z,rotate.w},Vector3{-translate.x,translate.y,translate.z});
+			jointWeightData.inverseBindPoseMatrix=bindPoseMatrix;
+
+			for(uint32_t weightIndex = 0; weightIndex < bone->mNumWeights; ++weightIndex){
+				jointWeightData.vertexWeights.push_back({bone->mWeights[weightIndex].mWeight,bone->mWeights[weightIndex].mVertexId});
 			}
 		}
 	}
-
+	
 	return modelData;
 }
 
@@ -121,15 +190,18 @@ ModelData ModelBuilder::CreateSphereModel(uint32_t subdivision) {
 			uint32_t p2 = start + (subdivision + 1);
 			uint32_t p3 = start + (subdivision + 1) + 1;
 
-			// 三角形1 (p0, p1, p2)
-			modelData.vertices.push_back(GetSphereVertex(p0, subdivision));
-			modelData.vertices.push_back(GetSphereVertex(p1, subdivision));
-			modelData.vertices.push_back(GetSphereVertex(p2, subdivision));
 
-			// 三角形2 (p1, p3, p2)
-			modelData.vertices.push_back(GetSphereVertex(p1, subdivision));
-			modelData.vertices.push_back(GetSphereVertex(p3, subdivision));
+			// 外側が表面になるよう、時計回りで三角形を構成
+			// 三角形1 (p0, p2, p1)
+			modelData.vertices.push_back(GetSphereVertex(p0, subdivision));
 			modelData.vertices.push_back(GetSphereVertex(p2, subdivision));
+			modelData.vertices.push_back(GetSphereVertex(p1, subdivision));
+
+
+			// 三角形2 (p1, p2, p3)
+			modelData.vertices.push_back(GetSphereVertex(p1, subdivision));
+			modelData.vertices.push_back(GetSphereVertex(p2, subdivision));
+			modelData.vertices.push_back(GetSphereVertex(p3, subdivision));
 		}
 	}
 
@@ -478,24 +550,32 @@ VertexData ModelBuilder::GetSphereVertex(uint32_t index, uint32_t subdivision) {
 Node ModelBuilder::ReadNode(aiNode* node) {
 	Node result;
 
-	aiMatrix4x4 aiLocalMatrix = node->mTransformation;
-	aiLocalMatrix.Transpose(); // Assimpは行優先、DirectXは列優先なので転置する
-	result.localMatrix.m[0][0] = aiLocalMatrix[0][0];
-	result.localMatrix.m[0][1] = aiLocalMatrix[0][1];
-	result.localMatrix.m[0][2] = aiLocalMatrix[0][2];
-	result.localMatrix.m[0][3] = aiLocalMatrix[0][3];
-	result.localMatrix.m[1][0] = aiLocalMatrix[1][0];
-	result.localMatrix.m[1][1] = aiLocalMatrix[1][1];
-	result.localMatrix.m[1][2] = aiLocalMatrix[1][2];
-	result.localMatrix.m[1][3] = aiLocalMatrix[1][3];
-	result.localMatrix.m[2][0] = aiLocalMatrix[2][0];
-	result.localMatrix.m[2][1] = aiLocalMatrix[2][1];
-	result.localMatrix.m[2][2] = aiLocalMatrix[2][2];
-	result.localMatrix.m[2][3] = aiLocalMatrix[2][3];
-	result.localMatrix.m[3][0] = aiLocalMatrix[3][0];
-	result.localMatrix.m[3][1] = aiLocalMatrix[3][1];
-	result.localMatrix.m[3][2] = aiLocalMatrix[3][2];
-	result.localMatrix.m[3][3] = aiLocalMatrix[3][3];
+	//aiMatrix4x4 aiLocalMatrix = node->mTransformation;
+	//aiLocalMatrix.Transpose(); // Assimpは行優先、DirectXは列優先なので転置する
+	//result.localMatrix.m[0][0] = aiLocalMatrix[0][0];
+	//result.localMatrix.m[0][1] = aiLocalMatrix[0][1];
+	//result.localMatrix.m[0][2] = aiLocalMatrix[0][2];
+	//result.localMatrix.m[0][3] = aiLocalMatrix[0][3];
+	//result.localMatrix.m[1][0] = aiLocalMatrix[1][0];
+	//result.localMatrix.m[1][1] = aiLocalMatrix[1][1];
+	//result.localMatrix.m[1][2] = aiLocalMatrix[1][2];
+	//result.localMatrix.m[1][3] = aiLocalMatrix[1][3];
+	//result.localMatrix.m[2][0] = aiLocalMatrix[2][0];
+	//result.localMatrix.m[2][1] = aiLocalMatrix[2][1];
+	//result.localMatrix.m[2][2] = aiLocalMatrix[2][2];
+	//result.localMatrix.m[2][3] = aiLocalMatrix[2][3];
+	//result.localMatrix.m[3][0] = aiLocalMatrix[3][0];
+	//result.localMatrix.m[3][1] = aiLocalMatrix[3][1];
+	//result.localMatrix.m[3][2] = aiLocalMatrix[3][2];
+	//result.localMatrix.m[3][3] = aiLocalMatrix[3][3];
+
+	aiVector3D scale, translate;
+	aiQuaternion rotate;
+	node->mTransformation.Decompose(scale, rotate, translate);
+	result.transform.scale = { scale.x, scale.y, scale.z };
+	result.transform.rotate = { rotate.x, -rotate.y, -rotate.z, rotate.w };
+	result.transform.translate = { -translate.x, translate.y, translate.z };
+	result.localMatrix = MakeAffineMatrix(result.transform.scale, result.transform.rotate, result.transform.translate);
 
 	result.name = node->mName.C_Str();
 	result.children.reserve(node->mNumChildren);

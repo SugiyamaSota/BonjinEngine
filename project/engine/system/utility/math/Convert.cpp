@@ -70,6 +70,30 @@ Matrix4x4 MakeRotateMatrix(Vector3 rotate) {
 	return result;
 }
 
+Matrix4x4 MakeRotateMatrix(const Quaternion& quaternion) {
+	Quaternion q = quaternion;
+	float length = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+	assert(length != 0.0f);
+	q.x /= length;
+	q.y /= length;
+	q.z /= length;
+	q.w /= length;
+
+	Matrix4x4 result = MakeIdentity4x4();
+	result.m[0][0] = 1.0f - 2.0f * (q.y * q.y + q.z * q.z);
+	result.m[0][1] = 2.0f * (q.x * q.y + q.w * q.z);
+	result.m[0][2] = 2.0f * (q.x * q.z - q.w * q.y);
+
+	result.m[1][0] = 2.0f * (q.x * q.y - q.w * q.z);
+	result.m[1][1] = 1.0f - 2.0f * (q.x * q.x + q.z * q.z);
+	result.m[1][2] = 2.0f * (q.y * q.z + q.w * q.x);
+
+	result.m[2][0] = 2.0f * (q.x * q.z + q.w * q.y);
+	result.m[2][1] = 2.0f * (q.y * q.z - q.w * q.x);
+	result.m[2][2] = 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
+	return result;
+}
+
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate) {
 	Matrix4x4 result = MakeIdentity4x4();
 	Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);
@@ -80,6 +104,10 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 	Matrix4x4 translateMatrix = MakeTranslateMatrix(translate);
 	result = Multiply(scaleMatrix, Multiply(rotateXYZMatrix, translateMatrix));
 	return result;
+}
+
+Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Quaternion& rotate, const Vector3& translate) {
+	return MakeAffineMatrix(scale, MakeRotateMatrix(rotate), translate);
 }
 
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Matrix4x4& rotate, const Vector3& translate) {

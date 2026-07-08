@@ -12,9 +12,11 @@
 #include "config/IPipelineConfig.h"
 
 enum class PrimitiveType {
-	kModel,   // モデル
+	kObject3D,   // 3Dオブジェクト
+	kSprite,
 	kParticle,
 	kSkyBox,
+	kLine,
 	kPostEffectFullScreen,
 	kPostEffectBoxFilter,
 	kPostEffectGaussianFilter,
@@ -23,6 +25,7 @@ enum class PrimitiveType {
 	kPostEffectRadialBlur,
 	kPostEffectDissolve,
 	kPostEffectRandomNoise,
+	kSkinningObject3D,
 	kPostEffectHSVFilter,
 	kCount,
 };

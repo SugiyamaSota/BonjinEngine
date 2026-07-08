@@ -1,20 +1,16 @@
 #pragma once
 #include "../bonjin/BonjinEngine.h"
 
-#include<memory>
+#include <string>
+#include <memory>
+#include <vector>
+
+class BaseObject;
 
 namespace Bonjin
 {
-
-	// シーンの種類を識別するための列挙型
-	enum class SceneType
-	{
-		kTitle,
-		kGame,
-		kResult,
-		kTest,
-		kExit // ゲーム終了を意味する特別なシーン
-	};
+	// シーンの種類を識別するための型エイリアス
+	using SceneType = std::string;
 
 	class IScene 
 	{
@@ -25,6 +21,11 @@ namespace Bonjin
 		/// 仮想デストラクタ
 		/// </summary>
 		virtual ~IScene() = default;
+
+		// オブジェクトの登録と取得
+		void RegisterObject(BaseObject* obj);
+		void UnregisterObject(BaseObject* obj);
+		const std::vector<BaseObject*>& GetSceneObjects() const { return sceneObjects_; }
 
 		/// <summary>
 		/// 初期化
@@ -79,10 +80,13 @@ namespace Bonjin
 		Camera* camera_ = nullptr;
 
 		// 派生クラスでのみ書き換え可能な現在のシーンタイプ
-		SceneType currentSceneType_ = SceneType::kTitle;
+		SceneType currentSceneType_ = "TitleScene";
 
 		// 次に遷移したいシーンタイプ
-		SceneType nextSceneType_ = SceneType::kTitle;
+		SceneType nextSceneType_ = "TitleScene";
+
+		// シーン内の登録オブジェクト一覧
+		std::vector<BaseObject*> sceneObjects_;
 
 	};
 }
