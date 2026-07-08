@@ -44,6 +44,3 @@ SceneType TutorialScene::GetNextScene() const {
 	return nextSceneType_;
 }
 
-void TutorialScene::DrawSceneImGui() {
-	battleController_->DrawImGui();
-}

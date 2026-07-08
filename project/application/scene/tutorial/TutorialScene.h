@@ -18,7 +18,6 @@ public:
 	void Update(float deltaTime) override;
 	void Draw() override;
 	SceneType GetNextScene() const override;
-	void DrawSceneImGui() override;
 	const char* GetScenename() const override { return "TutorialScene"; }
 
 private:

@@ -51,14 +51,3 @@ void GameScene::Draw() {
 SceneType GameScene::GetNextScene() const {
 	return nextSceneType_;
 }
-
-
-
-SceneType GameScene::GetNextScene() const {
-	return nextSceneType_;
-}#endif
-}
-
-SceneType GameScene::GetNextScene() const {
-	return nextSceneType_;
-}

@@ -20,7 +20,6 @@ public:
 	void Unload() override;
 	void Update(float deltaTime) override;
 	void Draw() override;
-	void DrawSceneImGui() override;
 	SceneType GetNextScene() const override;
 	const char* GetScenename() const override { return "ResultScene"; }
 

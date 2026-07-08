@@ -48,9 +48,6 @@ void ResultScene::Draw() {
 	}
 }
 
-void ResultScene::DrawSceneImGui() {
-}
-
 SceneType ResultScene::GetNextScene() const {
 	return nextSceneType_;
 }
