@@ -6,6 +6,7 @@
 #include "../../logic/Collision.h"
 #include <algorithm>
 #include <numbers>
+#include <cmath>
 
 void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position) {
 	assert(model);
@@ -31,6 +32,9 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 }
 
 void Player::Move() {
+	if (isKnockedBack_) {
+		return;
+	}
 	// 移動入力
 	// 接地状態
 	if (onGround_) {
@@ -133,10 +137,19 @@ void Player::Update() {
 	Move();
 
 	if (isKnockedBack_) {
+		velocity_.x *= kKnockbackAttenuation;
 		knockbackTimer_ -= 1.0f / 60.0f; // 1秒間に60フレームを想定
 		if (knockbackTimer_ <= 0.0f) {
 			isKnockedBack_ = false;
 			knockbackTimer_ = 0.0f;
+		}
+	}
+
+	if (isInvincible_) {
+		invincibleTimer_ -= 1.0f / 60.0f; // 1秒間に60フレームを想定
+		if (invincibleTimer_ <= 0.0f) {
+			isInvincible_ = false;
+			invincibleTimer_ = 0.0f;
 		}
 	}
 
@@ -168,7 +181,9 @@ void Player::Update() {
 
 	// XボタンでshootAnchor
 	if (Input::GetInstance()->IsPadTrigger(2) || Input::GetInstance()->IsTrigger(DIK_J)) {
-		shootAnchor();
+		if (!isKnockedBack_) {
+			shootAnchor();
+		}
 	}
 
 	// アンカーの更新
@@ -191,43 +206,57 @@ void Player::Update() {
 
 	// Yボタンでテレポート
 	if (Input::GetInstance()->IsPadTrigger(1) || Input::GetInstance()->IsTrigger(DIK_K)) {
-		// アンカーが存在し、isStandByがtrueの場合
-		if (anchor_ && anchor_->GetStandBy()) {
-			// アンカーの座標からテレポート先座標を取得
-			Vector3 anchorPos = anchor_->GetPosition();
-			Vector3 teleportPosition = anchorPos;
+		if (!isKnockedBack_) {
+			// アンカーが存在し、isStandByがtrueの場合
+			if (anchor_ && anchor_->GetStandBy()) {
+				// アンカーの座標からテレポート先座標を取得
+				Vector3 anchorPos = anchor_->GetPosition();
+				Vector3 teleportPosition = anchorPos;
 
-			//// キャラクターの高さの半分だけ上方向に移動
-			//teleportPosition.y = anchorPos.y + kHeight / 2.0f;
-			//// === ここまで修正 ===
+				//// キャラクターの高さの半分だけ上方向に移動
+				//teleportPosition.y = anchorPos.y + kHeight / 2.0f;
+				//// === ここまで修正 ===
 
-			Vector3 anchorVelocity = anchor_->GetVelocity();
+				Vector3 anchorVelocity = anchor_->GetVelocity();
 
-			// 体が埋まらないようにX座標を調整
-			if (anchorVelocity.x > 0.0f) {
-				teleportPosition.x -= kWidth / 2.0f;
-			} else if (anchorVelocity.x < 0.0f) {
-				teleportPosition.x += kWidth / 2.0f;
+				// 体が埋まらないようにX座標を調整
+				if (anchorVelocity.x > 0.0f) {
+					teleportPosition.x -= kWidth / 2.0f;
+				} else if (anchorVelocity.x < 0.0f) {
+					teleportPosition.x += kWidth / 2.0f;
+				}
+				// 体が埋まらないようにY座標を調整
+				if (anchorVelocity.y > 0.0f) {
+					teleportPosition.y -= kHeight / 2.0f;
+				} else if (anchorVelocity.y < 0.0f) {
+					teleportPosition.y += kHeight / 2.0f;
+				}
+
+				// プレイヤーを計算された座標にテレポート
+				worldTransform_.translate = teleportPosition;
+
+				// アンカーを消去
+				anchor_ = nullptr;
 			}
-			// 体が埋まらないようにY座標を調整
-			if (anchorVelocity.y > 0.0f) {
-				teleportPosition.y -= kHeight / 2.0f;
-			} else if (anchorVelocity.y < 0.0f) {
-				teleportPosition.y += kHeight / 2.0f;
-			}
-
-			// プレイヤーを計算された座標にテレポート
-			worldTransform_.translate = teleportPosition;
-
-			// アンカーを消去
-			anchor_ = nullptr;
 		}
 	}
+
 }
 
 void Player::Draw() {
+	// 無敵時間中の点滅処理 (0.1秒周期)
+	bool drawPlayerModel = true;
+	if (isInvincible_) {
+		if (std::fmod(invincibleTimer_, 0.1f) < 0.05f) {
+			drawPlayerModel = false;
+		}
+	}
+
 	// 自キャラの描画処理
-	model_->Draw();
+	if (drawPlayerModel) {
+		model_->Draw();
+	}
+
 	if (anchor_ != nullptr) 
 	{
 		anchor_->Draw();
@@ -291,7 +320,25 @@ AABB Player::GetAABB() {
 }
 
 void Player::OnCollision(Enemy* enemy) {
-	
+	if (isInvincible_|| hp_<=0) {
+		return;
+	}
+
+	isKnockedBack_ = true;
+	knockbackTimer_ = kKnockbackTime;
+
+	isInvincible_ = true;
+	invincibleTimer_ = kInvincibleTime;
+
+	ApplyDamage(1);
+
+	// ノックバック方向を決定 (敵とプレイヤーの相対位置)
+	Vector3 relative = Subtract(GetWorldPosition(), enemy->GetWorldPosition());
+	float knockbackDirX = (relative.x >= 0.0f) ? 1.0f : -1.0f;
+
+	// 速度を設定して弾き飛ばす
+	velocity_.x = knockbackDirX * kKnockbackPower;
+	velocity_.y = kKnockbackUpPower;
 }
 
 bool Player::ConsumeLandingEffectRequest() {

@@ -114,6 +114,7 @@ void BattleController::Update(float deltaTime) {
 	skyBox_->Update(InitializeWorldTransform(), camera_);
 	player_->Update();
 
+	// アンカーの即着地処理
 	if (player_->HasAnchor()) {
 		Anchor& anchor = player_->GetAnchor();
 		if (!anchor.GetStandBy() && !anchor.IsInstantResolved()) {
@@ -142,6 +143,19 @@ void BattleController::Update(float deltaTime) {
 		EmitLandingDustEffect(dustPosition);
 	}
 	CheckAnchorEnemyCollision();
+
+	// プレイヤーとエネミーの当たり判定
+	if (player_) {
+		for (const auto& enemy : enemies_) {
+			if (enemy->GetIsDead()) {
+				continue;
+			}
+			if (IsCollision(player_->GetAABB(), enemy->GetAABB())) {
+				player_->OnCollision(enemy.get());
+				break;
+			}
+		}
+	}
 
 	for (const auto& enemy : enemies_) {
 		if (enemy->ConsumeDefeatEffectRequest()) {

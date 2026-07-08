@@ -95,8 +95,15 @@ void Enemy::Update() {
 		// プレイヤーとの衝突判定
 		if (!(*it)->IsDead() && player_ && !player_->GetIsDead()) {
 			if (IsCollision((*it)->GetAABB(), player_->GetAABB())) {
-				(*it)->SetDead(true);
-				player_->ApplyDamage(1);
+				if (player_->GetIsInvincible()) {
+					// プレイヤーが無敵状態の場合は弾を消すだけ
+					(*it)->SetDead(true);
+				} else {
+					// プレイヤーが無敵状態でない場合はダメージを与える
+					(*it)->SetDead(true);
+					player_->ApplyDamage(1);
+					
+				}
 			}
 		}
 
