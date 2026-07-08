@@ -1,7 +1,16 @@
 #include "IScene.h"
 #include <algorithm>
+#include "../graphics/3d/object/BaseObject.h"
 
 using namespace Bonjin;
+
+IScene::~IScene() {
+	for (BaseObject* obj : sceneObjects_) {
+		if (obj) {
+			obj->SetParentScene(nullptr);
+		}
+	}
+}
 
 void IScene::RegisterObject(BaseObject* obj) {
 	sceneObjects_.push_back(obj);

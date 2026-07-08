@@ -20,7 +20,7 @@ namespace Bonjin
 		/// <summary>
 		/// 仮想デストラクタ
 		/// </summary>
-		virtual ~IScene() = default;
+		virtual ~IScene();
 
 		// オブジェクトの登録と取得
 		void RegisterObject(BaseObject* obj);

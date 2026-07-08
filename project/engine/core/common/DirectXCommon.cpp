@@ -55,9 +55,11 @@ void DirectXCommon::Initialize() {
 
 	// 既存のコードを削除し、以下に置き換え
 	rtvHandles_[2] = GetCPUDescriptorHandle(rtvDescriptorHeap_.Get(), descriptorSizeRTV_, 2);
+	rtvHandles_[3] = GetCPUDescriptorHandle(rtvDescriptorHeap_.Get(), descriptorSizeRTV_, 3);
 
 	// RenderTextureクラスの生成にRTVハンドルを渡す
 	renderTexture_ = std::make_unique<RenderTexture>(device_.Get(), rtvHandles_[2]);
+	postEffectTexture_ = std::make_unique<RenderTexture>(device_.Get(), rtvHandles_[3]);
 
 
 	pso = std::make_unique<PSOManager>();
@@ -146,18 +148,10 @@ void DirectXCommon::PostDraw()
 {
 	UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
 
-	// A) RenderTexture を 描画ターゲット から シェーダー読み込み用(SRV) に
+	// 1. RenderTexture (t0) を 描画ターゲット から ピクセルシェーダー用(SRV) に遷移
 	D3D12_RESOURCE_BARRIER rtBarrier = renderTexture_->CreateTransitionBarrier(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-	// B) バックバッファを 画面表示用(PRESENT) から 描画ターゲット に
-	D3D12_RESOURCE_BARRIER bbBarrier{};
-	bbBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	bbBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	bbBarrier.Transition.pResource = swapChainResources_[backBufferIndex].Get();
-	bbBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	bbBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-	// C) 深度テクスチャ を デプス書き込み(DEPTH_WRITE) から ピクセルシェーダー用(SRV) に
+	// 2. 深度テクスチャ (t1) を デプス書き込み から ピクセルシェーダー用(SRV) に遷移
 	D3D12_RESOURCE_BARRIER depthBarrier{};
 	depthBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	depthBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -165,18 +159,33 @@ void DirectXCommon::PostDraw()
 	depthBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	depthBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
+#ifdef USE_IMGUI
+	// A. ImGui使用時は、ポストエフェクトの描画先を postEffectTexture_ にする
+	// postEffectTexture_ を ピクセルシェーダー用 から 描画ターゲット(RTV) に遷移
+	D3D12_RESOURCE_BARRIER peBarrier = postEffectTexture_->CreateTransitionBarrier(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	D3D12_RESOURCE_BARRIER barriers[] = { rtBarrier, peBarrier, depthBarrier };
+	commandList_->ResourceBarrier(_countof(barriers), barriers);
+
+	// postEffectTexture_ をターゲットとして設定
+	D3D12_CPU_DESCRIPTOR_HANDLE peRtv = postEffectTexture_->GetRtvHandle();
+	commandList_->OMSetRenderTargets(1, &peRtv, false, nullptr);
+	postEffectTexture_->ClearView(commandList_.Get());
+#else
+	// B. ImGui非使用時（本番）は、直接バックバッファに描画する
+	D3D12_RESOURCE_BARRIER bbBarrier{};
+	bbBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	bbBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	bbBarrier.Transition.pResource = swapChainResources_[backBufferIndex].Get();
+	bbBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	bbBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
 	D3D12_RESOURCE_BARRIER barriers[] = { rtBarrier, bbBarrier, depthBarrier };
 	commandList_->ResourceBarrier(_countof(barriers), barriers);
 
-	// -------------------------------------------------------------------------
-	// ★修正: バリア完了後に、初めてバックバッファをターゲットとしてバインドする
-	// -------------------------------------------------------------------------
-	// フルスクリーンコピーの際は深度テストを行わない（または常に通過する）ため、DSVは nullptr で運用するのが安全です
 	commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, nullptr);
-
-	// バックバッファをクリア（紺色）
 	float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
 	commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex], clearColor, 0, nullptr);
+#endif
 
 	// ビューポートとシザー矩形を設定
 	commandList_->RSSetViewports(1, &viewport_);
@@ -185,12 +194,13 @@ void DirectXCommon::PostDraw()
 	// SrvManagerのディスクリプタヒープをセット
 	SrvManager::GetInstance()->PreDraw();
 
-	// アクティブなカメラの逆行列を定数バッファに書き込む
+	// 定数バッファの更新
 	Matrix4x4 projectionMatrix_ = MakePerspectiveFovMatrix(0.45f, float(WinApp::GetInstance()->GetClientWidth()) / float(WinApp::GetInstance()->GetClientHeight()), 0.1f, 1000.0f);
 	fullScreenMaterial_.projectionInverse = Inverse(projectionMatrix_);
 	fullScreenMaterial_.time = Bonjin::Time::GetInstance()->GetElapsedTime();
 	*fullScreenData_ = fullScreenMaterial_;
 
+	// エフェクトに対応するPSOの選択
 	PrimitiveType postEffectType = PrimitiveType::kPostEffectFullScreen;
 	switch (currentEffect_) {
 	case PostEffect::kFullScreen:
@@ -224,7 +234,7 @@ void DirectXCommon::PostDraw()
 		break;
 	}
 
-	// RenderTextureの内容をバックバッファにフルスクリーンコピー描画
+	// 描画実行
 	commandList_->SetGraphicsRootSignature(pso->GetRootSignature(postEffectType));
 	commandList_->SetPipelineState(pso->GetPipelineState(
 		device_.Get(), postEffectType, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE
@@ -238,9 +248,28 @@ void DirectXCommon::PostDraw()
 	commandList_->SetGraphicsRootConstantBufferView(2, fullScreenCB_->GetGPUVirtualAddress());
 
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList_->DrawInstanced(3, 1, 0, 0); // フルスクリーン三角形で描画（ポストエフェクト実行）
 
-#ifndef USE_IMGUI
-	commandList_->DrawInstanced(3, 1, 0, 0); // フルスクリーン三角形で描画
+#ifdef USE_IMGUI
+	// ImGui使用時は、描画完了した postEffectTexture_ を ピクセルシェーダー用(SRV) に戻す
+	D3D12_RESOURCE_BARRIER peBarrierEnd = postEffectTexture_->CreateTransitionBarrier(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	
+	// 同時に、バックバッファを PRESENT から RENDER_TARGET に遷移させ、ImGuiUIの描画ターゲットにする
+	D3D12_RESOURCE_BARRIER bbBarrierEnd{};
+	bbBarrierEnd.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	bbBarrierEnd.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	bbBarrierEnd.Transition.pResource = swapChainResources_[backBufferIndex].Get();
+	bbBarrierEnd.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	bbBarrierEnd.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+	D3D12_RESOURCE_BARRIER barriersEnd[] = { peBarrierEnd, bbBarrierEnd };
+	commandList_->ResourceBarrier(_countof(barriersEnd), barriersEnd);
+
+	// ImGui描画ターゲットとしてバックバッファを設定
+	commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, nullptr);
+	// バックバッファをクリア（ImGui UI の背景になる）
+	float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
+	commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex], clearColor, 0, nullptr);
 #endif
 }
 
@@ -506,7 +535,7 @@ void DirectXCommon::CreateSwapChain() {
 	descriptorSizeRTV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	descriptorSizeDSV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 	//RTVの設定
-	rtvDescriptorHeap_ = CreateDescriptorHeap(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 3, false);
+	rtvDescriptorHeap_ = CreateDescriptorHeap(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 4, false);
 	rtvDesc_.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;//出力結果をSRGBに変換
 	rtvDesc_.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;//2dテクスチャとして書き込む
 	//ディスクリプらの先頭を取得する

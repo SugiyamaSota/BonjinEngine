@@ -122,6 +122,7 @@ public:
 
 	// RenderTexture
 	RenderTexture* GetRenderTexture() const { return renderTexture_.get(); }
+	RenderTexture* GetPostEffectTexture() const { return postEffectTexture_.get(); }
 
 private:
 	// コンストラクタ
@@ -149,7 +150,7 @@ private:
 	// ディスクリプタヒープ
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap_ = nullptr;
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_{};
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[3];
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[4];
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_ = nullptr;
 
 	// ディスクリプタサイズ
@@ -186,6 +187,7 @@ private:
 	void UpdateFixFPS();    // FPS固定更新
 
 	std::unique_ptr<RenderTexture> renderTexture_ = nullptr;
+	std::unique_ptr<RenderTexture> postEffectTexture_ = nullptr;
 
 	std::unique_ptr<DepthStencil> depthStencil_ = nullptr;
 
