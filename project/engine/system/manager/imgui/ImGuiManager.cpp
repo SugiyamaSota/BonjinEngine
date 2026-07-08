@@ -82,6 +82,7 @@ void ImGuiManager::NewFrame() {
 
 		// 各ウィンドウをドッキング
 		ImGui::DockBuilderDockWindow("System Settings", dock_id_left);
+		ImGui::DockBuilderDockWindow("Scene Settings", dock_id_left);
 		ImGui::DockBuilderDockWindow("Game View", dock_id_top_right);
 		ImGui::DockBuilderDockWindow("Hierarchy", dock_id_bottom_right);
 

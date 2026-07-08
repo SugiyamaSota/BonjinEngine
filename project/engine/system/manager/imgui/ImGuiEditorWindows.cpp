@@ -5,16 +5,12 @@
 #include "SrvManager.h"
 #include "DirectXCommon.h"
 #include "../../externals/imgui/imgui.h"
-#include "../light/LightManager.h"
 
 using namespace Bonjin;
 
 void ImGuiEditorWindows::DrawSystemSettings(SceneManager* sceneManager) {
 #ifdef USE_IMGUI
 	if (ImGui::Begin("System Settings")) {
-		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-		ImGui::Separator();
-
 		const char* postEffectNames[] = {
 			"FullScreen",
 			"BoxFilter",
@@ -118,9 +114,6 @@ void ImGuiEditorWindows::DrawSystemSettings(SceneManager* sceneManager) {
 			break;
 		}
 		}
-
-		ImGui::Separator();
-		LightManager::GetInstance()->DrawImGui();
 	}
 	ImGui::End();
 #endif
