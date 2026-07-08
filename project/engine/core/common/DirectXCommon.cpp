@@ -92,6 +92,9 @@ void DirectXCommon::Initialize() {
 	fullScreenMaterial_.dissolveEdgeWidth = 0.03f;
 	fullScreenMaterial_.time = 0.0f;
 	fullScreenMaterial_.noiseAlpha = 0.5f;
+	fullScreenMaterial_.hsvHueShift = 0.0f;
+	fullScreenMaterial_.hsvSaturationMultiplier = 1.0f;
+	fullScreenMaterial_.hsvValueMultiplier = 1.0f;
 	fullScreenCB_ = CreateBufferResource(device_.Get(), sizeof(FullScreenMaterial));
 	fullScreenCB_->Map(0, nullptr, reinterpret_cast<void**>(&fullScreenData_));
 	*fullScreenData_ = fullScreenMaterial_;
@@ -214,6 +217,9 @@ void DirectXCommon::PostDraw()
 	case PostEffect::kRandomNoise:
 		postEffectType = PrimitiveType::kPostEffectRandomNoise;
 		break;
+	case PostEffect::kHSVFilter:
+		postEffectType = PrimitiveType::kPostEffectHSVFilter;
+		break;
 	default:
 		break;
 	}
@@ -270,6 +276,18 @@ void DirectXCommon::SetDissolveEdgeWidth(float width) {
 
 void DirectXCommon::SetNoiseAlpha(float alpha) {
 	fullScreenMaterial_.noiseAlpha = std::clamp(alpha, 0.0f, 1.0f);
+}
+
+void DirectXCommon::SetHSVHueShift(float hueShift) {
+	fullScreenMaterial_.hsvHueShift = std::clamp(hueShift, -1.0f, 1.0f);
+}
+
+void DirectXCommon::SetHSVSaturationMultiplier(float satMult) {
+	fullScreenMaterial_.hsvSaturationMultiplier = satMult < 0.0f ? 0.0f : satMult;
+}
+
+void DirectXCommon::SetHSVValueMultiplier(float valMult) {
+	fullScreenMaterial_.hsvValueMultiplier = valMult < 0.0f ? 0.0f : valMult;
 }
 
 void DirectXCommon::EndFrame() 

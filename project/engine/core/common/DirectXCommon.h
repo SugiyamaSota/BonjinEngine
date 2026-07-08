@@ -22,7 +22,8 @@ public:
 		kDepthBasedOutline,
 		kRadialBlur,
 		kDissolve,
-		kRandomNoise
+		kRandomNoise,
+		kHSVFilter
 	};
 
 	/// --- インスタンス関連 ---
@@ -54,6 +55,12 @@ public:
 	float GetDissolveEdgeWidth() const { return fullScreenMaterial_.dissolveEdgeWidth; }
 	void SetNoiseAlpha(float alpha);
 	float GetNoiseAlpha() const { return fullScreenMaterial_.noiseAlpha; }
+	void SetHSVHueShift(float hueShift);
+	float GetHSVHueShift() const { return fullScreenMaterial_.hsvHueShift; }
+	void SetHSVSaturationMultiplier(float satMult);
+	float GetHSVSaturationMultiplier() const { return fullScreenMaterial_.hsvSaturationMultiplier; }
+	void SetHSVValueMultiplier(float valMult);
+	float GetHSVValueMultiplier() const { return fullScreenMaterial_.hsvValueMultiplier; }
 
 	/// --- 汎用関数 ---
 	// デストラクタ
@@ -192,7 +199,10 @@ private:
 		float dissolveEdgeWidth;
 		float time;
 		float noiseAlpha;
-		float padding3[2];
+		float hsvHueShift;
+		float hsvSaturationMultiplier;
+		float hsvValueMultiplier;
+		float padding3[3];
 	};
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> fullScreenCB_ = nullptr;

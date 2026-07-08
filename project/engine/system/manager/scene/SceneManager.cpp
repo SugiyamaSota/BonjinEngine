@@ -91,7 +91,8 @@ void SceneManager::DrawImGui() {
 		"DepthBasedOutline",
 		"RadialBlur",
 		"Dissolve",
-		"RandomNoise"
+		"RandomNoise",
+		"HSVFilter"
 	};
 
 	int currentPostEffect = static_cast<int>(GetPostEffect());
@@ -152,6 +153,18 @@ void SceneManager::DrawImGui() {
 	float noiseAlpha = GetNoiseAlpha();
 	if (ImGui::SliderFloat("Noise Alpha", &noiseAlpha, 0.0f, 1.0f)) {
 		SetNoiseAlpha(noiseAlpha);
+	}
+	float hsvHueShift = GetHSVHueShift();
+	if (ImGui::SliderFloat("HSV Hue Shift", &hsvHueShift, -1.0f, 1.0f)) {
+		SetHSVHueShift(hsvHueShift);
+	}
+	float hsvSaturationMultiplier = GetHSVSaturationMultiplier();
+	if (ImGui::SliderFloat("HSV Saturation", &hsvSaturationMultiplier, 0.0f, 2.0f)) {
+		SetHSVSaturationMultiplier(hsvSaturationMultiplier);
+	}
+	float hsvValueMultiplier = GetHSVValueMultiplier();
+	if (ImGui::SliderFloat("HSV Value", &hsvValueMultiplier, 0.0f, 2.0f)) {
+		SetHSVValueMultiplier(hsvValueMultiplier);
 	}
 #endif
 
@@ -255,4 +268,28 @@ void SceneManager::SetNoiseAlpha(float alpha) {
 
 float SceneManager::GetNoiseAlpha() const {
 	return DirectXCommon::GetInstance()->GetNoiseAlpha();
+}
+
+void SceneManager::SetHSVHueShift(float hueShift) {
+	DirectXCommon::GetInstance()->SetHSVHueShift(hueShift);
+}
+
+float SceneManager::GetHSVHueShift() const {
+	return DirectXCommon::GetInstance()->GetHSVHueShift();
+}
+
+void SceneManager::SetHSVSaturationMultiplier(float satMult) {
+	DirectXCommon::GetInstance()->SetHSVSaturationMultiplier(satMult);
+}
+
+float SceneManager::GetHSVSaturationMultiplier() const {
+	return DirectXCommon::GetInstance()->GetHSVSaturationMultiplier();
+}
+
+void SceneManager::SetHSVValueMultiplier(float valMult) {
+	DirectXCommon::GetInstance()->SetHSVValueMultiplier(valMult);
+}
+
+float SceneManager::GetHSVValueMultiplier() const {
+	return DirectXCommon::GetInstance()->GetHSVValueMultiplier();
 }

@@ -27,6 +27,7 @@ PSOManager::PSOManager() {
 	configs_[static_cast<size_t>(PrimitiveType::kPostEffectRadialBlur)] = std::make_unique<CopyImageConfig>(L"resources/shader/RadialBlur.PS.hlsl");
 	configs_[static_cast<size_t>(PrimitiveType::kPostEffectDissolve)] = std::make_unique<CopyImageConfig>(L"resources/shader/Dissolve.PS.hlsl");
 	configs_[static_cast<size_t>(PrimitiveType::kPostEffectRandomNoise)] = std::make_unique<CopyImageConfig>(L"resources/shader/RandomNoise.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectHSVFilter)] = std::make_unique<CopyImageConfig>(L"resources/shader/HSVFilter.PS.hlsl");
 
 }
 

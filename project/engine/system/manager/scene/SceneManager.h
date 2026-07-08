@@ -52,6 +52,12 @@ namespace Bonjin
         float GetDissolveEdgeWidth() const;
         void SetNoiseAlpha(float alpha);
         float GetNoiseAlpha() const;
+        void SetHSVHueShift(float hueShift);
+        float GetHSVHueShift() const;
+        void SetHSVSaturationMultiplier(float satMult);
+        float GetHSVSaturationMultiplier() const;
+        void SetHSVValueMultiplier(float valMult);
+        float GetHSVValueMultiplier() const;
 
     private:
 
