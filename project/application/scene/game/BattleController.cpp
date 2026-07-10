@@ -1,4 +1,5 @@
 #include "BattleController.h"
+#include "gameObject/camera/CameraController.h"
 
 #include "logic/Collision.h"
 #include "gameObject/anchor/anchor.h"
@@ -48,6 +49,9 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	player_->Initialize(playerModel_.get(), camera_, playerPosition);
 	player_->SetMapChipField(mapChipField_.get());
 	player_->SetLockedOnEnemiesList(&lockedOnEnemies_);
+
+	cameraController_ = std::make_unique<CameraController>();
+	cameraController_->Initialize(camera_, playerPosition);
 
 	for (uint32_t i = 0; i < vertical; ++i) {
 		for (uint32_t j = 0; j < horizontal; ++j) {
@@ -156,8 +160,7 @@ void BattleController::Update(float deltaTime) {
 	}
 
 	//const IndexSet centerIndex = mapChipField_->GetMapChipIndexSetByCenter();
-	camera_->SetTarget(
-		player_->GetWorldPosition());
+	cameraController_->Update(player_->GetWorldPosition(), deltaTime);
 
 	const uint32_t vertical = mapChipField_->GetNumBlockVirtical();
 	const uint32_t horizontal = mapChipField_->GetNumBlockHorizontal();
@@ -204,6 +207,7 @@ void BattleController::Draw() {
 void BattleController::DrawImGui() {
 #ifdef USE_IMGUI
 	LightManager::GetInstance()->DrawImGui();
+	cameraController_->DrawImGui();
 	ImGui::Checkbox("Enemy Respawn", &isEnemyRespawnEnabled_);
 	ImGui::SliderFloat("Enemy Respawn Time", &enemyRespawnTime_, 0.5f, 10.0f, "%.1f sec");
 
