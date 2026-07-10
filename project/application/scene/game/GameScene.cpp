@@ -25,7 +25,7 @@ void GameScene::Unload() {
 void GameScene::Update(float deltaTime) {
 	battleController_->Update(deltaTime);
 
-	if (battleController_->IsGoalReached()) {
+	if (battleController_->IsGoalReached()||battleController_->GetPlayer()->GetIsDead()) {
 		ChangePhase(GamePhase::kGoal);
 	}
 

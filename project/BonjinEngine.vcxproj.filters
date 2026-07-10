@@ -225,13 +225,17 @@
     <ClCompile Include="application\scene\game\logic\Collision.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="application\scene\game\logic\CollisionManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="application\scene\game\gameObject\player\Player.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="application\scene\game\gameObject\camera\CameraController.cpp">
+    <ClCompile Include="application\scene\game\gameObject\GameObject.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="application\scene\game\gameObject\BaseCharacter.cpp">
+    
+    <ClCompile Include="application\scene\game\gameObject\camera\CameraController.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="application\scene\game\gameObject\anchor\anchor.cpp">
@@ -443,6 +447,15 @@
     <ClInclude Include="application\scene\game\logic\Collision.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="application\scene\game\logic\CollisionConfig.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\scene\game\logic\Collider.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\scene\game\logic\CollisionManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="application\scene\game\logic\Data.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -452,7 +465,7 @@
     <ClInclude Include="application\scene\game\gameObject\camera\CameraController.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="application\scene\game\gameObject\BaseCharacter.h">
+    <ClInclude Include="application\scene\game\gameObject\GameObject.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\game\gameObject\anchor\anchor.h">

@@ -2,6 +2,7 @@
 #include "gameObject/camera/CameraController.h"
 
 #include "logic/Collision.h"
+#include "logic/CollisionManager.h"
 #include "gameObject/anchor/anchor.h"
 #include <algorithm>
 #include <cmath>
@@ -10,6 +11,8 @@
 using namespace Bonjin;
 
 void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
+	CollisionManager::GetInstance()->Clear();
+
 	camera_ = camera;
 	enemies_.clear();
 	enemyModels_.clear();
@@ -105,6 +108,7 @@ void BattleController::Unload() {
 	player_.reset();
 	playerModel_.reset();
 	goalModel_.reset();
+	goal_.reset();
 	blockModels_.clear();
 	blockWorldTransforms_.clear();
 	mapChipField_.reset();
@@ -118,6 +122,7 @@ void BattleController::Update(float deltaTime) {
 	skyBox_->Update(InitializeWorldTransform(), camera_);
 	player_->Update();
 
+	// アンカーの即着地処理
 	if (player_->HasAnchor()) {
 		Anchor& anchor = player_->GetAnchor();
 		if (!anchor.GetStandBy() && !anchor.IsInstantResolved()) {
@@ -125,18 +130,8 @@ void BattleController::Update(float deltaTime) {
 		}
 	}
 
-	if (goalModel_) {
-		goalModel_->Update(goalWorldTransform_, camera_);
-
-		// プレイヤーとゴールの当たり判定 (誤差対策にマージン付き)
-		AABB goalAABB;
-		float w = 2.2f;
-		float h = 2.2f;
-		goalAABB.min = { goalWorldTransform_.translate.x - w / 2.0f, goalWorldTransform_.translate.y - h / 2.0f, -2.0f };
-		goalAABB.max = { goalWorldTransform_.translate.x + w / 2.0f, goalWorldTransform_.translate.y + h / 2.0f, 2.0f };
-		if (IsCollision(player_->GetAABB(), goalAABB)) {
-			isGoalReached_ = true;
-		}
+	if (goal_) {
+		goal_->Update();
 	}
 
 	if (player_->ConsumeLandingEffectRequest()) {
@@ -145,7 +140,14 @@ void BattleController::Update(float deltaTime) {
 		dustPosition.z = -0.1f;
 		EmitLandingDustEffect(dustPosition);
 	}
-	CheckAnchorEnemyCollision();
+
+	// 共通衝突判定の実行
+	CollisionManager::GetInstance()->CheckAllCollisions();
+
+	// プレイヤーのゴール到達フラグチェック
+	if (player_ && player_->GetIsGoalReached()) {
+		isGoalReached_ = true;
+	}
 
 	for (const auto& enemy : enemies_) {
 		if (enemy->ConsumeDefeatEffectRequest()) {
@@ -186,8 +188,8 @@ void BattleController::Draw() {
 		}
 	}
 
-	if (goalModel_) {
-		goalModel_->Draw();
+	if (goal_) {
+		goal_->Draw();
 	}
 
 	player_->Draw();
@@ -225,24 +227,21 @@ void BattleController::DrawImGui() {
 
 	if (ImGui::TreeNode("Goal Debug")) {
 		ImGui::Text("Goal Reached: %s", isGoalReached_ ? "TRUE" : "FALSE");
-		if (goalModel_) {
-			ImGui::Text("Goal Pos: (%.2f, %.2f, %.2f)", goalWorldTransform_.translate.x, goalWorldTransform_.translate.y, goalWorldTransform_.translate.z);
+		if (goal_) {
+			Vector3 goalPos = goal_->GetPosition();
+			ImGui::Text("Goal Pos: (%.2f, %.2f, %.2f)", goalPos.x, goalPos.y, goalPos.z);
 			AABB pAABB = player_->GetAABB();
 			ImGui::Text("Player AABB min: (%.2f, %.2f, %.2f)", pAABB.min.x, pAABB.min.y, pAABB.min.z);
 			ImGui::Text("Player AABB max: (%.2f, %.2f, %.2f)", pAABB.max.x, pAABB.max.y, pAABB.max.z);
 
-			AABB gAABB;
-			float w = 2.2f;
-			float h = 2.2f;
-			gAABB.min = { goalWorldTransform_.translate.x - w / 2.0f, goalWorldTransform_.translate.y - h / 2.0f, -2.0f };
-			gAABB.max = { goalWorldTransform_.translate.x + w / 2.0f, goalWorldTransform_.translate.y + h / 2.0f, 2.0f };
+			AABB gAABB = goal_->GetAABB();
 			ImGui::Text("Goal AABB min: (%.2f, %.2f, %.2f)", gAABB.min.x, gAABB.min.y, gAABB.min.z);
 			ImGui::Text("Goal AABB max: (%.2f, %.2f, %.2f)", gAABB.max.x, gAABB.max.y, gAABB.max.z);
 
 			bool collision = IsCollision(pAABB, gAABB);
 			ImGui::Text("Is Collision: %s", collision ? "TRUE" : "FALSE");
 		} else {
-			ImGui::Text("Goal Model is NULL (No Goal in Map)");
+			ImGui::Text("Goal is NULL (No Goal in Map)");
 		}
 		ImGui::TreePop();
 	}
@@ -261,37 +260,25 @@ void BattleController::GenerateBlocksAndGoal() {
 				blockWorldTransforms_[i][j].translate =
 					mapChipField_->GetMapChipPositionByIndex(j, i);
 			} else if (type == MapChipType::kGoal) {
-				goalWorldTransform_ = InitializeWorldTransform();
-				goalWorldTransform_.translate =
-					mapChipField_->GetMapChipPositionByIndex(j, i);
 				goalModel_ = std::make_unique<Object3D>();
 				goalModel_->CreateModel(
 					ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
 				goalModel_->SetEnableEnableEnvironmentMap(false);
 				goalModel_->SetColor({0.0f, 1.0f, 0.0f, 1.0f}); // ゴールを緑色にする
+
+				goal_ = std::make_unique<GameObject>();
+				GameObjectInitConfig config;
+				config.physicsType = PhysicsType::None;
+				config.hasCollider = true;
+				config.categoryAttr = kAttributeGoal;
+				config.collisionMask = kAttributePlayer;
+				config.tag = "Goal";
+
+				const Vector3 goalPosition = mapChipField_->GetMapChipPositionByIndex(j, i);
+				goal_->Initialize(goalModel_.get(), camera_, goalPosition, config);
+				goal_->SetWidth(2.2f);
+				goal_->SetHeight(2.2f);
 			}
-		}
-	}
-}
-
-void BattleController::CheckAnchorEnemyCollision() {
-	if (!player_->HasAnchor()) {
-		return;
-	}
-
-	Anchor& anchor = player_->GetAnchor();
-	for (const auto& enemy : enemies_) {
-		if (enemy->GetIsDead() || enemy->GetIsLockedOn()) {
-			continue;
-		}
-
-		if (IsCollision(anchor.GetAABB(), enemy->GetAABB())) {
-			const Vector3 hitPosition = anchor.GetPosition();
-			enemy->OnCollision();
-			lockedOnEnemies_.push_back(enemy.get());
-			anchor.OnCollision();
-			EmitAnchorHitEffect(hitPosition);
-			break;
 		}
 	}
 }

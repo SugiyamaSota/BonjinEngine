@@ -1,6 +1,6 @@
 #pragma once
 #include "../../logic/Data.h"
-#include "../BaseCharacter.h"
+#include "../GameObject.h"
 #include "EnemyBullet.h"
 
 #include "Object3D.h"
@@ -14,7 +14,7 @@ enum class EnemyState {
 	kChase,  // 追跡
 };
 
-class Enemy : public BaseCharacter {
+class Enemy : public Bonjin::GameObject {
 public:
     /// <summary>
     /// 初期化
@@ -185,8 +185,4 @@ private:
     /// </summary>
     void ChaseBehavior();
 
-    /// <summary>
-    /// 物理と移動の適用
-    /// </summary>
-    void ApplyPhysicsAndMovement();
 };

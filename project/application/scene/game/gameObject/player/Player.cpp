@@ -4,33 +4,46 @@
 #include "ImGuiManager.h"
 #include"../../mapchip/MapChipField.h"
 #include "../../logic/Collision.h"
+#include "ParticleManager.h"
 #include <algorithm>
 #include <numbers>
+#include <cmath>
+
+using namespace Bonjin;
 
 void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position) {
-	assert(model);
-	model_ = model;
-
-	worldTransform_ = {
-		{1,1,1},
-		{0,0,0},
-		position,
-	};
-
-	camera_ = camera;
-
-	onGround_ = false;
-
 	width_ = kWidth;
 	height_ = kHeight;
+
+	GameObjectInitConfig config;
+	config.physicsType = PhysicsType::Gravity;
+	config.hasCollider = true;
+	config.categoryAttr = kAttributePlayer;
+	config.collisionMask = kAttributeEnemy | kAttributeGoal | kAttributeEnemyBullet;
+	config.tag = "Player";
+	GameObject::Initialize(model, camera, position, config);
 
 	hp_ = 3;
 
 	anchorLine_ = std::make_unique<Bonjin::Line3D>();
 	anchorLine_->Initialize();
+
+	isGoalReached_ = false;
+}
+
+void Player::OnCollision(Bonjin::Collider* other) {
+	if (other->GetCategoryAttr() == kAttributeEnemy) {
+		Enemy* enemy = static_cast<Enemy*>(other->GetOwner());
+		OnCollision(enemy);
+	} else if (other->GetCategoryAttr() == kAttributeGoal) {
+		isGoalReached_ = true;
+	}
 }
 
 void Player::Move() {
+	if (isKnockedBack_) {
+		return;
+	}
 	// 移動入力
 	// 接地状態
 	if (onGround_) {
@@ -133,6 +146,7 @@ void Player::Update() {
 	Move();
 
 	if (isKnockedBack_) {
+		velocity_.x *= kKnockbackAttenuation;
 		knockbackTimer_ -= 1.0f / 60.0f; // 1秒間に60フレームを想定
 		if (knockbackTimer_ <= 0.0f) {
 			isKnockedBack_ = false;
@@ -140,8 +154,16 @@ void Player::Update() {
 		}
 	}
 
+	if (isInvincible_) {
+		invincibleTimer_ -= 1.0f / 60.0f; // 1秒間に60フレームを想定
+		if (invincibleTimer_ <= 0.0f) {
+			isInvincible_ = false;
+			invincibleTimer_ = 0.0f;
+		}
+	}
+
 	// 2.物理とマップ衝突判定の更新
-	UpdatePhysicsAndMapCollision();
+	GameObject::Update();
 
 	if (!wasOnGround && onGround_) {
 		landingEffectRequested_ = true;
@@ -164,11 +186,11 @@ void Player::Update() {
 		}
 	}
 
-	model_->Update(worldTransform_,camera_);
-
 	// XボタンでshootAnchor
 	if (Input::GetInstance()->IsPadTrigger(2) || Input::GetInstance()->IsTrigger(DIK_J)) {
-		shootAnchor();
+		if (!isKnockedBack_) {
+			shootAnchor();
+		}
 	}
 
 	// アンカーの更新
@@ -176,7 +198,7 @@ void Player::Update() {
 
 	if (anchor_ != nullptr) {
 		// アンカーを更新
-		anchor_->Update(*camera_);
+		anchor_->Update();
 		// 衝突フラグが立っているかチェック
 		if (anchor_->IsDead()) {
 			anchor_ = nullptr; // アンカーを削除
@@ -191,43 +213,57 @@ void Player::Update() {
 
 	// Yボタンでテレポート
 	if (Input::GetInstance()->IsPadTrigger(1) || Input::GetInstance()->IsTrigger(DIK_K)) {
-		// アンカーが存在し、isStandByがtrueの場合
-		if (anchor_ && anchor_->GetStandBy()) {
-			// アンカーの座標からテレポート先座標を取得
-			Vector3 anchorPos = anchor_->GetPosition();
-			Vector3 teleportPosition = anchorPos;
+		if (!isKnockedBack_) {
+			// アンカーが存在し、isStandByがtrueの場合
+			if (anchor_ && anchor_->GetStandBy()) {
+				// アンカーの座標からテレポート先座標を取得
+				Vector3 anchorPos = anchor_->GetPosition();
+				Vector3 teleportPosition = anchorPos;
 
-			//// キャラクターの高さの半分だけ上方向に移動
-			//teleportPosition.y = anchorPos.y + kHeight / 2.0f;
-			//// === ここまで修正 ===
+				//// キャラクターの高さの半分だけ上方向に移動
+				//teleportPosition.y = anchorPos.y + kHeight / 2.0f;
+				//// === ここまで修正 ===
 
-			Vector3 anchorVelocity = anchor_->GetVelocity();
+				Vector3 anchorVelocity = anchor_->GetVelocity();
 
-			// 体が埋まらないようにX座標を調整
-			if (anchorVelocity.x > 0.0f) {
-				teleportPosition.x -= kWidth / 2.0f;
-			} else if (anchorVelocity.x < 0.0f) {
-				teleportPosition.x += kWidth / 2.0f;
+				// 体が埋まらないようにX座標を調整
+				if (anchorVelocity.x > 0.0f) {
+					teleportPosition.x -= kWidth / 2.0f;
+				} else if (anchorVelocity.x < 0.0f) {
+					teleportPosition.x += kWidth / 2.0f;
+				}
+				// 体が埋まらないようにY座標を調整
+				if (anchorVelocity.y > 0.0f) {
+					teleportPosition.y -= kHeight / 2.0f;
+				} else if (anchorVelocity.y < 0.0f) {
+					teleportPosition.y += kHeight / 2.0f;
+				}
+
+				// プレイヤーを計算された座標にテレポート
+				worldTransform_.translate = teleportPosition;
+
+				// アンカーを消去
+				anchor_ = nullptr;
 			}
-			// 体が埋まらないようにY座標を調整
-			if (anchorVelocity.y > 0.0f) {
-				teleportPosition.y -= kHeight / 2.0f;
-			} else if (anchorVelocity.y < 0.0f) {
-				teleportPosition.y += kHeight / 2.0f;
-			}
-
-			// プレイヤーを計算された座標にテレポート
-			worldTransform_.translate = teleportPosition;
-
-			// アンカーを消去
-			anchor_ = nullptr;
 		}
 	}
+
 }
 
 void Player::Draw() {
+	// 無敵時間中の点滅処理 (0.1秒周期)
+	bool drawPlayerModel = true;
+	if (isInvincible_) {
+		if (std::fmod(invincibleTimer_, 0.1f) < 0.05f) {
+			drawPlayerModel = false;
+		}
+	}
+
 	// 自キャラの描画処理
-	model_->Draw();
+	if (drawPlayerModel) {
+		model_->Draw();
+	}
+
 	if (anchor_ != nullptr) 
 	{
 		anchor_->Draw();
@@ -274,7 +310,7 @@ void Player::shootAnchor() {
 	initialVelocity.z = 0.0f;
 
 	Vector3 spawnPos = { worldTransform_.translate.x, worldTransform_.translate.y,0.0f };
-	anchor_ = std::make_unique<Anchor>(spawnPos, initialVelocity, mapChipField_);
+	anchor_ = std::make_unique<Anchor>(spawnPos, initialVelocity, mapChipField_, this, camera_);
 }
 
 Vector3 Player::GetWorldPosition() {
@@ -291,7 +327,25 @@ AABB Player::GetAABB() {
 }
 
 void Player::OnCollision(Enemy* enemy) {
-	
+	if (isInvincible_|| hp_<=0) {
+		return;
+	}
+
+	isKnockedBack_ = true;
+	knockbackTimer_ = kKnockbackTime;
+
+	isInvincible_ = true;
+	invincibleTimer_ = kInvincibleTime;
+
+	ApplyDamage(1);
+
+	// ノックバック方向を決定 (敵とプレイヤーの相対位置)
+	Vector3 relative = Subtract(GetWorldPosition(), enemy->GetWorldPosition());
+	float knockbackDirX = (relative.x >= 0.0f) ? 1.0f : -1.0f;
+
+	// 速度を設定して弾き飛ばす
+	velocity_.x = knockbackDirX * kKnockbackPower;
+	velocity_.y = kKnockbackUpPower;
 }
 
 bool Player::ConsumeLandingEffectRequest() {
@@ -327,7 +381,7 @@ void Player::HandleLockOnRemovalInput() {
 }
 
 void Player::OnMapCollision(const CollisionMapInfo& collisionMapinfo) {
-	BaseCharacter::OnMapCollision(collisionMapinfo);
+	GameObject::OnMapCollision(collisionMapinfo);
 
 	if (collisionMapinfo.isHitWall_) {
 		velocity_.x *= (1.0f - kAttenuationWall);
@@ -358,4 +412,44 @@ void Player::DrawImGui() {
 		ImGui::TreePop();
 	}
 #endif
+}
+
+void Player::EmitAnchorHitEffect(const Vector3& position) {
+	static std::mt19937 randomEngine(std::random_device{}());
+	ParticleManager* particleManager = ParticleManager::GetInstance();
+	
+	constexpr uint32_t kRayCount = 8;
+	std::uniform_real_distribution<float> rotateDistribution(
+		-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
+	std::uniform_real_distribution<float> lengthDistribution(1.2f, 2.2f);
+
+	for (uint32_t index = 0; index < kRayCount; ++index) {
+		ParticleConfig ray{};
+		ray.position = position;
+		ray.rotate = {0.0f, 0.0f, rotateDistribution(randomEngine)};
+		ray.velocity = {0.0f, 0.0f, 0.0f};
+		ray.scale = {0.12f, lengthDistribution(randomEngine), 1.0f};
+		ray.color = {0.35f, 0.75f, 1.0f, 1.0f};
+		ray.lifeTime = 0.28f;
+		ray.updateFunc = [](ParticleData& particle, float deltaTime) {
+			particle.transform.scale.y += 4.0f * deltaTime;
+			particle.transform.scale.x -= 0.25f * deltaTime;
+			if (particle.transform.scale.x < 0.0f) {
+				particle.transform.scale.x = 0.0f;
+			}
+		};
+		particleManager->Emit("anchorHitRay", ray);
+	}
+
+	ParticleConfig flash{};
+	flash.position = position;
+	flash.scale = {0.9f, 0.9f, 1.0f};
+	flash.color = {0.65f, 0.9f, 1.0f, 1.0f};
+	flash.lifeTime = 0.18f;
+	flash.updateFunc = [](ParticleData& particle, float deltaTime) {
+		const float expansion = 4.0f * deltaTime;
+		particle.transform.scale.x += expansion;
+		particle.transform.scale.y += expansion;
+	};
+	particleManager->Emit("anchorHitFlash", flash);
 }

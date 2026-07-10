@@ -1,49 +1,45 @@
 #include "EnemyBullet.h"
 #include "../../mapchip/MapChipField.h"
 #include "../../logic/Collision.h"
+#include "../player/Player.h"
+
+using namespace Bonjin;
 
 EnemyBullet::EnemyBullet(const Vector3& position, const Vector3& velocity, Camera* camera, MapChipField* mapChipField) {
-	camera_ = camera;
-	velocity_ = velocity;
 	mapChipField_ = mapChipField;
+	width_ = kWidth;
+	height_ = kHeight;
 
-	worldTransform_ = {
-		{0.3f, 0.3f, 0.3f},
-		{0.0f, 0.0f, 0.0f},
-		position
-	};
+	bulletModel_ = std::make_unique<Object3D>();
+	bulletModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+	bulletModel_->SetColor({ 1.0f, 0.0f, 0.0f, 1.0f });
 
-	model_ = std::make_unique<Object3D>();
-	model_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
-	model_->SetColor({ 1.0f, 0.0f, 0.0f, 1.0f });
+	GameObjectInitConfig config;
+	config.physicsType = PhysicsType::Linear;
+	config.hasCollider = true;
+	config.categoryAttr = kAttributeEnemyBullet;
+	config.collisionMask = kAttributePlayer;
+	config.tag = "EnemyBullet";
+
+	GameObject::Initialize(bulletModel_.get(), camera, position, config);
+
+	velocity_ = velocity;
+
+	worldTransform_.scale = { 0.3f, 0.3f, 0.3f };
 }
 
-void EnemyBullet::Update() {
-	// 直進移動
-	worldTransform_.translate = Add(worldTransform_.translate, velocity_);
-
-	// 壁衝突判定
-	if (mapChipField_) {
-		IndexSet index = mapChipField_->GetMapChipIndexSetByPosition(worldTransform_.translate);
-		MapChipType type = mapChipField_->GetMapChipTypeByIndex(index.xIndex, index.yIndex);
-		if (type == MapChipType::kBlock) {
-			isDead_ = true; // 壁に当たったら消滅
+void EnemyBullet::OnCollision(Bonjin::Collider* other) {
+	if (other->GetCategoryAttr() == kAttributePlayer) {
+		Player* player = static_cast<Player*>(other->GetOwner());
+		if (!player->GetIsInvincible()) {
+			player->ApplyDamage(1);
 		}
-	}
-
-	model_->Update(worldTransform_, camera_);
-}
-
-void EnemyBullet::Draw() {
-	if (!isDead_) {
-		model_->Draw();
+		SetDead(true);
 	}
 }
 
-AABB EnemyBullet::GetAABB() const {
-	AABB aabb;
-	float size = 0.3f;
-	aabb.min = { worldTransform_.translate.x - size / 2.0f, worldTransform_.translate.y - size / 2.0f, worldTransform_.translate.z - size / 2.0f };
-	aabb.max = { worldTransform_.translate.x + size / 2.0f, worldTransform_.translate.y + size / 2.0f, worldTransform_.translate.z + size / 2.0f };
-	return aabb;
+void EnemyBullet::OnMapCollision(const CollisionMapInfo& collisionMapinfo) {
+	if (collisionMapinfo.isHitWall_ || collisionMapinfo.isHotTop_ || collisionMapinfo.isLandin_) {
+		SetDead(true);
+	}
 }
