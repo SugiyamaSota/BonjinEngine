@@ -5,7 +5,7 @@
 
 #include "../anchor/anchor.h"
 #include "../../logic/Data.h"
-#include "../BaseCharacter.h"
+#include "../GameObject.h"
 
 #include "Object3D.h"
 #include "Line3D.h"
@@ -17,7 +17,7 @@ class Camera;
 /// <summary>
 /// 自キャラ
 /// </summary>
-class Player : public BaseCharacter {
+class Player : public Bonjin::GameObject {
 public:
 	/// <summary>
 	/// 初期化
@@ -74,6 +74,12 @@ public:
 		lockedOnEnemies_ = enemiesList;
 	}
 
+	void AddLockedOnEnemy(Enemy* enemy) {
+		if (lockedOnEnemies_ && enemy) {
+			lockedOnEnemies_->push_back(enemy);
+		}
+	}
+
 	// HP関連
 	int GetHp() const { return hp_; }
 	void SetHp(int hp) { hp_ = hp; }
@@ -82,6 +88,9 @@ public:
 
 	bool GetIsInvincible() const { return isInvincible_; }
 
+	bool GetIsGoalReached() const { return isGoalReached_; }
+	void SetIsGoalReached(bool reached) { isGoalReached_ = reached; }
+
 	// ロックオン中の敵をすべて削除する処理（入力判定を含む)
 	void HandleLockOnRemovalInput();
 
@@ -89,6 +98,11 @@ public:
 	void RemoveLockedOnEnemies(std::list<Enemy*>& enemies);
 
 	void DrawImGui();
+
+	// 衝突コールバックのオーバーライド
+	void OnCollision(Bonjin::Collider* other) override;
+
+	void EmitAnchorHitEffect(const Vector3& position);
 
 	void UpdateWorldTransform(){ model_->Update(worldTransform_, camera_); }
 
@@ -140,9 +154,6 @@ private:
 	std::unique_ptr<Anchor> anchor_;
 	std::unique_ptr<Bonjin::Line3D> anchorLine_;
 	Vector4 lineColor_ = { 0.5f, 0.85f, 1.f, 0.5f };
-	/// <summary>
-	/// アンカーの射出
-	/// </summary>
 	void shootAnchor();
 
 	// ロックオンされた敵のリストへのポインタ
@@ -150,4 +161,6 @@ private:
 
 	// HP
 	int hp_ = 3;
+
+	bool isGoalReached_ = false;
 };

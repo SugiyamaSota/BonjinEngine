@@ -4,31 +4,40 @@
 #include "ImGuiManager.h"
 #include"../../mapchip/MapChipField.h"
 #include "../../logic/Collision.h"
+#include "ParticleManager.h"
 #include <algorithm>
 #include <numbers>
 #include <cmath>
 
+using namespace Bonjin;
+
 void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position) {
-	assert(model);
-	model_ = model;
-
-	worldTransform_ = {
-		{1,1,1},
-		{0,0,0},
-		position,
-	};
-
-	camera_ = camera;
-
-	onGround_ = false;
-
 	width_ = kWidth;
 	height_ = kHeight;
+
+	GameObjectInitConfig config;
+	config.physicsType = PhysicsType::Gravity;
+	config.hasCollider = true;
+	config.categoryAttr = kAttributePlayer;
+	config.collisionMask = kAttributeEnemy | kAttributeGoal | kAttributeEnemyBullet;
+	config.tag = "Player";
+	GameObject::Initialize(model, camera, position, config);
 
 	hp_ = 3;
 
 	anchorLine_ = std::make_unique<Bonjin::Line3D>();
 	anchorLine_->Initialize();
+
+	isGoalReached_ = false;
+}
+
+void Player::OnCollision(Bonjin::Collider* other) {
+	if (other->GetCategoryAttr() == kAttributeEnemy) {
+		Enemy* enemy = static_cast<Enemy*>(other->GetOwner());
+		OnCollision(enemy);
+	} else if (other->GetCategoryAttr() == kAttributeGoal) {
+		isGoalReached_ = true;
+	}
 }
 
 void Player::Move() {
@@ -154,7 +163,7 @@ void Player::Update() {
 	}
 
 	// 2.物理とマップ衝突判定の更新
-	UpdatePhysicsAndMapCollision();
+	GameObject::Update();
 
 	if (!wasOnGround && onGround_) {
 		landingEffectRequested_ = true;
@@ -177,8 +186,6 @@ void Player::Update() {
 		}
 	}
 
-	model_->Update(worldTransform_,camera_);
-
 	// XボタンでshootAnchor
 	if (Input::GetInstance()->IsPadTrigger(2) || Input::GetInstance()->IsTrigger(DIK_J)) {
 		if (!isKnockedBack_) {
@@ -191,7 +198,7 @@ void Player::Update() {
 
 	if (anchor_ != nullptr) {
 		// アンカーを更新
-		anchor_->Update(*camera_);
+		anchor_->Update();
 		// 衝突フラグが立っているかチェック
 		if (anchor_->IsDead()) {
 			anchor_ = nullptr; // アンカーを削除
@@ -303,7 +310,7 @@ void Player::shootAnchor() {
 	initialVelocity.z = 0.0f;
 
 	Vector3 spawnPos = { worldTransform_.translate.x, worldTransform_.translate.y,0.0f };
-	anchor_ = std::make_unique<Anchor>(spawnPos, initialVelocity, mapChipField_);
+	anchor_ = std::make_unique<Anchor>(spawnPos, initialVelocity, mapChipField_, this, camera_);
 }
 
 Vector3 Player::GetWorldPosition() {
@@ -374,7 +381,7 @@ void Player::HandleLockOnRemovalInput() {
 }
 
 void Player::OnMapCollision(const CollisionMapInfo& collisionMapinfo) {
-	BaseCharacter::OnMapCollision(collisionMapinfo);
+	GameObject::OnMapCollision(collisionMapinfo);
 
 	if (collisionMapinfo.isHitWall_) {
 		velocity_.x *= (1.0f - kAttenuationWall);
@@ -405,4 +412,44 @@ void Player::DrawImGui() {
 		ImGui::TreePop();
 	}
 #endif
+}
+
+void Player::EmitAnchorHitEffect(const Vector3& position) {
+	static std::mt19937 randomEngine(std::random_device{}());
+	ParticleManager* particleManager = ParticleManager::GetInstance();
+	
+	constexpr uint32_t kRayCount = 8;
+	std::uniform_real_distribution<float> rotateDistribution(
+		-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
+	std::uniform_real_distribution<float> lengthDistribution(1.2f, 2.2f);
+
+	for (uint32_t index = 0; index < kRayCount; ++index) {
+		ParticleConfig ray{};
+		ray.position = position;
+		ray.rotate = {0.0f, 0.0f, rotateDistribution(randomEngine)};
+		ray.velocity = {0.0f, 0.0f, 0.0f};
+		ray.scale = {0.12f, lengthDistribution(randomEngine), 1.0f};
+		ray.color = {0.35f, 0.75f, 1.0f, 1.0f};
+		ray.lifeTime = 0.28f;
+		ray.updateFunc = [](ParticleData& particle, float deltaTime) {
+			particle.transform.scale.y += 4.0f * deltaTime;
+			particle.transform.scale.x -= 0.25f * deltaTime;
+			if (particle.transform.scale.x < 0.0f) {
+				particle.transform.scale.x = 0.0f;
+			}
+		};
+		particleManager->Emit("anchorHitRay", ray);
+	}
+
+	ParticleConfig flash{};
+	flash.position = position;
+	flash.scale = {0.9f, 0.9f, 1.0f};
+	flash.color = {0.65f, 0.9f, 1.0f, 1.0f};
+	flash.lifeTime = 0.18f;
+	flash.updateFunc = [](ParticleData& particle, float deltaTime) {
+		const float expansion = 4.0f * deltaTime;
+		particle.transform.scale.x += expansion;
+		particle.transform.scale.y += expansion;
+	};
+	particleManager->Emit("anchorHitFlash", flash);
 }

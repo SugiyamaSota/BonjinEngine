@@ -11,6 +11,7 @@
 #include "Object3D.h"
 #include "ParticleManager.h"
 #include "SkyBox.h"
+#include "gameObject/GameObject.h"
 
 namespace Bonjin {
 
@@ -44,8 +45,8 @@ private:
 	std::unique_ptr<MapChipField> mapChipField_;
 	std::vector<std::vector<std::unique_ptr<Object3D>>> blockModels_;
 	std::vector<std::vector<WorldTransform>> blockWorldTransforms_;
+	std::unique_ptr<GameObject> goal_;
 	std::unique_ptr<Object3D> goalModel_;
-	WorldTransform goalWorldTransform_{};
 	std::unique_ptr<SkyBox> skyBox_;
 
 	ParticleManager* particleManager_ = nullptr;
@@ -57,7 +58,6 @@ private:
 
 	void GenerateBlocksAndGoal();
 	void ResolveAnchorInstantLanding(class Anchor& anchor);
-	void CheckAnchorEnemyCollision();
 	void EmitAnchorHitEffect(const Vector3& position);
 	void EmitEnemyDefeatEffect(const Vector3& position);
 	void EmitLandingDustEffect(const Vector3& position);

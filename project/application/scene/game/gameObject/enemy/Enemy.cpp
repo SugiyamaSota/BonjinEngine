@@ -13,19 +13,7 @@
 using namespace Bonjin;
 
 void Enemy::Initialize(Object3D* model, Camera* camera, const Vector3& position) {
-
-	worldTransform_ = {
-		{1,1,1},
-		{0,0,0},
-		position,
-	};
 	spawnPosition_ = position;
-
-	model_ = model;
-
-	camera_ = camera;
-
-	velocity_ = { -kWalkSpeed, 0, 0 };
 
 	walkTimer_ = 0.0f;
 	isLockedOn_ = false;
@@ -38,6 +26,16 @@ void Enemy::Initialize(Object3D* model, Camera* camera, const Vector3& position)
 
 	width_ = kWidth_;
 	height_ = kHeight_;
+
+	GameObjectInitConfig config;
+	config.physicsType = PhysicsType::Gravity;
+	config.hasCollider = true;
+	config.categoryAttr = kAttributeEnemy;
+	config.collisionMask = kAttributePlayer | kAttributeAnchor;
+	config.tag = "Enemy";
+	GameObject::Initialize(model, camera, position, config);
+
+	velocity_ = { -kWalkSpeed, 0, 0 };
 
 	shootTimer_ = 0.0f;
 	bullets_.clear();
@@ -61,7 +59,7 @@ void Enemy::Update() {
 		break;
 	}
 
-	ApplyPhysicsAndMovement();
+	GameObject::Update();
 
 	// チャージ更新
 	if (isCharging_) {
@@ -92,21 +90,6 @@ void Enemy::Update() {
 	for (auto it = bullets_.begin(); it != bullets_.end();) {
 		(*it)->Update();
 
-		// プレイヤーとの衝突判定
-		if (!(*it)->IsDead() && player_ && !player_->GetIsDead()) {
-			if (IsCollision((*it)->GetAABB(), player_->GetAABB())) {
-				if (player_->GetIsInvincible()) {
-					// プレイヤーが無敵状態の場合は弾を消すだけ
-					(*it)->SetDead(true);
-				} else {
-					// プレイヤーが無敵状態でない場合はダメージを与える
-					(*it)->SetDead(true);
-					player_->ApplyDamage(1);
-					
-				}
-			}
-		}
-
 		if ((*it)->IsDead()) {
 			it = bullets_.erase(it);
 		} else {
@@ -128,8 +111,7 @@ void Enemy::Update() {
 		walkTimer_ = 0.0f;
 	}
 
-	// 行列の変換
-	model_->Update(worldTransform_, camera_);
+
 
 	//lockedOnSprite_->Update();
 }
@@ -203,10 +185,8 @@ void Enemy::ChaseBehavior() {
 	velocity_.x = 0.f;
 
 	if (playerPos.x < myPos.x) {
-		//velocity_.x = -kWalkSpeed;
 		lrDirection_ = LRDirection::kLeft;
 	} else {
-		//velocity_.x = kWalkSpeed;
 		lrDirection_ = LRDirection::kRight;
 	}
 
@@ -243,9 +223,7 @@ void Enemy::ChaseBehavior() {
 	}
 }
 
-void Enemy::ApplyPhysicsAndMovement() {
-	UpdatePhysicsAndMapCollision();
-}
+
 
 
 void Enemy::Draw() { 
@@ -316,7 +294,6 @@ void Enemy::UpdateRespawn(float deltaTime, float respawnTime, bool isRespawnEnab
 		{0.0f, 0.0f, 0.0f},
 		spawnPosition_,
 	};
-	velocity_ = {-kWalkSpeed, 0.0f, 0.0f};
 	lrDirection_ = LRDirection::kLeft;
 	walkTimer_ = 0.0f;
 	respawnTimer_ = 0.0f;
@@ -329,6 +306,17 @@ void Enemy::UpdateRespawn(float deltaTime, float respawnTime, bool isRespawnEnab
 	isCharging_ = false;
 	chargeTimer_ = 0.0f;
 	uvScrollTimer_ = 0.0f;
+
+	GameObjectInitConfig config;
+	config.physicsType = PhysicsType::Gravity;
+	config.hasCollider = true;
+	config.categoryAttr = kAttributeEnemy;
+	config.collisionMask = kAttributePlayer | kAttributeAnchor;
+	config.tag = "Enemy";
+	GameObject::Initialize(model_, camera_, spawnPosition_, config);
+
+	velocity_ = { -kWalkSpeed, 0.0f, 0.0f };
+
 	model_->SetColor({1.0f, 1.0f, 1.0f, 1.0f});
 	model_->Update(worldTransform_, camera_);
 }
@@ -337,6 +325,7 @@ void Enemy::SetIsDead(bool flag) {
 	if (flag && !isDead_) {
 		defeatEffectRequested_ = true;
 		respawnTimer_ = 0.0f;
+		collider_.reset();
 	}
 	isDead_ = flag;
 }
@@ -351,7 +340,7 @@ bool Enemy::ConsumeDefeatEffectRequest() {
 }
 
 void Enemy::OnMapCollision(const CollisionMapInfo& collisionMapinfo) {
-	BaseCharacter::OnMapCollision(collisionMapinfo);
+	GameObject::OnMapCollision(collisionMapinfo);
 
 	if (collisionMapinfo.isHitWall_) {
 		if (state_ == EnemyState::kPatrol) {

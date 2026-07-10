@@ -1,30 +1,22 @@
 #pragma once
-#include "../../logic/Data.h"
-#include "Object3D.h"
-#include <memory>
+#include "../GameObject.h"
 
-class MapChipField;
-class Camera;
-
-class EnemyBullet {
-private:
-	WorldTransform worldTransform_{};
-	Vector3 velocity_ = {};
-	Camera* camera_ = nullptr;
-	MapChipField* mapChipField_ = nullptr;
-	std::unique_ptr<Object3D> model_;
-
-	bool isDead_ = false;
-
+class EnemyBullet : public Bonjin::GameObject {
 public:
 	EnemyBullet(const Vector3& position, const Vector3& velocity, Camera* camera, MapChipField* mapChipField);
 	~EnemyBullet() = default;
 
-	void Update();
-	void Draw();
+	// 衝突コールバックのオーバーライド
+	void OnCollision(Bonjin::Collider* other) override;
 
-	bool IsDead() const { return isDead_; }
-	void SetDead(bool flag) { isDead_ = flag; }
-	Vector3 GetPosition() const { return worldTransform_.translate; }
-	AABB GetAABB() const;
+protected:
+	// マップ壁衝突時の消滅処理
+	void OnMapCollision(const CollisionMapInfo& collisionMapinfo) override;
+
+private:
+	std::unique_ptr<Object3D> bulletModel_;
+
+	// 弾サイズ
+	static inline const float kWidth = 0.5f;
+	static inline const float kHeight = 0.5f;
 };
