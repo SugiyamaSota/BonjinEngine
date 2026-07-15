@@ -2,6 +2,7 @@
 #include "SceneManager.h"
 #include "input/Input.h"
 #include "input/Gamepad.h"
+#include "TextSprite.h"
 
 #include <cmath>
 
@@ -62,9 +63,16 @@ void TestScene::Initialize(Camera* camera)
 
 	ParticleManager::GetInstance()->Emit("ringGroup", ringEffect);
 
+	testTextSprite_ = std::make_unique<TextSprite>();
+	testTextSprite_->Initialize();
+	strcpy_s(textBuffer_, "test sprite");
+	testTextSprite_->SetText(L"test sprite", 48, RGB(255, 255, 255));
+	testTextSprite_->SetTranslate({ 100.0f, 200.0f });
+
 	damageTimer_ = 0.0f;
 	isLowHP_ = false;
 	isPaused_ = false;
+	isManualPostEffect_ = false;
 }
 
 void TestScene::Unload() {
@@ -128,39 +136,43 @@ void TestScene::Update(float deltaTime) {
 		if (damageTimer_ < 0.0f) damageTimer_ = 0.0f;
 	}
 
-	auto sceneManager = SceneManager::GetInstance();
-	sceneManager->ClearPostEffects();
+	if (!isManualPostEffect_) {
+		auto sceneManager = SceneManager::GetInstance();
+		sceneManager->ClearPostEffects();
 
-	if (isPaused_) {
-		// ポーズ中はガウシアンブラーとHSVフィルター（彩度減、輝度減）
-		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kGaussianFilter);
-		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kHSVFilter);
-		sceneManager->SetHSVSaturationMultiplier(0.3f);
-		sceneManager->SetHSVValueMultiplier(0.5f);
+		if (isPaused_) {
+			// ポーズ中はガウシアンブラーとHSVフィルター（彩度減、輝度減）
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kGaussianFilter);
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kHSVFilter);
+			sceneManager->SetHSVSaturationMultiplier(0.3f);
+			sceneManager->SetHSVValueMultiplier(0.5f);
+		}
+		else if (isLowHP_) {
+			// 瀕死時はモノクロビネット＋ノイズ
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kFullScreen);
+			sceneManager->SetFullScreenGray(true);
+			sceneManager->SetFullScreenVignette(true);
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
+			sceneManager->SetNoiseAlpha(0.3f);
+		}
+		else if (damageTimer_ > 0.0f) {
+			// 被弾時はRadialBlurと強いノイズ（タイマーで減衰）
+			float progress = damageTimer_ / 0.3f;
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRadialBlur);
+			sceneManager->SetRadialBlurWidth(progress * 0.04f);
+			sceneManager->SetRadialBlurCenter({0.5f, 0.5f});
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
+			sceneManager->SetNoiseAlpha(progress * 0.7f);
+		}
+		else {
+			// 何も適用しない場合はFullScreenのデフォルト
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kFullScreen);
+			sceneManager->SetFullScreenGray(false);
+			sceneManager->SetFullScreenVignette(false);
+		}
 	}
-	else if (isLowHP_) {
-		// 瀕死時はモノクロビネット＋ノイズ
-		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kFullScreen);
-		sceneManager->SetFullScreenGray(true);
-		sceneManager->SetFullScreenVignette(true);
-		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
-		sceneManager->SetNoiseAlpha(0.3f);
-	}
-	else if (damageTimer_ > 0.0f) {
-		// 被弾時はRadialBlurと強いノイズ（タイマーで減衰）
-		float progress = damageTimer_ / 0.3f;
-		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRadialBlur);
-		sceneManager->SetRadialBlurWidth(progress * 0.04f);
-		sceneManager->SetRadialBlurCenter({0.5f, 0.5f});
-		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
-		sceneManager->SetNoiseAlpha(progress * 0.7f);
-	}
-	else {
-		// 何も適用しない場合はFullScreenのデフォルト
-		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kFullScreen);
-		sceneManager->SetFullScreenGray(false);
-		sceneManager->SetFullScreenVignette(false);
-	}
+
+	testTextSprite_->Update();
 }
 
 void TestScene::Draw() {
@@ -172,6 +184,7 @@ void TestScene::Draw() {
 	testCube_->Draw();
 
 	testSprite_->Draw();
+	testTextSprite_->Draw();
 
 	pm->Draw();
 
@@ -203,22 +216,61 @@ void TestScene::DrawSceneImGui() {
 			damageTimer_ = 0.0f;
 		}
 	}
+	ImGui::Checkbox("Manual PostEffect Control", &isManualPostEffect_);
 
 	ImGui::Separator();
 	ImGui::Text("Gamepad Test (XInput):");
-	auto input = Input::GetInstance();
-	if (input->IsPadConnected()) {
-		ImGui::Text("Status: Connected");
-		ImGui::Text("Stick L: (%ld, %ld)", input->GetPadLStickX(), input->GetPadLStickY());
-		ImGui::Text("Stick R: (%ld, %ld)", input->GetPadRStickX(), input->GetPadRStickY());
-		ImGui::Text("Buttons: A:%d B:%d X:%d Y:%d",
-			input->IsPadPress(XINPUT_GAMEPAD_A),
-			input->IsPadPress(XINPUT_GAMEPAD_B),
-			input->IsPadPress(XINPUT_GAMEPAD_X),
-			input->IsPadPress(XINPUT_GAMEPAD_Y));
-		ImGui::Text("DPad POV: 0x%X", input->GetPadPov());
-	} else {
-		ImGui::Text("Status: Disconnected");
+	auto gamepad = Gamepad::GetInstance();
+	for (uint32_t i = 0; i < 4; ++i) {
+		ImGui::PushID(static_cast<int>(i));
+		if (ImGui::TreeNode((void*)(intptr_t)i, "Player %d Gamepad", i + 1)) {
+			if (gamepad->IsConnected(i)) {
+				ImGui::Text("Status: Connected");
+				ImGui::Text("Stick L: (%ld, %ld)", gamepad->GetLStickX(i), gamepad->GetLStickY(i));
+				ImGui::Text("Stick R: (%ld, %ld)", gamepad->GetRStickX(i), gamepad->GetRStickY(i));
+				ImGui::Text("Buttons: A:%d B:%d X:%d Y:%d",
+					gamepad->IsPress(XINPUT_GAMEPAD_A, i),
+					gamepad->IsPress(XINPUT_GAMEPAD_B, i),
+					gamepad->IsPress(XINPUT_GAMEPAD_X, i),
+					gamepad->IsPress(XINPUT_GAMEPAD_Y, i));
+				ImGui::Text("DPad POV: 0x%X", gamepad->GetPov(i));
+			} else {
+				ImGui::Text("Status: Disconnected");
+			}
+			ImGui::TreePop();
+		}
+		ImGui::PopID();
+	}
+
+	ImGui::Separator();
+	ImGui::Text("TextSprite Test:");
+	if (ImGui::InputText("Input Text", textBuffer_, sizeof(textBuffer_))) {
+		int size_needed = MultiByteToWideChar(CP_ACP, 0, textBuffer_, -1, NULL, 0);
+		std::wstring wstrTo(size_needed, 0);
+		MultiByteToWideChar(CP_ACP, 0, textBuffer_, -1, &wstrTo[0], size_needed);
+		if (!wstrTo.empty() && wstrTo.back() == L'\0') {
+			wstrTo.pop_back();
+		}
+		testTextSprite_->SetText(wstrTo, 48);
+	}
+	Vector2 textPos = testTextSprite_->GetTranslate();
+	if (ImGui::DragFloat2("Text Pos", &textPos.x, 1.0f)) {
+		testTextSprite_->SetTranslate(textPos);
+	}
+
+	Vector2 textScale = testTextSprite_->GetScale();
+	if (ImGui::DragFloat2("Text Scale", &textScale.x, 0.05f, 0.0f, 10.0f)) {
+		testTextSprite_->SetScale(textScale);
+	}
+
+	Vector2 textRotate = testTextSprite_->GetRotate();
+	if (ImGui::DragFloat2("Text Rotate", &textRotate.x, 0.05f)) {
+		testTextSprite_->SetRotate(textRotate);
+	}
+
+	Vector4 textColor = testTextSprite_->GetColor();
+	if (ImGui::ColorEdit4("Text Color", &textColor.x)) {
+		testTextSprite_->SetColor(textColor);
 	}
 #endif
 }
