@@ -70,6 +70,7 @@ namespace Bonjin
 		float damageTimer_ = 0.0f;
 		bool isLowHP_ = false;
 		bool isPaused_ = false;
+		bool isManualPostEffect_ = false;
 
 	private:
 		// --- ゲーム固有の関数 ---

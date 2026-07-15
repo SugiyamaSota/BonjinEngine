@@ -72,6 +72,7 @@ void TestScene::Initialize(Camera* camera)
 	damageTimer_ = 0.0f;
 	isLowHP_ = false;
 	isPaused_ = false;
+	isManualPostEffect_ = false;
 }
 
 void TestScene::Unload() {
@@ -135,38 +136,40 @@ void TestScene::Update(float deltaTime) {
 		if (damageTimer_ < 0.0f) damageTimer_ = 0.0f;
 	}
 
-	auto sceneManager = SceneManager::GetInstance();
-	sceneManager->ClearPostEffects();
+	if (!isManualPostEffect_) {
+		auto sceneManager = SceneManager::GetInstance();
+		sceneManager->ClearPostEffects();
 
-	if (isPaused_) {
-		// ポーズ中はガウシアンブラーとHSVフィルター（彩度減、輝度減）
-		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kGaussianFilter);
-		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kHSVFilter);
-		sceneManager->SetHSVSaturationMultiplier(0.3f);
-		sceneManager->SetHSVValueMultiplier(0.5f);
-	}
-	else if (isLowHP_) {
-		// 瀕死時はモノクロビネット＋ノイズ
-		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kFullScreen);
-		sceneManager->SetFullScreenGray(true);
-		sceneManager->SetFullScreenVignette(true);
-		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
-		sceneManager->SetNoiseAlpha(0.3f);
-	}
-	else if (damageTimer_ > 0.0f) {
-		// 被弾時はRadialBlurと強いノイズ（タイマーで減衰）
-		float progress = damageTimer_ / 0.3f;
-		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRadialBlur);
-		sceneManager->SetRadialBlurWidth(progress * 0.04f);
-		sceneManager->SetRadialBlurCenter({0.5f, 0.5f});
-		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
-		sceneManager->SetNoiseAlpha(progress * 0.7f);
-	}
-	else {
-		// 何も適用しない場合はFullScreenのデフォルト
-		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kFullScreen);
-		sceneManager->SetFullScreenGray(false);
-		sceneManager->SetFullScreenVignette(false);
+		if (isPaused_) {
+			// ポーズ中はガウシアンブラーとHSVフィルター（彩度減、輝度減）
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kGaussianFilter);
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kHSVFilter);
+			sceneManager->SetHSVSaturationMultiplier(0.3f);
+			sceneManager->SetHSVValueMultiplier(0.5f);
+		}
+		else if (isLowHP_) {
+			// 瀕死時はモノクロビネット＋ノイズ
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kFullScreen);
+			sceneManager->SetFullScreenGray(true);
+			sceneManager->SetFullScreenVignette(true);
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
+			sceneManager->SetNoiseAlpha(0.3f);
+		}
+		else if (damageTimer_ > 0.0f) {
+			// 被弾時はRadialBlurと強いノイズ（タイマーで減衰）
+			float progress = damageTimer_ / 0.3f;
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRadialBlur);
+			sceneManager->SetRadialBlurWidth(progress * 0.04f);
+			sceneManager->SetRadialBlurCenter({0.5f, 0.5f});
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
+			sceneManager->SetNoiseAlpha(progress * 0.7f);
+		}
+		else {
+			// 何も適用しない場合はFullScreenのデフォルト
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kFullScreen);
+			sceneManager->SetFullScreenGray(false);
+			sceneManager->SetFullScreenVignette(false);
+		}
 	}
 
 	testTextSprite_->Update();
@@ -213,6 +216,7 @@ void TestScene::DrawSceneImGui() {
 			damageTimer_ = 0.0f;
 		}
 	}
+	ImGui::Checkbox("Manual PostEffect Control", &isManualPostEffect_);
 
 	ImGui::Separator();
 	ImGui::Text("Gamepad Test (XInput):");
