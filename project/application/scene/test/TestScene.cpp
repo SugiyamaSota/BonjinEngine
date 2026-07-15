@@ -1,4 +1,6 @@
 #include "TestScene.h"
+#include "input/Input.h"
+#include "input/Gamepad.h"
 
 #include <cmath>
 
@@ -134,6 +136,30 @@ void TestScene::Draw() {
 void TestScene::DrawSceneImGui() {
 #ifdef USE_IMGUI
 	LightManager::GetInstance()->DrawImGui();
+
+	ImGui::Separator();
+	ImGui::Text("Gamepad Test (XInput):");
+	auto gamepad = Gamepad::GetInstance();
+	for (uint32_t i = 0; i < 4; ++i) {
+		ImGui::PushID(static_cast<int>(i));
+		if (ImGui::TreeNode((void*)(intptr_t)i, "Player %d Gamepad", i + 1)) {
+			if (gamepad->IsConnected(i)) {
+				ImGui::Text("Status: Connected");
+				ImGui::Text("Stick L: (%ld, %ld)", gamepad->GetLStickX(i), gamepad->GetLStickY(i));
+				ImGui::Text("Stick R: (%ld, %ld)", gamepad->GetRStickX(i), gamepad->GetRStickY(i));
+				ImGui::Text("Buttons: A:%d B:%d X:%d Y:%d",
+					gamepad->IsPress(XINPUT_GAMEPAD_A, i),
+					gamepad->IsPress(XINPUT_GAMEPAD_B, i),
+					gamepad->IsPress(XINPUT_GAMEPAD_X, i),
+					gamepad->IsPress(XINPUT_GAMEPAD_Y, i));
+				ImGui::Text("DPad POV: 0x%X", gamepad->GetPov(i));
+			} else {
+				ImGui::Text("Status: Disconnected");
+			}
+			ImGui::TreePop();
+		}
+		ImGui::PopID();
+	}
 #endif
 }
 

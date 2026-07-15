@@ -3,6 +3,7 @@
 #include<fstream>
 
 #include"ParticleManager.h"
+#include "input/Gamepad.h"
 
 // DirectX関連のライブラリリンク
 #pragma comment(lib,"d3d12.lib")
@@ -53,6 +54,7 @@ void Bonjin::Finalize() {
 void Bonjin::NewFrame() {
 	Time::GetInstance()->Update();
 	Input::GetInstance()->Update();
+	Gamepad::GetInstance()->Update();
 	ImGuiManager::GetInstance()->NewFrame();
 }
 

@@ -129,6 +129,9 @@
     <ClCompile Include="engine\system\platform\input\Input.cpp">
       <Filter>engine\input</Filter>
     </ClCompile>
+    <ClCompile Include="engine\system\platform\input\Gamepad.cpp">
+      <Filter>engine\input</Filter>
+    </ClCompile>
     <ClCompile Include="engine\audio\AudioPlayer.cpp">
       <Filter>engine\audio</Filter>
     </ClCompile>
@@ -300,6 +303,9 @@
       <Filter>engine\Func</Filter>
     </ClInclude>
     <ClInclude Include="engine\system\platform\input\Input.h">
+      <Filter>engine\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\system\platform\input\Gamepad.h">
       <Filter>engine\input</Filter>
     </ClInclude>
     <ClInclude Include="engine\audio\AudioPlayer.h">
