@@ -67,7 +67,7 @@ void TestScene::Initialize(Camera* camera)
 	testTextSprite_->Initialize();
 	strcpy_s(textBuffer_, "test sprite");
 	testTextSprite_->SetText(L"test sprite", 48, RGB(255, 255, 255));
-	testTextSprite_->Translate() = { 100.0f, 200.0f };
+	testTextSprite_->SetTranslate({ 100.0f, 200.0f });
 
 	damageTimer_ = 0.0f;
 	isLowHP_ = false;
@@ -249,10 +249,25 @@ void TestScene::DrawSceneImGui() {
 		}
 		testTextSprite_->SetText(wstrTo, 48);
 	}
-	ImGui::DragFloat2("Text Pos", &testTextSprite_->Translate().x, 1.0f);
-	ImGui::DragFloat2("Text Scale", &testTextSprite_->Scale().x, 0.05f, 0.0f, 10.0f);
-	ImGui::DragFloat2("Text Rotate", &testTextSprite_->Rotate().x, 0.05f);
-	ImGui::ColorEdit4("Text Color", &testTextSprite_->Color().x);
+	Vector2 textPos = testTextSprite_->GetTranslate();
+	if (ImGui::DragFloat2("Text Pos", &textPos.x, 1.0f)) {
+		testTextSprite_->SetTranslate(textPos);
+	}
+
+	Vector2 textScale = testTextSprite_->GetScale();
+	if (ImGui::DragFloat2("Text Scale", &textScale.x, 0.05f, 0.0f, 10.0f)) {
+		testTextSprite_->SetScale(textScale);
+	}
+
+	Vector2 textRotate = testTextSprite_->GetRotate();
+	if (ImGui::DragFloat2("Text Rotate", &textRotate.x, 0.05f)) {
+		testTextSprite_->SetRotate(textRotate);
+	}
+
+	Vector4 textColor = testTextSprite_->GetColor();
+	if (ImGui::ColorEdit4("Text Color", &textColor.x)) {
+		testTextSprite_->SetColor(textColor);
+	}
 #endif
 }
 

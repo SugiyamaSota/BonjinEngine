@@ -7,70 +7,28 @@
 
 namespace Bonjin {
 
-    TextSprite::TextSprite()
+    TextSprite::TextSprite() : BaseSprite()
     {
-        viewMatrix_ = MakeIdentity4x4();
-        projectionMatrix_ = MakeOrthographicMatrix(0.0f, 0.0f, 1280.0f, 720.0f, 0.0f, 100.0f);
-        viewProjectionMatrix_ = Multiply(viewMatrix_, projectionMatrix_);
-
-        anchor_ = { 0.0f, 0.0f, 0.0f };
-        size_ = { 100.0f, 100.0f };
-        scale_ = { 1.0f, 1.0f };
-        rotate_ = { 0.0f, 0.0f };
-        translate_ = { 0.0f, 0.0f };
-        color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-        dxCommon_ = DirectXCommon::GetInstance();
-        device_ = dxCommon_->GetDevice();
-
-        pso_ = dxCommon_->GetPSO()->GetPipelineState(
-            device_, PrimitiveType::kSprite, BlendMode::kNormal,
-            D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE
-        );
     }
 
     TextSprite::~TextSprite()
     {
-        if (vertexResource_) vertexResource_->Unmap(0, nullptr);
-        if (materialResource_) materialResource_->Unmap(0, nullptr);
-        if (wvpResource_) wvpResource_->Unmap(0, nullptr);
-        if (indexResource_) indexResource_->Unmap(0, nullptr);
     }
 
     void TextSprite::Initialize() {
-        // 頂点バッファ
-        vertexResource_ = CreateBufferResource(device_, sizeof(VertexData) * 4);
-        vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
-        vertexBufferView_.SizeInBytes = sizeof(VertexData) * 4;
-        vertexBufferView_.StrideInBytes = sizeof(VertexData);
-        vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
-
-        // インデックスバッファ
-        indexResource_ = CreateBufferResource(device_, sizeof(uint32_t) * 6);
-        indexBufferView_.BufferLocation = indexResource_->GetGPUVirtualAddress();
-        indexBufferView_.SizeInBytes = sizeof(uint32_t) * 6;
-        indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
-        indexResource_->Map(0, nullptr, reinterpret_cast<void**>(&indexData_));
-
-        indexData_[0] = 0; indexData_[1] = 1; indexData_[2] = 2;
-        indexData_[3] = 1; indexData_[4] = 3; indexData_[5] = 2;
-
-        // マテリアル
-        materialResource_ = CreateBufferResource(device_, sizeof(Material));
-        materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
-        materialData_->enableLighting = false;
-        materialData_->uvTransform = MakeIdentity4x4();
-
-        // WVP
-        wvpResource_ = CreateBufferResource(device_, sizeof(TransformationMatrix));
-        wvpResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
-
-        RefreshVertexData();
+        BaseSprite::Initialize();
     }
 
     void TextSprite::SetText(const std::wstring& text, int fontSize, COLORREF textColor) {
         CreateTextTexture(text, fontSize, textColor);
         RefreshVertexData();
+    }
+
+    D3D12_GPU_DESCRIPTOR_HANDLE TextSprite::GetSRVHandle() const {
+        if (!hasSrv_) {
+            return SrvManager::GetInstance()->GetGPUHandle(0);
+        }
+        return SrvManager::GetInstance()->GetGPUHandle(srvIndex_);
     }
 
     void TextSprite::CreateTextTexture(const std::wstring& text, int fontSize, COLORREF textColor) {
@@ -142,8 +100,6 @@ namespace Bonjin {
                 }
             }
         }
-
-
 
         // 2. DirectX12 デフォルトヒープテクスチャの作成
         D3D12_RESOURCE_DESC textureDesc = {};
@@ -247,51 +203,5 @@ namespace Bonjin {
         }
 
         SrvManager::GetInstance()->CreateSrv(srvIndex_, textureResource_.Get(), SrvType::Texture2D);
-    }
-
-    void TextSprite::Update() {
-        RefreshVertexData();
-
-        Vector3 scale = { scale_.x, scale_.y, 0.0f };
-        Vector3 rotate = { rotate_.x, rotate_.y, 0.0f };
-        Vector3 translate = { translate_.x, translate_.y, 0.0f };
-
-        Matrix4x4 worldMatrix = MakeAffineMatrix(scale, rotate, translate);
-
-        wvpData_->World = worldMatrix;
-        wvpData_->WVP = Multiply(worldMatrix, viewProjectionMatrix_);
-        materialData_->color = color_;
-        materialData_->uvTransform = MakeIdentity4x4();
-    }
-
-    void TextSprite::RefreshVertexData() {
-        float left = -size_.x * anchor_.x;
-        float right = size_.x * (1.0f - anchor_.x);
-        float top = -size_.y * anchor_.y;
-        float bottom = size_.y * (1.0f - anchor_.y);
-
-        vertexData_[0] = { {left, bottom, 0.0f, 1.0f}, {0.0f, 1.0f}, {0,0,-1} };
-        vertexData_[1] = { {left, top, 0.0f, 1.0f},    {0.0f, 0.0f}, {0,0,-1} };
-        vertexData_[2] = { {right, bottom, 0.0f, 1.0f}, {1.0f, 1.0f}, {0,0,-1} };
-        vertexData_[3] = { {right, top, 0.0f, 1.0f},    {1.0f, 0.0f}, {0,0,-1} };
-    }
-
-    void TextSprite::Draw() {
-        if (!hasSrv_) return;
-
-        auto commandList = dxCommon_->GetCommandList();
-
-        commandList->SetGraphicsRootSignature(dxCommon_->GetPSO()->GetRootSignature(PrimitiveType::kSprite));
-        commandList->SetPipelineState(pso_);
-        commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-        commandList->IASetIndexBuffer(&indexBufferView_);
-        commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
-
-        commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
-        commandList->SetGraphicsRootConstantBufferView(1, wvpResource_->GetGPUVirtualAddress());
-        commandList->SetGraphicsRootDescriptorTable(2, SrvManager::GetInstance()->GetGPUHandle(srvIndex_));
-
-        commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
     }
 }
