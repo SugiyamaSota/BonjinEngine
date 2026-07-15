@@ -56,9 +56,11 @@ void DirectXCommon::Initialize() {
 	// 既存のコードを削除し、以下に置き換え
 	rtvHandles_[2] = GetCPUDescriptorHandle(rtvDescriptorHeap_.Get(), descriptorSizeRTV_, 2);
 	rtvHandles_[3] = GetCPUDescriptorHandle(rtvDescriptorHeap_.Get(), descriptorSizeRTV_, 3);
+	rtvHandles_[4] = GetCPUDescriptorHandle(rtvDescriptorHeap_.Get(), descriptorSizeRTV_, 4);
 
 	// RenderTextureクラスの生成にRTVハンドルを渡す
 	renderTexture_ = std::make_unique<RenderTexture>(device_.Get(), rtvHandles_[2]);
+	tempRenderTexture_ = std::make_unique<RenderTexture>(device_.Get(), rtvHandles_[4]);
 	postEffectTexture_ = std::make_unique<RenderTexture>(device_.Get(), rtvHandles_[3]);
 
 
@@ -102,11 +104,12 @@ void DirectXCommon::Initialize() {
 	*fullScreenData_ = fullScreenMaterial_;
 	dissolveMaskTextureHandle_ = TextureManager::GetInstance()->LoadTexture("resources/textures/noise0.png");
 
-	// RenderTextureとpostEffectTextureを初期ステートであるPIXEL_SHADER_RESOURCEに遷移させておく
-	D3D12_RESOURCE_BARRIER initBarriers[2] = {};
+	// RenderTextureとtempRenderTextureとpostEffectTextureを初期ステートであるPIXEL_SHADER_RESOURCEに遷移させておく
+	D3D12_RESOURCE_BARRIER initBarriers[3] = {};
 	initBarriers[0] = renderTexture_->CreateTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	initBarriers[1] = postEffectTexture_->CreateTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	commandList_->ResourceBarrier(2, initBarriers);
+	initBarriers[1] = tempRenderTexture_->CreateTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	initBarriers[2] = postEffectTexture_->CreateTransitionBarrier(D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	commandList_->ResourceBarrier(3, initBarriers);
 
 	// コマンドリストを閉じて実行、同期待ちを行う
 	commandList_->Close();
@@ -181,33 +184,8 @@ void DirectXCommon::PostDraw()
 	depthBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	depthBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
-#ifdef USE_IMGUI
-	// A. ImGui使用時は、ポストエフェクトの描画先を postEffectTexture_ にする
-	// postEffectTexture_ を ピクセルシェーダー用 から 描画ターゲット(RTV) に遷移
-	D3D12_RESOURCE_BARRIER peBarrier = postEffectTexture_->CreateTransitionBarrier(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	D3D12_RESOURCE_BARRIER barriers[] = { rtBarrier, peBarrier, depthBarrier };
-	commandList_->ResourceBarrier(_countof(barriers), barriers);
-
-	// postEffectTexture_ をターゲットとして設定
-	D3D12_CPU_DESCRIPTOR_HANDLE peRtv = postEffectTexture_->GetRtvHandle();
-	commandList_->OMSetRenderTargets(1, &peRtv, false, nullptr);
-	postEffectTexture_->ClearView(commandList_.Get());
-#else
-	// B. ImGui非使用時（本番）は、直接バックバッファに描画する
-	D3D12_RESOURCE_BARRIER bbBarrier{};
-	bbBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	bbBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	bbBarrier.Transition.pResource = swapChainResources_[backBufferIndex].Get();
-	bbBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	bbBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-	D3D12_RESOURCE_BARRIER barriers[] = { rtBarrier, bbBarrier, depthBarrier };
-	commandList_->ResourceBarrier(_countof(barriers), barriers);
-
-	commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, nullptr);
-	float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
-	commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex], clearColor, 0, nullptr);
-#endif
+	D3D12_RESOURCE_BARRIER initialBarriers[] = { rtBarrier, depthBarrier };
+	commandList_->ResourceBarrier(_countof(initialBarriers), initialBarriers);
 
 	// ビューポートとシザー矩形を設定
 	commandList_->RSSetViewports(1, &viewport_);
@@ -222,77 +200,164 @@ void DirectXCommon::PostDraw()
 	fullScreenMaterial_.time = Bonjin::Time::GetInstance()->GetElapsedTime();
 	*fullScreenData_ = fullScreenMaterial_;
 
-	// エフェクトに対応するPSOの選択
-	PrimitiveType postEffectType = PrimitiveType::kPostEffectFullScreen;
-	switch (currentEffect_) {
-	case PostEffect::kFullScreen:
-		postEffectType = PrimitiveType::kPostEffectFullScreen;
-		break;
-	case PostEffect::kBoxFilter:
-		postEffectType = PrimitiveType::kPostEffectBoxFilter;
-		break;
-	case PostEffect::kGaussianFilter:
-		postEffectType = PrimitiveType::kPostEffectGaussianFilter;
-		break;
-	case PostEffect::kLuminanceBasedOutline:
-		postEffectType = PrimitiveType::kPostEffectLuminanceOutline;
-		break;
-	case PostEffect::kDepthBasedOutline:
-		postEffectType = PrimitiveType::kPostEffectDepthOutline;
-		break;
-	case PostEffect::kRadialBlur:
-		postEffectType = PrimitiveType::kPostEffectRadialBlur;
-		break;
-	case PostEffect::kDissolve:
-		postEffectType = PrimitiveType::kPostEffectDissolve;
-		break;
-	case PostEffect::kRandomNoise:
-		postEffectType = PrimitiveType::kPostEffectRandomNoise;
-		break;
-	case PostEffect::kHSVFilter:
-		postEffectType = PrimitiveType::kPostEffectHSVFilter;
-		break;
-	default:
-		break;
+	// 適用するエフェクトの決定
+	std::vector<PostEffect> effectsToApply = activeEffects_;
+	if (effectsToApply.empty()) {
+		effectsToApply.push_back(PostEffect::kFullScreen);
 	}
 
-	// 描画実行
-	commandList_->SetGraphicsRootSignature(pso->GetRootSignature(postEffectType));
-	commandList_->SetPipelineState(pso->GetPipelineState(
-		device_.Get(), postEffectType, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE
-	));
-	commandList_->SetGraphicsRootDescriptorTable(0, SrvManager::GetInstance()->GetGPUHandle(renderTexture_->GetSrvIndex()));
-	if (currentEffect_ == PostEffect::kDissolve && dissolveMaskTextureHandle_ >= 0) {
-		commandList_->SetGraphicsRootDescriptorTable(1, TextureManager::GetInstance()->GetGPUHandle(dissolveMaskTextureHandle_));
-	} else {
-		commandList_->SetGraphicsRootDescriptorTable(1, SrvManager::GetInstance()->GetGPUHandle(depthStencil_->GetSrvIndex()));
-	}
-	commandList_->SetGraphicsRootConstantBufferView(2, fullScreenCB_->GetGPUVirtualAddress());
+	size_t numEffects = effectsToApply.size();
 
-	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	commandList_->DrawInstanced(3, 1, 0, 0); // フルスクリーン三角形で描画（ポストエフェクト実行）
+	// 現在の入力テクスチャと中間出力先テクスチャのポインタ
+	RenderTexture* currentInput = renderTexture_.get();
+	RenderTexture* nextTempOutput = tempRenderTexture_.get();
 
+	for (size_t i = 0; i < numEffects; ++i) {
+		PostEffect effect = effectsToApply[i];
+		bool isLast = (i == numEffects - 1);
+
+		// 出力先の決定
+		RenderTexture* outputTexture = nullptr;
+		ID3D12Resource* outputResource = nullptr;
+		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle{};
+
+		if (isLast) {
 #ifdef USE_IMGUI
-	// ImGui使用時は、描画完了した postEffectTexture_ を ピクセルシェーダー用(SRV) に戻す
-	D3D12_RESOURCE_BARRIER peBarrierEnd = postEffectTexture_->CreateTransitionBarrier(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	
-	// 同時に、バックバッファを PRESENT から RENDER_TARGET に遷移させ、ImGuiUIの描画ターゲットにする
-	D3D12_RESOURCE_BARRIER bbBarrierEnd{};
-	bbBarrierEnd.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	bbBarrierEnd.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	bbBarrierEnd.Transition.pResource = swapChainResources_[backBufferIndex].Get();
-	bbBarrierEnd.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	bbBarrierEnd.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-	D3D12_RESOURCE_BARRIER barriersEnd[] = { peBarrierEnd, bbBarrierEnd };
-	commandList_->ResourceBarrier(_countof(barriersEnd), barriersEnd);
-
-	// ImGui描画ターゲットとしてバックバッファを設定
-	commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, nullptr);
-	// バックバッファをクリア（ImGui UI の背景になる）
-	float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
-	commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex], clearColor, 0, nullptr);
+			outputTexture = postEffectTexture_.get();
+			outputResource = outputTexture->GetResource();
+			rtvHandle = outputTexture->GetRtvHandle();
+#else
+			outputResource = swapChainResources_[backBufferIndex].Get();
+			rtvHandle = rtvHandles_[backBufferIndex];
 #endif
+		} else {
+			outputTexture = nextTempOutput;
+			outputResource = outputTexture->GetResource();
+			rtvHandle = outputTexture->GetRtvHandle();
+		}
+
+		// 出力先を RENDER_TARGET に遷移
+		D3D12_RESOURCE_BARRIER outBarrier{};
+		outBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		outBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		outBarrier.Transition.pResource = outputResource;
+		
+		if (isLast) {
+#ifdef USE_IMGUI
+			outBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+			outBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+#else
+			outBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+			outBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+#endif
+		} else {
+			if (i == 0) {
+				outBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
+			} else {
+				outBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+			}
+			outBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		}
+		commandList_->ResourceBarrier(1, &outBarrier);
+
+		// OMSetRenderTargets
+		commandList_->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+
+		// クリア
+		if (outputTexture) {
+			outputTexture->ClearView(commandList_.Get());
+		} else {
+			float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
+			commandList_->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+		}
+
+		// エフェクトに対応するPSOの選択
+		PrimitiveType postEffectType = PrimitiveType::kPostEffectFullScreen;
+		switch (effect) {
+		case PostEffect::kFullScreen:
+			postEffectType = PrimitiveType::kPostEffectFullScreen;
+			break;
+		case PostEffect::kBoxFilter:
+			postEffectType = PrimitiveType::kPostEffectBoxFilter;
+			break;
+		case PostEffect::kGaussianFilter:
+			postEffectType = PrimitiveType::kPostEffectGaussianFilter;
+			break;
+		case PostEffect::kLuminanceBasedOutline:
+			postEffectType = PrimitiveType::kPostEffectLuminanceOutline;
+			break;
+		case PostEffect::kDepthBasedOutline:
+			postEffectType = PrimitiveType::kPostEffectDepthOutline;
+			break;
+		case PostEffect::kRadialBlur:
+			postEffectType = PrimitiveType::kPostEffectRadialBlur;
+			break;
+		case PostEffect::kDissolve:
+			postEffectType = PrimitiveType::kPostEffectDissolve;
+			break;
+		case PostEffect::kRandomNoise:
+			postEffectType = PrimitiveType::kPostEffectRandomNoise;
+			break;
+		case PostEffect::kHSVFilter:
+			postEffectType = PrimitiveType::kPostEffectHSVFilter;
+			break;
+		default:
+			break;
+		}
+
+		// 描画実行
+		commandList_->SetGraphicsRootSignature(pso->GetRootSignature(postEffectType));
+		commandList_->SetPipelineState(pso->GetPipelineState(
+			device_.Get(), postEffectType, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE
+		));
+		commandList_->SetGraphicsRootDescriptorTable(0, SrvManager::GetInstance()->GetGPUHandle(currentInput->GetSrvIndex()));
+		if (effect == PostEffect::kDissolve && dissolveMaskTextureHandle_ >= 0) {
+			commandList_->SetGraphicsRootDescriptorTable(1, TextureManager::GetInstance()->GetGPUHandle(dissolveMaskTextureHandle_));
+		} else {
+			commandList_->SetGraphicsRootDescriptorTable(1, SrvManager::GetInstance()->GetGPUHandle(depthStencil_->GetSrvIndex()));
+		}
+		commandList_->SetGraphicsRootConstantBufferView(2, fullScreenCB_->GetGPUVirtualAddress());
+
+		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		commandList_->DrawInstanced(3, 1, 0, 0);
+
+		// 描画後、出力先を PIXEL_SHADER_RESOURCE に遷移させる
+		if (!isLast) {
+			D3D12_RESOURCE_BARRIER postBarrier = outputTexture->CreateTransitionBarrier(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+			commandList_->ResourceBarrier(1, &postBarrier);
+
+			// ピンポンポインタの更新
+			nextTempOutput = currentInput;
+			currentInput = outputTexture;
+		} else {
+#ifdef USE_IMGUI
+			// ImGui使用時は、描画完了した postEffectTexture_ を ピクセルシェーダー用(SRV) に戻す
+			D3D12_RESOURCE_BARRIER peBarrierEnd = postEffectTexture_->CreateTransitionBarrier(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+			
+			// 同時に、バックバッファを PRESENT から RENDER_TARGET に遷移させ、ImGuiUIの描画ターゲットにする
+			D3D12_RESOURCE_BARRIER bbBarrierEnd{};
+			bbBarrierEnd.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			bbBarrierEnd.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+			bbBarrierEnd.Transition.pResource = swapChainResources_[backBufferIndex].Get();
+			bbBarrierEnd.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+			bbBarrierEnd.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+			D3D12_RESOURCE_BARRIER barriersEnd[] = { peBarrierEnd, bbBarrierEnd };
+			commandList_->ResourceBarrier(_countof(barriersEnd), barriersEnd);
+
+			// ImGui描画ターゲットとしてバックバッファを設定
+			commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, nullptr);
+			// バックバッファをクリア（ImGui UI の背景になる）
+			float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
+			commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex], clearColor, 0, nullptr);
+#endif
+		}
+	}
+}
+
+void DirectXCommon::RemovePostEffect(PostEffect effect) {
+	auto it = std::remove(activeEffects_.begin(), activeEffects_.end(), effect);
+	activeEffects_.erase(it, activeEffects_.end());
 }
 
 void DirectXCommon::SetFullScreenGray(bool isGray) {
@@ -347,7 +412,7 @@ void DirectXCommon::EndFrame()
 {	
 	UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
 
-	D3D12_RESOURCE_BARRIER endBarriers[3]{};
+	D3D12_RESOURCE_BARRIER endBarriers[4]{};
 
 	// PRESENTへの遷移
 	endBarriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -370,7 +435,14 @@ void DirectXCommon::EndFrame()
 	endBarriers[2].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	endBarriers[2].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 
-	commandList_->ResourceBarrier(3, endBarriers);
+	// tempRenderTextureをCOMMONへ
+	endBarriers[3].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	endBarriers[3].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	endBarriers[3].Transition.pResource = tempRenderTexture_->GetResource();
+	endBarriers[3].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	endBarriers[3].Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
+
+	commandList_->ResourceBarrier(4, endBarriers);
 
 	// コマンドリストの内容を確定させる（既存の処理）
 	HRESULT hr = commandList_->Close();
@@ -557,7 +629,7 @@ void DirectXCommon::CreateSwapChain() {
 	descriptorSizeRTV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	descriptorSizeDSV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 	//RTVの設定
-	rtvDescriptorHeap_ = CreateDescriptorHeap(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 4, false);
+	rtvDescriptorHeap_ = CreateDescriptorHeap(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 5, false);
 	rtvDesc_.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;//出力結果をSRGBに変換
 	rtvDesc_.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;//2dテクスチャとして書き込む
 	//ディスクリプらの先頭を取得する

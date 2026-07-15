@@ -1,7 +1,8 @@
 #pragma once
 #include"BonjinEngine.h"
 #include <map>
-#include<memory>
+#include <memory>
+#include <vector>
 
 #include"../interface/IScene.h"
 
@@ -39,6 +40,11 @@ namespace Bonjin
 
         void SetPostEffect(DirectXCommon::PostEffect effect);
         DirectXCommon::PostEffect GetPostEffect() const;
+        void ClearPostEffects();
+        void AddPostEffect(DirectXCommon::PostEffect effect);
+        void RemovePostEffect(DirectXCommon::PostEffect effect);
+        void SetActiveEffects(const std::vector<DirectXCommon::PostEffect>& effects);
+        const std::vector<DirectXCommon::PostEffect>& GetActiveEffects() const;
         void SetFullScreenGray(bool isGray);
         bool IsFullScreenGray() const;
         void SetFullScreenVignette(bool isVignette);

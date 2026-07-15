@@ -27,92 +27,126 @@ void ImGuiEditorWindows::DrawSystemSettings(SceneManager* sceneManager) {
 			sceneManager->RequestSceneRestart();
 		}
 
-		int currentPostEffect = static_cast<int>(sceneManager->GetPostEffect());
-		int postEffectCount = sizeof(postEffectNames) / sizeof(postEffectNames[0]);
-		if (ImGui::Combo("PostEffect", &currentPostEffect, postEffectNames, postEffectCount)) {
-			sceneManager->SetPostEffect(static_cast<DirectXCommon::PostEffect>(currentPostEffect));
+		// ポストエフェクト重ね掛け用のエディタUI
+		ImGui::Text("Active Post Effects:");
+		auto activeEffects = sceneManager->GetActiveEffects();
+		std::vector<DirectXCommon::PostEffect> nextEffects = activeEffects;
+
+		int removeIndex = -1;
+		int moveUpIndex = -1;
+		int moveDownIndex = -1;
+
+		ImGui::BeginChild("EffectsList", ImVec2(0, 150), true);
+		for (size_t i = 0; i < nextEffects.size(); ++i) {
+			ImGui::PushID(static_cast<int>(i));
+			ImGui::Text("[%d] %s", static_cast<int>(i), postEffectNames[static_cast<int>(nextEffects[i])]);
+			ImGui::SameLine();
+			if (ImGui::Button("Up") && i > 0) {
+				moveUpIndex = static_cast<int>(i);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Down") && i < nextEffects.size() - 1) {
+				moveDownIndex = static_cast<int>(i);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Remove")) {
+				removeIndex = static_cast<int>(i);
+			}
+			ImGui::PopID();
+		}
+		ImGui::EndChild();
+
+		if (removeIndex != -1) {
+			nextEffects.erase(nextEffects.begin() + removeIndex);
+		}
+		if (moveUpIndex != -1) {
+			std::swap(nextEffects[moveUpIndex], nextEffects[moveUpIndex - 1]);
+		}
+		if (moveDownIndex != -1) {
+			std::swap(nextEffects[moveDownIndex], nextEffects[moveDownIndex + 1]);
 		}
 
-		// ポストエフェクトごとの設定を表示
-		switch (currentPostEffect) {
-		case static_cast<int>(DirectXCommon::PostEffect::kFullScreen):
-		{
+		// 追加用Combo
+		static int selectedEffectToAdd = 0;
+		int postEffectCount = sizeof(postEffectNames) / sizeof(postEffectNames[0]);
+		ImGui::Combo("Add Effect", &selectedEffectToAdd, postEffectNames, postEffectCount);
+		ImGui::SameLine();
+		if (ImGui::Button("Add")) {
+			nextEffects.push_back(static_cast<DirectXCommon::PostEffect>(selectedEffectToAdd));
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Clear All")) {
+			nextEffects.clear();
+		}
+
+		// 変更があれば適用
+		if (nextEffects != activeEffects) {
+			sceneManager->SetActiveEffects(nextEffects);
+		}
+
+		ImGui::Separator();
+
+		// ポストエフェクトごとの設定を CollapsingHeader で表示
+		if (ImGui::CollapsingHeader("FullScreen Settings")) {
 			bool isGray = sceneManager->IsFullScreenGray();
-			if (ImGui::Checkbox("FullScreen Gray", &isGray)) {
+			if (ImGui::Checkbox("Gray Scale", &isGray)) {
 				sceneManager->SetFullScreenGray(isGray);
 			}
-
 			bool isVignette = sceneManager->IsFullScreenVignette();
-			if (ImGui::Checkbox("FullScreen Vignette", &isVignette)) {
+			if (ImGui::Checkbox("Vignette", &isVignette)) {
 				sceneManager->SetFullScreenVignette(isVignette);
 			}
-			break;
 		}
-		case static_cast<int>(DirectXCommon::PostEffect::kBoxFilter):
-			break;
-		case static_cast<int>(DirectXCommon::PostEffect::kGaussianFilter):
-			break;
-		case static_cast<int>(DirectXCommon::PostEffect::kLuminanceBasedOutline):
-			break;
-		case static_cast<int>(DirectXCommon::PostEffect::kDepthBasedOutline):
-			break;
-		case static_cast<int>(DirectXCommon::PostEffect::kRadialBlur):
-		{
+
+		if (ImGui::CollapsingHeader("RadialBlur Settings")) {
 			Vector2 radialBlurCenter = sceneManager->GetRadialBlurCenter();
 			float center[2] = { radialBlurCenter.x, radialBlurCenter.y };
-			if (ImGui::SliderFloat2("RadialBlur Center", center, 0.0f, 1.0f)) {
+			if (ImGui::SliderFloat2("Center", center, 0.0f, 1.0f)) {
 				sceneManager->SetRadialBlurCenter({ center[0], center[1] });
 			}
-
 			float radialBlurWidth = sceneManager->GetRadialBlurWidth();
-			if (ImGui::SliderFloat("RadialBlur Width", &radialBlurWidth, 0.0f, 0.05f)) {
+			if (ImGui::SliderFloat("Width", &radialBlurWidth, 0.0f, 0.05f)) {
 				sceneManager->SetRadialBlurWidth(radialBlurWidth);
 			}
-			break;
 		}
-		case static_cast<int>(DirectXCommon::PostEffect::kDissolve):
-		{
+
+		if (ImGui::CollapsingHeader("Dissolve Settings")) {
 			float dissolveThreshold = sceneManager->GetDissolveThreshold();
-			if (ImGui::SliderFloat("Dissolve Threshold", &dissolveThreshold, 0.0f, 1.0f)) {
+			if (ImGui::SliderFloat("Threshold", &dissolveThreshold, 0.0f, 1.0f)) {
 				sceneManager->SetDissolveThreshold(dissolveThreshold);
 			}
-
 			float dissolveEdgeWidth = sceneManager->GetDissolveEdgeWidth();
-			if (ImGui::SliderFloat("Dissolve Edge Width", &dissolveEdgeWidth, 0.0f, 0.2f)) {
+			if (ImGui::SliderFloat("Edge Width", &dissolveEdgeWidth, 0.0f, 0.2f)) {
 				sceneManager->SetDissolveEdgeWidth(dissolveEdgeWidth);
 			}
-
 			Vector3 dissolveEdgeColor = sceneManager->GetDissolveEdgeColor();
 			float edgeColor[3] = { dissolveEdgeColor.x, dissolveEdgeColor.y, dissolveEdgeColor.z };
-			if (ImGui::ColorEdit3("Dissolve Edge Color", edgeColor)) {
+			if (ImGui::ColorEdit3("Edge Color", edgeColor)) {
 				sceneManager->SetDissolveEdgeColor({ edgeColor[0], edgeColor[1], edgeColor[2] });
 			}
-			break;
 		}
-		case static_cast<int>(DirectXCommon::PostEffect::kRandomNoise):
-		{
+
+		if (ImGui::CollapsingHeader("RandomNoise Settings")) {
 			float noiseAlpha = sceneManager->GetNoiseAlpha();
 			if (ImGui::SliderFloat("Noise Alpha", &noiseAlpha, 0.0f, 1.0f)) {
 				sceneManager->SetNoiseAlpha(noiseAlpha);
 			}
-			break;
 		}
-		case static_cast<int>(DirectXCommon::PostEffect::kHSVFilter):
-		{
+
+		if (ImGui::CollapsingHeader("HSVFilter Settings")) {
 			float hsvHueShift = sceneManager->GetHSVHueShift();
-			if (ImGui::SliderFloat("HSV Hue Shift", &hsvHueShift, -1.0f, 1.0f)) {
+			if (ImGui::SliderFloat("Hue Shift", &hsvHueShift, -1.0f, 1.0f)) {
 				sceneManager->SetHSVHueShift(hsvHueShift);
 			}
 			float hsvSaturationMultiplier = sceneManager->GetHSVSaturationMultiplier();
-			if (ImGui::SliderFloat("HSV Saturation Multiplier", &hsvSaturationMultiplier, 0.0f, 2.0f)) {
+			if (ImGui::SliderFloat("Saturation Multiplier", &hsvSaturationMultiplier, 0.0f, 2.0f)) {
 				sceneManager->SetHSVSaturationMultiplier(hsvSaturationMultiplier);
 			}
 			float hsvValueMultiplier = sceneManager->GetHSVValueMultiplier();
-			if (ImGui::SliderFloat("HSV Value Multiplier", &hsvValueMultiplier, 0.0f, 2.0f)) {
+			if (ImGui::SliderFloat("Value Multiplier", &hsvValueMultiplier, 0.0f, 2.0f)) {
 				sceneManager->SetHSVValueMultiplier(hsvValueMultiplier);
 			}
-			break;
-		}
 		}
 	}
 	ImGui::End();

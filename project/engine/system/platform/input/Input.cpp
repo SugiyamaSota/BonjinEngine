@@ -3,6 +3,7 @@
 #include <memory> // std::unique_ptr を使用するために追加
 
 #pragma comment(lib,"dinput8.lib")
+#pragma comment(lib,"xinput.lib")
 
 // シングルトンインスタンスを保持する静的ポインタ
 // スレッドセーフなシングルトンのために std::call_once や std::mutex を使用することも検討できますが、
@@ -190,4 +191,4 @@ void Input::SetMouseLock(bool lock) {
         ClipCursor(NULL);
     }
 }
-
+

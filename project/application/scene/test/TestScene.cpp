@@ -1,4 +1,5 @@
 #include "TestScene.h"
+#include "SceneManager.h"
 #include "input/Input.h"
 #include "input/Gamepad.h"
 
@@ -61,6 +62,9 @@ void TestScene::Initialize(Camera* camera)
 
 	ParticleManager::GetInstance()->Emit("ringGroup", ringEffect);
 
+	damageTimer_ = 0.0f;
+	isLowHP_ = false;
+	isPaused_ = false;
 }
 
 void TestScene::Unload() {
@@ -117,6 +121,46 @@ void TestScene::Update(float deltaTime) {
 
 		break;
 	}
+
+	// ポストエフェクトデモの更新
+	if (damageTimer_ > 0.0f) {
+		damageTimer_ -= deltaTime;
+		if (damageTimer_ < 0.0f) damageTimer_ = 0.0f;
+	}
+
+	auto sceneManager = SceneManager::GetInstance();
+	sceneManager->ClearPostEffects();
+
+	if (isPaused_) {
+		// ポーズ中はガウシアンブラーとHSVフィルター（彩度減、輝度減）
+		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kGaussianFilter);
+		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kHSVFilter);
+		sceneManager->SetHSVSaturationMultiplier(0.3f);
+		sceneManager->SetHSVValueMultiplier(0.5f);
+	}
+	else if (isLowHP_) {
+		// 瀕死時はモノクロビネット＋ノイズ
+		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kFullScreen);
+		sceneManager->SetFullScreenGray(true);
+		sceneManager->SetFullScreenVignette(true);
+		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
+		sceneManager->SetNoiseAlpha(0.3f);
+	}
+	else if (damageTimer_ > 0.0f) {
+		// 被弾時はRadialBlurと強いノイズ（タイマーで減衰）
+		float progress = damageTimer_ / 0.3f;
+		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRadialBlur);
+		sceneManager->SetRadialBlurWidth(progress * 0.04f);
+		sceneManager->SetRadialBlurCenter({0.5f, 0.5f});
+		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
+		sceneManager->SetNoiseAlpha(progress * 0.7f);
+	}
+	else {
+		// 何も適用しない場合はFullScreenのデフォルト
+		sceneManager->AddPostEffect(DirectXCommon::PostEffect::kFullScreen);
+		sceneManager->SetFullScreenGray(false);
+		sceneManager->SetFullScreenVignette(false);
+	}
 }
 
 void TestScene::Draw() {
@@ -138,27 +182,43 @@ void TestScene::DrawSceneImGui() {
 	LightManager::GetInstance()->DrawImGui();
 
 	ImGui::Separator();
-	ImGui::Text("Gamepad Test (XInput):");
-	auto gamepad = Gamepad::GetInstance();
-	for (uint32_t i = 0; i < 4; ++i) {
-		ImGui::PushID(static_cast<int>(i));
-		if (ImGui::TreeNode((void*)(intptr_t)i, "Player %d Gamepad", i + 1)) {
-			if (gamepad->IsConnected(i)) {
-				ImGui::Text("Status: Connected");
-				ImGui::Text("Stick L: (%ld, %ld)", gamepad->GetLStickX(i), gamepad->GetLStickY(i));
-				ImGui::Text("Stick R: (%ld, %ld)", gamepad->GetRStickX(i), gamepad->GetRStickY(i));
-				ImGui::Text("Buttons: A:%d B:%d X:%d Y:%d",
-					gamepad->IsPress(XINPUT_GAMEPAD_A, i),
-					gamepad->IsPress(XINPUT_GAMEPAD_B, i),
-					gamepad->IsPress(XINPUT_GAMEPAD_X, i),
-					gamepad->IsPress(XINPUT_GAMEPAD_Y, i));
-				ImGui::Text("DPad POV: 0x%X", gamepad->GetPov(i));
-			} else {
-				ImGui::Text("Status: Disconnected");
-			}
-			ImGui::TreePop();
+	ImGui::Text("Game Post-Effect Presets:");
+	
+	if (ImGui::Button("Trigger Damage Effect (0.3s)")) {
+		damageTimer_ = 0.3f;
+		isLowHP_ = false;
+		isPaused_ = false;
+	}
+
+	if (ImGui::Checkbox("Low HP (Low Health) Effect", &isLowHP_)) {
+		if (isLowHP_) {
+			isPaused_ = false;
+			damageTimer_ = 0.0f;
 		}
-		ImGui::PopID();
+	}
+
+	if (ImGui::Checkbox("Pause (Menu Background) Blur", &isPaused_)) {
+		if (isPaused_) {
+			isLowHP_ = false;
+			damageTimer_ = 0.0f;
+		}
+	}
+
+	ImGui::Separator();
+	ImGui::Text("Gamepad Test (XInput):");
+	auto input = Input::GetInstance();
+	if (input->IsPadConnected()) {
+		ImGui::Text("Status: Connected");
+		ImGui::Text("Stick L: (%ld, %ld)", input->GetPadLStickX(), input->GetPadLStickY());
+		ImGui::Text("Stick R: (%ld, %ld)", input->GetPadRStickX(), input->GetPadRStickY());
+		ImGui::Text("Buttons: A:%d B:%d X:%d Y:%d",
+			input->IsPadPress(XINPUT_GAMEPAD_A),
+			input->IsPadPress(XINPUT_GAMEPAD_B),
+			input->IsPadPress(XINPUT_GAMEPAD_X),
+			input->IsPadPress(XINPUT_GAMEPAD_Y));
+		ImGui::Text("DPad POV: 0x%X", input->GetPadPov());
+	} else {
+		ImGui::Text("Status: Disconnected");
 	}
 #endif
 }
