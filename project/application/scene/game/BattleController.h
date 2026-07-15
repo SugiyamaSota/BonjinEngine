@@ -5,7 +5,7 @@
 #include <random>
 #include <vector>
 
-#include "gameObject/enemy/Enemy.h"
+#include "gameObject/enemy/BaseEnemy.h"
 #include "gameObject/player/Player.h"
 #include "mapchip/MapChipField.h"
 #include "Object3D.h"
@@ -40,9 +40,9 @@ private:
 	std::unique_ptr<Player> player_;
 	std::unique_ptr<Object3D> playerModel_;
 
-	std::list<std::unique_ptr<Enemy>> enemies_;
+	std::list<std::unique_ptr<BaseEnemy>> enemies_;
 	std::list<std::unique_ptr<Object3D>> enemyModels_;
-	std::list<Enemy*> lockedOnEnemies_;
+	std::list<BaseEnemy*> lockedOnEnemies_;
 
 	std::unique_ptr<MapChipField> mapChipField_;
 	std::vector<std::vector<std::unique_ptr<Object3D>>> blockModels_;

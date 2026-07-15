@@ -1,6 +1,6 @@
 #define NOMINMAX
 #include "Player.h"
-#include "../enemy/Enemy.h"
+#include "../enemy/BaseEnemy.h"
 #include "ImGuiManager.h"
 #include"../../mapchip/MapChipField.h"
 #include "../../logic/Collision.h"
@@ -24,6 +24,9 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 	GameObject::Initialize(model, camera, position, config);
 
 	hp_ = 3;
+	maxHp_ = 3;
+	level_ = 1;
+	exp_ = 0;
 
 	anchorLine_ = std::make_unique<Bonjin::Line3D>();
 	anchorLine_->Initialize();
@@ -33,7 +36,7 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 
 void Player::OnCollision(Bonjin::Collider* other) {
 	if (other->GetCategoryAttr() == kAttributeEnemy) {
-		Enemy* enemy = static_cast<Enemy*>(other->GetOwner());
+		Bonjin::BaseEnemy* enemy = static_cast<Bonjin::BaseEnemy*>(other->GetOwner());
 		OnCollision(enemy);
 	} else if (other->GetCategoryAttr() == kAttributeGoal) {
 		isGoalReached_ = true;
@@ -326,7 +329,7 @@ AABB Player::GetAABB() {
 	return aabb;
 }
 
-void Player::OnCollision(Enemy* enemy) {
+void Player::OnCollision(Bonjin::BaseEnemy* enemy) {
 	if (isInvincible_|| hp_<=0) {
 		return;
 	}
@@ -357,9 +360,24 @@ bool Player::ConsumeLandingEffectRequest() {
 	return true;
 }
 
-void Player::RemoveLockedOnEnemies(std::list<Enemy*>& enemies) {
-	for (Enemy* enemy : enemies) {
-		if (enemy != nullptr) {
+void Player::GainExp(int amount) {
+	if (hp_ <= 0) {
+		return;
+	}
+
+	exp_ += amount;
+	while (exp_ >= GetRequiredExp()) {
+		exp_ -= GetRequiredExp();
+		level_++;
+		maxHp_++;
+		hp_ = maxHp_; // レベルアップで全回復
+	}
+}
+
+void Player::RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies) {
+	for (Bonjin::BaseEnemy* enemy : enemies) {
+		if (enemy != nullptr && !enemy->GetIsDead()) {
+			GainExp(enemy->GetExpReward());
 			enemy->SetIsDead(true);
 			enemy->SetIsLockedOn(false);
 		}
@@ -395,6 +413,9 @@ void Player::DrawImGui() {
 		ImGui::Text("Player Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
 		ImGui::Text("On Ground: %s", onGround_ ? "true" : "false");
 		ImGui::InputInt("Player HP", &hp_);
+		ImGui::Text("Player Level: %d", level_);
+		ImGui::Text("Player Exp: %d / %d", exp_, GetRequiredExp());
+		ImGui::Text("Player Max HP: %d", maxHp_);
 		bool hasAnchor = HasAnchor();
 		ImGui::Text("Has Anchor: %s", hasAnchor ? "true" : "false");
 

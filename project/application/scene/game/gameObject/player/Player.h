@@ -11,7 +11,9 @@
 #include "Line3D.h"
 
 class MapChipField;
-class Enemy;
+namespace Bonjin {
+	class BaseEnemy;
+}
 class Camera;
 
 /// <summary>
@@ -51,7 +53,7 @@ protected:
 public:
 	Vector3 GetWorldPosition();
 	AABB GetAABB();
-	void OnCollision(Enemy* enemy);
+	void OnCollision(Bonjin::BaseEnemy* enemy);
 	bool ConsumeLandingEffectRequest();
 	bool HasAnchor() const {
 		return anchor_ != nullptr;
@@ -70,11 +72,11 @@ public:
 		return *anchor_;
 	}
 
-	void SetLockedOnEnemiesList(std::list<Enemy*>* enemiesList) {
+	void SetLockedOnEnemiesList(std::list<Bonjin::BaseEnemy*>* enemiesList) {
 		lockedOnEnemies_ = enemiesList;
 	}
 
-	void AddLockedOnEnemy(Enemy* enemy) {
+	void AddLockedOnEnemy(Bonjin::BaseEnemy* enemy) {
 		if (lockedOnEnemies_ && enemy) {
 			lockedOnEnemies_->push_back(enemy);
 		}
@@ -82,9 +84,16 @@ public:
 
 	// HP関連
 	int GetHp() const { return hp_; }
+	int GetMaxHp() const { return maxHp_; }
 	void SetHp(int hp) { hp_ = hp; }
 	void ApplyDamage(int damage) { hp_ = (hp_ > damage) ? hp_ - damage : 0; }
 	bool GetIsDead() const { return hp_ <= 0; }
+
+	// レベル・経験値関連
+	int GetLevel() const { return level_; }
+	int GetExp() const { return exp_; }
+	int GetRequiredExp() const { return level_ * 100; }
+	void GainExp(int amount);
 
 	bool GetIsInvincible() const { return isInvincible_; }
 
@@ -95,7 +104,7 @@ public:
 	void HandleLockOnRemovalInput();
 
 	// ロックオン中の敵をすべて倒す
-	void RemoveLockedOnEnemies(std::list<Enemy*>& enemies);
+	void RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies);
 
 	void DrawImGui();
 
@@ -157,10 +166,15 @@ private:
 	void shootAnchor();
 
 	// ロックオンされた敵のリストへのポインタ
-	std::list<Enemy*>* lockedOnEnemies_ = nullptr;
+	std::list<Bonjin::BaseEnemy*>* lockedOnEnemies_ = nullptr;
 
 	// HP
 	int hp_ = 3;
+	int maxHp_ = 3;
+
+	// レベル・経験値
+	int level_ = 1;
+	int exp_ = 0;
 
 	bool isGoalReached_ = false;
 };

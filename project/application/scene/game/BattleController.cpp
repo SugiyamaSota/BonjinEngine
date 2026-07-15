@@ -4,6 +4,8 @@
 #include "logic/Collision.h"
 #include "logic/CollisionManager.h"
 #include "gameObject/anchor/anchor.h"
+#include "gameObject/enemy/Enemy.h"
+#include "gameObject/enemy/NoGravityEnemy.h"
 #include <algorithm>
 #include <cmath>
 #include <numbers>
@@ -66,13 +68,33 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 			enemyModels_.back()->CreateModel(
 				ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
 			enemyModels_.back()->SetEnableEnableEnvironmentMap(false);
-			enemyModels_.back()->SetColor({0.2f, 0.2f, 0.2f, 1.0f});
 
-			enemies_.push_back(std::make_unique<Enemy>());
+			bool isNoGravity = (std::uniform_real_distribution<float>(0.0f, 1.0f)(randomEngine_) < 0.4f);
+			isNoGravity = true;
 			const Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(j, i);
-			enemies_.back()->Initialize(enemyModels_.back().get(), camera_, enemyPosition);
-			enemies_.back()->SetMapChipField(mapChipField_.get());
-			enemies_.back()->SetPlayer(player_.get());
+
+			if (isNoGravity) {
+				// 空中敵は青みがかった色にする
+				enemyModels_.back()->SetColor({0.2f, 0.3f, 0.5f, 1.0f});
+				
+				Vector3 spawnPos = enemyPosition;
+				spawnPos.y += 1.0f; // 少し高めに出現させる
+
+				auto enemy = std::make_unique<NoGravityEnemy>();
+				enemy->Initialize(enemyModels_.back().get(), camera_, spawnPos);
+				enemy->SetMapChipField(mapChipField_.get());
+				enemy->SetPlayer(player_.get());
+				enemies_.push_back(std::move(enemy));
+			} else {
+				// 地上敵はグレーがかった赤色にする
+				enemyModels_.back()->SetColor({0.3f, 0.2f, 0.2f, 1.0f});
+
+				auto enemy = std::make_unique<Enemy>();
+				enemy->Initialize(enemyModels_.back().get(), camera_, enemyPosition);
+				enemy->SetMapChipField(mapChipField_.get());
+				enemy->SetPlayer(player_.get());
+				enemies_.push_back(std::move(enemy));
+			}
 		}
 	}
 
@@ -445,7 +467,7 @@ void BattleController::ResolveAnchorInstantLanding(Anchor& anchor) {
 		tempAABB.min = { currentPos.x - w / 2.0f, currentPos.y - h / 2.0f, -0.5f };
 		tempAABB.max = { currentPos.x + w / 2.0f, currentPos.y + h / 2.0f, 0.5f };
 
-		Enemy* hitEnemy = nullptr;
+		BaseEnemy* hitEnemy = nullptr;
 		for (const auto& enemy : enemies_) {
 			if (enemy->GetIsDead() || enemy->GetIsLockedOn()) {
 				continue;

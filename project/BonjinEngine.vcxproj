@@ -163,8 +163,10 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="application\scene\game\gameObject\anchor\anchor.cpp" />
+    <ClCompile Include="application\scene\game\gameObject\enemy\BaseEnemy.cpp" />
     <ClCompile Include="application\scene\game\gameObject\enemy\Enemy.cpp" />
     <ClCompile Include="application\scene\game\gameObject\enemy\EnemyBullet.cpp" />
+    <ClCompile Include="application\scene\game\gameObject\enemy\NoGravityEnemy.cpp" />
     <ClCompile Include="application\scene\game\gameObject\player\Player.cpp" />
     <ClCompile Include="application\scene\game\gameObject\camera\CameraController.cpp" />
     <ClCompile Include="application\scene\game\gameObject\GameObject.cpp" />
@@ -254,8 +256,10 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
   <ItemGroup>
     <ClInclude Include="application\core\Core.h" />
     <ClInclude Include="application\scene\game\gameObject\anchor\anchor.h" />
+    <ClInclude Include="application\scene\game\gameObject\enemy\BaseEnemy.h" />
     <ClInclude Include="application\scene\game\gameObject\enemy\Enemy.h" />
     <ClInclude Include="application\scene\game\gameObject\enemy\EnemyBullet.h" />
+    <ClInclude Include="application\scene\game\gameObject\enemy\NoGravityEnemy.h" />
     <ClInclude Include="application\scene\game\gameObject\player\Player.h" />
     <ClInclude Include="application\scene\game\gameObject\GameObject.h" />
     <ClInclude Include="application\scene\game\gameObject\camera\CameraController.h" />
