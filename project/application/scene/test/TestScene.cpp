@@ -2,6 +2,7 @@
 #include "SceneManager.h"
 #include "input/Input.h"
 #include "input/Gamepad.h"
+#include "TextSprite.h"
 
 #include <cmath>
 
@@ -61,6 +62,12 @@ void TestScene::Initialize(Camera* camera)
 	ringEffect.updateFunc = ringUpdate;
 
 	ParticleManager::GetInstance()->Emit("ringGroup", ringEffect);
+
+	testTextSprite_ = std::make_unique<TextSprite>();
+	testTextSprite_->Initialize();
+	strcpy_s(textBuffer_, "test sprite");
+	testTextSprite_->SetText(L"test sprite", 48, RGB(255, 255, 255));
+	testTextSprite_->Translate() = { 100.0f, 200.0f };
 
 	damageTimer_ = 0.0f;
 	isLowHP_ = false;
@@ -161,6 +168,8 @@ void TestScene::Update(float deltaTime) {
 		sceneManager->SetFullScreenGray(false);
 		sceneManager->SetFullScreenVignette(false);
 	}
+
+	testTextSprite_->Update();
 }
 
 void TestScene::Draw() {
@@ -172,6 +181,7 @@ void TestScene::Draw() {
 	testCube_->Draw();
 
 	testSprite_->Draw();
+	testTextSprite_->Draw();
 
 	pm->Draw();
 
@@ -206,20 +216,43 @@ void TestScene::DrawSceneImGui() {
 
 	ImGui::Separator();
 	ImGui::Text("Gamepad Test (XInput):");
-	auto input = Input::GetInstance();
-	if (input->IsPadConnected()) {
-		ImGui::Text("Status: Connected");
-		ImGui::Text("Stick L: (%ld, %ld)", input->GetPadLStickX(), input->GetPadLStickY());
-		ImGui::Text("Stick R: (%ld, %ld)", input->GetPadRStickX(), input->GetPadRStickY());
-		ImGui::Text("Buttons: A:%d B:%d X:%d Y:%d",
-			input->IsPadPress(XINPUT_GAMEPAD_A),
-			input->IsPadPress(XINPUT_GAMEPAD_B),
-			input->IsPadPress(XINPUT_GAMEPAD_X),
-			input->IsPadPress(XINPUT_GAMEPAD_Y));
-		ImGui::Text("DPad POV: 0x%X", input->GetPadPov());
-	} else {
-		ImGui::Text("Status: Disconnected");
+	auto gamepad = Gamepad::GetInstance();
+	for (uint32_t i = 0; i < 4; ++i) {
+		ImGui::PushID(static_cast<int>(i));
+		if (ImGui::TreeNode((void*)(intptr_t)i, "Player %d Gamepad", i + 1)) {
+			if (gamepad->IsConnected(i)) {
+				ImGui::Text("Status: Connected");
+				ImGui::Text("Stick L: (%ld, %ld)", gamepad->GetLStickX(i), gamepad->GetLStickY(i));
+				ImGui::Text("Stick R: (%ld, %ld)", gamepad->GetRStickX(i), gamepad->GetRStickY(i));
+				ImGui::Text("Buttons: A:%d B:%d X:%d Y:%d",
+					gamepad->IsPress(XINPUT_GAMEPAD_A, i),
+					gamepad->IsPress(XINPUT_GAMEPAD_B, i),
+					gamepad->IsPress(XINPUT_GAMEPAD_X, i),
+					gamepad->IsPress(XINPUT_GAMEPAD_Y, i));
+				ImGui::Text("DPad POV: 0x%X", gamepad->GetPov(i));
+			} else {
+				ImGui::Text("Status: Disconnected");
+			}
+			ImGui::TreePop();
+		}
+		ImGui::PopID();
 	}
+
+	ImGui::Separator();
+	ImGui::Text("TextSprite Test:");
+	if (ImGui::InputText("Input Text", textBuffer_, sizeof(textBuffer_))) {
+		int size_needed = MultiByteToWideChar(CP_ACP, 0, textBuffer_, -1, NULL, 0);
+		std::wstring wstrTo(size_needed, 0);
+		MultiByteToWideChar(CP_ACP, 0, textBuffer_, -1, &wstrTo[0], size_needed);
+		if (!wstrTo.empty() && wstrTo.back() == L'\0') {
+			wstrTo.pop_back();
+		}
+		testTextSprite_->SetText(wstrTo, 48);
+	}
+	ImGui::DragFloat2("Text Pos", &testTextSprite_->Translate().x, 1.0f);
+	ImGui::DragFloat2("Text Scale", &testTextSprite_->Scale().x, 0.05f, 0.0f, 10.0f);
+	ImGui::DragFloat2("Text Rotate", &testTextSprite_->Rotate().x, 0.05f);
+	ImGui::ColorEdit4("Text Color", &testTextSprite_->Color().x);
 #endif
 }
 
