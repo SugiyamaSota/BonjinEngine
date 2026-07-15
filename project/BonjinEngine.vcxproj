@@ -192,6 +192,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="engine\core\common\DirectXCommon.cpp" />
     <ClCompile Include="engine\system\utility\function\function.cpp" />
     <ClCompile Include="engine\system\platform\input\Input.cpp" />
+    <ClCompile Include="engine\system\platform\input\Gamepad.cpp" />
     <ClCompile Include="engine\graphics\core\pso\graphicsPipelineStateBuilder\GraphicsPipelineStateBuilder.cpp" />
     <ClCompile Include="engine\graphics\core\pso\PSOManager.cpp" />
     <ClCompile Include="engine\graphics\core\pso\rootSignatureBuilder\RootSignatureBuilder.cpp" />
@@ -272,6 +273,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\core\common\DirectXCommon.h" />
     <ClInclude Include="engine\system\utility\function\function.h" />
     <ClInclude Include="engine\system\platform\input\Input.h" />
+    <ClInclude Include="engine\system\platform\input\Gamepad.h" />
     <ClInclude Include="engine\graphics\core\pso\graphicsPipelineStateBuilder\GraphicsPipelineStateBuilder.h" />
     <ClInclude Include="engine\graphics\core\pso\PSOManager.h" />
     <ClInclude Include="engine\graphics\core\pso\rootSignatureBuilder\RootSignatureBuilder.h" />

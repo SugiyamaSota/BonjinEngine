@@ -61,6 +61,11 @@ namespace Bonjin
 		ParticleManager* pm = nullptr;
 		ParticleConfig ringEffect;
 
+		// デバッグ用ポストエフェクト変数
+		float damageTimer_ = 0.0f;
+		bool isLowHP_ = false;
+		bool isPaused_ = false;
+
 	private:
 		// --- ゲーム固有の関数 ---
 	};
