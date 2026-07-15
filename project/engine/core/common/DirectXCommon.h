@@ -37,8 +37,13 @@ public:
 	DirectXCommon(const DirectXCommon&) = delete;
 	DirectXCommon& operator=(const DirectXCommon&) = delete;
 
-	void SetPostEffect(PostEffect effect) { currentEffect_ = effect; }
-	PostEffect GetPostEffect() const { return currentEffect_; }
+	void SetPostEffect(PostEffect effect) { ClearPostEffects(); AddPostEffect(effect); }
+	PostEffect GetPostEffect() const { return activeEffects_.empty() ? PostEffect::kFullScreen : activeEffects_[0]; }
+	void ClearPostEffects() { activeEffects_.clear(); }
+	void AddPostEffect(PostEffect effect) { activeEffects_.push_back(effect); }
+	void RemovePostEffect(PostEffect effect);
+	void SetActiveEffects(const std::vector<PostEffect>& effects) { activeEffects_ = effects; }
+	const std::vector<PostEffect>& GetActiveEffects() const { return activeEffects_; }
 	void SetFullScreenGray(bool isGray);
 	bool IsFullScreenGray() const { return fullScreenMaterial_.isGray != 0; }
 	void SetFullScreenVignette(bool isVignette);
@@ -150,7 +155,7 @@ private:
 	// ディスクリプタヒープ
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap_ = nullptr;
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_{};
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[4];
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[5];
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_ = nullptr;
 
 	// ディスクリプタサイズ
@@ -187,6 +192,7 @@ private:
 	void UpdateFixFPS();    // FPS固定更新
 
 	std::unique_ptr<RenderTexture> renderTexture_ = nullptr;
+	std::unique_ptr<RenderTexture> tempRenderTexture_ = nullptr;
 	std::unique_ptr<RenderTexture> postEffectTexture_ = nullptr;
 
 	std::unique_ptr<DepthStencil> depthStencil_ = nullptr;
@@ -214,6 +220,6 @@ private:
 	FullScreenMaterial fullScreenMaterial_{};
 	int dissolveMaskTextureHandle_ = -1;
 
-	PostEffect currentEffect_ = PostEffect::kFullScreen;
+	std::vector<PostEffect> activeEffects_;
 
 };
