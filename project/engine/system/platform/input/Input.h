@@ -4,6 +4,7 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 #include <wrl/client.h>
+#include <XInput.h>
 
 class Input {
 private:
@@ -23,9 +24,9 @@ private:
     DIMOUSESTATE2 prevMouseState_; // 1フレーム前のマウス状態
 
     // ゲームパッド入力
-    Microsoft::WRL::ComPtr<IDirectInputDevice8> gamepad_;
-    DIJOYSTATE2 gamepadState_;
-    DIJOYSTATE2 prevGamepadState_;
+    XINPUT_STATE gamepadState_{};
+    XINPUT_STATE prevGamepadState_{};
+    bool isGamepadConnected_ = false;
 
     // マウス固定関連
     bool isMouseLocked_ = false;
@@ -90,6 +91,4 @@ public:
 
     // ゲームパッドが接続されているか
     bool IsPadConnected();
-
-    static BOOL CALLBACK EnumGamePadCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pContext);
 };

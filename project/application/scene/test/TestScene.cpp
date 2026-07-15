@@ -201,6 +201,23 @@ void TestScene::DrawSceneImGui() {
 			damageTimer_ = 0.0f;
 		}
 	}
+
+	ImGui::Separator();
+	ImGui::Text("Gamepad Test (XInput):");
+	auto input = Input::GetInstance();
+	if (input->IsPadConnected()) {
+		ImGui::Text("Status: Connected");
+		ImGui::Text("Stick L: (%ld, %ld)", input->GetPadLStickX(), input->GetPadLStickY());
+		ImGui::Text("Stick R: (%ld, %ld)", input->GetPadRStickX(), input->GetPadRStickY());
+		ImGui::Text("Buttons: A:%d B:%d X:%d Y:%d",
+			input->IsPadPress(XINPUT_GAMEPAD_A),
+			input->IsPadPress(XINPUT_GAMEPAD_B),
+			input->IsPadPress(XINPUT_GAMEPAD_X),
+			input->IsPadPress(XINPUT_GAMEPAD_Y));
+		ImGui::Text("DPad POV: 0x%X", input->GetPadPov());
+	} else {
+		ImGui::Text("Status: Disconnected");
+	}
 #endif
 }
 
