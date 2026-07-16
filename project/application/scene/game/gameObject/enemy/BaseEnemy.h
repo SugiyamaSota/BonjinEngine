@@ -19,6 +19,8 @@ public:
     virtual void Update() override; // 派生クラスで固有のAIを実装
     virtual void Draw();
 
+    virtual bool IsChasing() const = 0;
+
     void UpdateRespawn(float deltaTime, float respawnTime, bool isEnemyRespawnEnabled);
 
     // コライダーの衝突時用

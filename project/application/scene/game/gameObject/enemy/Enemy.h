@@ -30,6 +30,8 @@ public:
     /// </summary>
     void OnCollision() override;
 
+    bool IsChasing() const override;
+
 protected:
     void OnMapCollision(const CollisionMapInfo& collisionMapinfo) override;
 

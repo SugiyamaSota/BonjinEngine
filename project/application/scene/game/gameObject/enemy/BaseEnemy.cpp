@@ -83,7 +83,9 @@ void BaseEnemy::Draw() {
 
 		// デバッグ用索敵範囲の円を描画
 		if (searchRangeCircle_ && camera_) {
-			searchRangeCircle_->Update(GetWorldPosition(), searchRadius_, camera_, { 1.0f, 0.0f, 0.0f, 1.0f });
+			float radius = IsChasing() ? loseRadius_ : searchRadius_;
+			Vector4 color = IsChasing() ? Vector4{ 1.0f, 0.5f, 0.0f, 1.0f } : Vector4{ 1.0f, 0.0f, 0.0f, 1.0f };
+			searchRangeCircle_->Update(GetWorldPosition(), radius, camera_, color);
 			searchRangeCircle_->Draw();
 		}
 	}

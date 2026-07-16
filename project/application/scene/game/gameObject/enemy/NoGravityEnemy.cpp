@@ -296,4 +296,8 @@ void NoGravityEnemy::DrawImGui(int index) {
 #endif
 }
 
+bool NoGravityEnemy::IsChasing() const {
+	return state_ == NoGravityEnemyState::kChase;
+}
+
 } // namespace Bonjin

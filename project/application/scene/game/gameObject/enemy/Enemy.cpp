@@ -239,4 +239,8 @@ void Enemy::DrawImGui(int index) {
 #endif
 }
 
+bool Enemy::IsChasing() const {
+	return state_ == EnemyState::kChase;
+}
+
 } // namespace Bonjin
