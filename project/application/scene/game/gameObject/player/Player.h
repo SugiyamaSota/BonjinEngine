@@ -9,6 +9,7 @@
 
 #include "Object3D.h"
 #include "Line3D.h"
+#include "Lightning3D.h"
 
 class MapChipField;
 namespace Bonjin {
@@ -80,6 +81,12 @@ public:
 		if (lockedOnEnemies_ && enemy) {
 			lockedOnEnemies_->push_back(enemy);
 		}
+	}
+
+	bool ConsumeHitStopRequest() {
+		if (!hitStopRequested_) return false;
+		hitStopRequested_ = false;
+		return true;
 	}
 
 	// HP関連
@@ -177,4 +184,21 @@ private:
 	int exp_ = 0;
 
 	bool isGoalReached_ = false;
+
+	// 順次テレポート用
+	std::list<Vector3> teleportQueue_;
+	float teleportTimer_ = 0.0f;
+	float teleportInterval_ = 0.15f;
+
+	// 雷霆エフェクト用
+	std::unique_ptr<Bonjin::Lightning3D> lightningEffect_;
+	Vector3 lastTeleportStartPos_;
+	float lightningActiveTimer_ = 0.0f;
+	float lightningShowDuration_ = 0.12f;
+	Vector4 lightningColor_ = { 0.3f, 0.7f, 1.0f, 1.0f };
+	float lightningOffsetRatio_ = 0.08f;
+	float lightningMinOffset_ = 0.2f;
+	float lightningMaxOffsetLimit_ = 1.5f;
+
+	bool hitStopRequested_ = false;
 };

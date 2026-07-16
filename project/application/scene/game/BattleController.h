@@ -57,6 +57,7 @@ private:
 	bool isEnemyRespawnEnabled_ = true;
 	float enemyRespawnTime_ = 3.0f;
 	bool isGoalReached_ = false;
+	float hitStopTimer_ = 0.0f;
 
 	void GenerateBlocksAndGoal();
 	void ResolveAnchorInstantLanding(class Anchor& anchor);

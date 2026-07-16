@@ -134,6 +134,25 @@ void BattleController::Unload() {
 }
 
 void BattleController::Update(float deltaTime) {
+	// ヒットストップの開始リクエストチェック
+	if (player_ && player_->ConsumeHitStopRequest()) {
+		hitStopTimer_ = 0.05f; // 1秒間時を止める
+	}
+
+	// ヒットストップ中の処理
+	if (hitStopTimer_ > 0.0f) {
+		hitStopTimer_ -= deltaTime;
+		if (hitStopTimer_ < 0.0f) {
+			hitStopTimer_ = 0.0f;
+		}
+
+		// カメラ、天球、パーティクルの更新のみを行い、他はフリーズ
+		skyBox_->Update(InitializeWorldTransform(), camera_);
+		cameraController_->Update(player_->GetWorldPosition(), deltaTime);
+		particleManager_->Update(camera_);
+		return;
+	}
+
 	(void)deltaTime;
 	skyBox_->Update(InitializeWorldTransform(), camera_);
 	player_->Update();

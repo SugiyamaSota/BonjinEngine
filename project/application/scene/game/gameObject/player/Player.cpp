@@ -1,6 +1,7 @@
 #define NOMINMAX
 #include "Player.h"
 #include "input/Gamepad.h"
+#include "Lightning3D.h"
 #include "../enemy/BaseEnemy.h"
 #include "ImGuiManager.h"
 #include"../../mapchip/MapChipField.h"
@@ -33,6 +34,9 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 	anchorLine_->Initialize();
 
 	isGoalReached_ = false;
+
+	lightningEffect_ = std::make_unique<Bonjin::Lightning3D>();
+	lightningEffect_->Initialize();
 }
 
 void Player::OnCollision(Bonjin::Collider* other) {
@@ -45,7 +49,7 @@ void Player::OnCollision(Bonjin::Collider* other) {
 }
 
 void Player::Move() {
-	if (isKnockedBack_) {
+	if (isKnockedBack_ || !teleportQueue_.empty()) {
 		return;
 	}
 	// 移動入力
@@ -145,6 +149,32 @@ void Player::Update() {
 	HandleLockOnRemovalInput();
 	const bool wasOnGround = onGround_;
 
+	// テレポートキューの更新
+	if (!teleportQueue_.empty()) {
+		teleportTimer_ -= 1.0f / 60.0f;
+		if (teleportTimer_ <= 0.0f) {
+			lastTeleportStartPos_ = worldTransform_.translate; // テレポート元の位置を保存
+
+			worldTransform_.translate = teleportQueue_.front();
+			teleportQueue_.pop_front();
+			teleportTimer_ = teleportInterval_;
+
+			lightningActiveTimer_ = lightningShowDuration_; // 雷を発生させる
+
+			velocity_ = { 0.0f, 0.0f, 0.0f }; // 速度のリセット
+
+			// カメラシェイクとヒットストップ
+			if (camera_) {
+				camera_->StartShake(2.f,1.f);
+			}
+			hitStopRequested_ = true;
+		}
+	}
+
+	// 雷タイマーの更新
+	if (lightningActiveTimer_ > 0.0f) {
+		lightningActiveTimer_ -= 1.0f / 60.0f;
+	}
 
 	// 1.移動処理
 	Move();
@@ -272,6 +302,12 @@ void Player::Draw() {
 	{
 		anchor_->Draw();
 	}
+
+	// 雷霆エフェクトの描画
+	if (lightningActiveTimer_ > 0.0f && lightningEffect_) {
+		lightningEffect_->Update(lastTeleportStartPos_, GetWorldPosition(), camera_, lightningColor_, lightningOffsetRatio_, lightningMinOffset_, lightningMaxOffsetLimit_);
+		lightningEffect_->Draw();
+	}
 }
 
 void Player::DrawAnchorLine() {
@@ -378,12 +414,38 @@ void Player::GainExp(int amount) {
 void Player::RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies) {
 	for (Bonjin::BaseEnemy* enemy : enemies) {
 		if (enemy != nullptr && !enemy->GetIsDead()) {
+			// 敵の座標をテレポートキューに追加
+			teleportQueue_.push_back(enemy->GetWorldPosition());
+
 			GainExp(enemy->GetExpReward());
 			enemy->SetIsDead(true);
 			enemy->SetIsLockedOn(false);
 		}
 	}
 	enemies.clear();
+
+	// 最初のテレポートを開始
+	if (!teleportQueue_.empty()) {
+		lastTeleportStartPos_ = worldTransform_.translate; // 開始位置を保存
+
+		worldTransform_.translate = teleportQueue_.front();
+		teleportQueue_.pop_front();
+		teleportTimer_ = teleportInterval_;
+
+		lightningActiveTimer_ = lightningShowDuration_; // 雷を発生させる
+
+		velocity_ = { 0.0f, 0.0f, 0.0f };
+
+		// カメラシェイクとヒットストップ
+		if (camera_) {
+			camera_->StartShake(0.5f, 0.1f);
+		}
+		hitStopRequested_ = true;
+
+		// 演出終了まで無敵状態にする
+		isInvincible_ = true;
+		invincibleTimer_ = teleportInterval_ * (teleportQueue_.size() + 2);
+	}
 }
 
 void Player::HandleLockOnRemovalInput() {
@@ -431,6 +493,18 @@ void Player::DrawImGui() {
 				anchor_ = nullptr;
 			}
 		}
+
+		// 雷霆テレポートエフェクトの調整UI
+		if (ImGui::TreeNode("Teleport & Lightning Effect")) {
+			ImGui::DragFloat("Teleport Interval", &teleportInterval_, 0.01f, 0.01f, 1.0f, "%.2fs");
+			ImGui::DragFloat("Lightning Duration", &lightningShowDuration_, 0.01f, 0.01f, 1.0f, "%.2fs");
+			ImGui::ColorEdit4("Lightning Color", &lightningColor_.x);
+			ImGui::DragFloat("Lightning Offset Ratio", &lightningOffsetRatio_, 0.005f, 0.0f, 0.5f, "%.3f");
+			ImGui::DragFloat("Lightning Min Offset", &lightningMinOffset_, 0.01f, 0.0f, 5.0f, "%.2f");
+			ImGui::DragFloat("Lightning Max Offset", &lightningMaxOffsetLimit_, 0.01f, 0.0f, 10.0f, "%.2f");
+			ImGui::TreePop();
+		}
+
 		ImGui::TreePop();
 	}
 #endif

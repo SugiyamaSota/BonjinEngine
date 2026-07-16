@@ -256,6 +256,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="engine\graphics\2d\line\Line2D.cpp" />
     <ClCompile Include="engine\graphics\3d\line\Line3D.cpp" />
     <ClCompile Include="engine\graphics\3d\line\DebugCircle3D.cpp" />
+    <ClCompile Include="engine\graphics\3d\line\Lightning3D.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\core\Core.h" />
@@ -343,6 +344,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\graphics\2d\line\Line2D.h" />
     <ClInclude Include="engine\graphics\3d\line\Line3D.h" />
     <ClInclude Include="engine\graphics\3d\line\DebugCircle3D.h" />
+    <ClInclude Include="engine\graphics\3d\line\Lightning3D.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
