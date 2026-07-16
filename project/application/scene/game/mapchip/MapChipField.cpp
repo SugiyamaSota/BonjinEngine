@@ -10,7 +10,6 @@ namespace {
     std::map<std::string, MapChipType> mapChipTable = {
         {"0", MapChipType::kBlank},
         {"1", MapChipType::kBlock},
-        {"E", MapChipType::kEnemy},
         {"2", MapChipType::kGoal},
         {"G", MapChipType::kGoal},
     };
@@ -18,6 +17,7 @@ namespace {
 
 void MapChipField::ResetMapChipData() {
     mapChipData_.data.clear();
+    enemySpawns_.clear();
     numBlockVertical_ = 0;
     numBlockHorizontal_ = 0;
 }
@@ -30,35 +30,64 @@ void MapChipField::LoadmapChipCsv(const std::string& filePath) {
     assert(file.is_open());
 
     std::string line;
+    bool readingTerrain = true;
+
     // ファイルから1行ずつ読み込む（終端までループ）
     while (getline(file, line)) {
-        // 空行（ファイルの最後の改行など）はスキップ
-        if (line.empty()) continue;
-
-        std::vector<MapChipType> mapChipLine;
-        std::istringstream line_stream(line);
-        std::string word;
-
-        // カンマ区切りで各ブロックを読み込む
-        while (getline(line_stream, word, ',')) {
-            // 改行コード(\r)が末尾に残る場合への対策（Windows環境などの安全策）
-            if (!word.empty() && word.back() == '\r') {
-                word.pop_back();
-            }
-
-            if (mapChipTable.contains(word)) {
-                mapChipLine.push_back(mapChipTable[word]);
-            } else {
-                // 定義されていない文字はとりあえず空白で埋める
-                mapChipLine.push_back(MapChipType::kBlank);
-            }
+        // 改行コード(\r)が末尾に残る場合への対策（Windows環境などの安全策）
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
         }
 
-        // 1行分のデータを追加
-        mapChipData_.data.push_back(mapChipLine);
+        // 空行があった場合
+        if (line.empty()) {
+            // 地形読み込み中に空行が来たら、オブジェクト読み込みに移行
+            if (readingTerrain && !mapChipData_.data.empty()) {
+                readingTerrain = false;
+            }
+            continue;
+        }
 
-        // 最大の横幅（列数）を更新
-        numBlockHorizontal_ = std::max(numBlockHorizontal_, static_cast<uint32_t>(mapChipLine.size()));
+        if (readingTerrain) {
+            std::vector<MapChipType> mapChipLine;
+            std::istringstream line_stream(line);
+            std::string word;
+
+            // カンマ区切りで各ブロックを読み込む
+            while (getline(line_stream, word, ',')) {
+                if (!word.empty() && word.back() == '\r') {
+                    word.pop_back();
+                }
+
+                if (mapChipTable.contains(word)) {
+                    mapChipLine.push_back(mapChipTable[word]);
+                } else {
+                    mapChipLine.push_back(MapChipType::kBlank);
+                }
+            }
+            mapChipData_.data.push_back(mapChipLine);
+            numBlockHorizontal_ = std::max(numBlockHorizontal_, static_cast<uint32_t>(mapChipLine.size()));
+        } else {
+            // オブジェクト読み込みフェーズ
+            // 期待するフォーマット： normalenemy(14,9) または nogravityenemy(3.5, 2.0)
+            size_t openParenthesis = line.find('(');
+            size_t closeParenthesis = line.find(')');
+            if (openParenthesis != std::string::npos && closeParenthesis != std::string::npos && closeParenthesis > openParenthesis) {
+                std::string type = line.substr(0, openParenthesis);
+                
+                // トリミング
+                type.erase(std::remove_if(type.begin(), type.end(), ::isspace), type.end());
+
+                std::string coordsStr = line.substr(openParenthesis + 1, closeParenthesis - openParenthesis - 1);
+                std::istringstream coordStream(coordsStr);
+                std::string xStr, yStr;
+                if (getline(coordStream, xStr, ',') && getline(coordStream, yStr)) {
+                    float x = std::stof(xStr);
+                    float y = std::stof(yStr);
+                    enemySpawns_.push_back({type, x, y});
+                }
+            }
+        }
     }
 
     file.close();
@@ -83,9 +112,12 @@ MapChipType MapChipField::GetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex
     return mapChipData_.data[yIndex][xIndex];
 }
 
+Vector3 MapChipField::GetMapChipPosition(float x, float y) const {
+    return Vector3(kBlockWidth * x, kBlockHeight * (static_cast<float>(numBlockVertical_) - 1.0f - y), 0.0f);
+}
+
 Vector3 MapChipField::GetMapChipPositionByIndex(uint32_t xIndex, uint32_t yIndex) const {
-    // メンバ変数 numBlockVertical_ を使用
-    return Vector3(kBlockWidth * xIndex, kBlockHeight * (numBlockVertical_ - 1 - yIndex), 0);
+    return GetMapChipPosition(static_cast<float>(xIndex), static_cast<float>(yIndex));
 }
 
 IndexSet MapChipField::GetMapChipIndexSetByPosition(const Vector3& position) const {

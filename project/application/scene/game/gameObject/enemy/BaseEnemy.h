@@ -3,6 +3,7 @@
 #include "../GameObject.h"
 #include "EnemyBullet.h"
 #include "Object3D.h"
+#include "DebugCircle3D.h"
 #include <list>
 #include <memory>
 
@@ -50,8 +51,10 @@ public:
 
 protected:
     Player* player_ = nullptr;
-    float searchRadius_ = 10.0f;
+    float searchRadius_ = 5.0f;
     float loseRadius_ = 12.0f;
+
+    std::unique_ptr<DebugCircle3D> searchRangeCircle_;
 
     bool isLockedOn_ = false;
     bool defeatEffectRequested_ = false;

@@ -8,12 +8,17 @@
 enum class MapChipType {
 	kBlank, // 空白
 	kBlock, // ブロック
-	kEnemy, // 敵
 	kGoal,  // ゴール
 };
 
 struct MapChipData {
 	std::vector<std::vector<MapChipType>> data;
+};
+
+struct EnemySpawnData {
+	std::string type;
+	float x;
+	float y;
 };
 
 class MapChipField {
@@ -25,8 +30,7 @@ private:
 	uint32_t numBlockHorizontal_ = 0;
 
 	MapChipData mapChipData_;
-
-
+	std::vector<EnemySpawnData> enemySpawns_;
 
 public:
 	
@@ -46,10 +50,13 @@ public:
 
 	//ゲッター
 	MapChipType GetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex) const;
+	Vector3 GetMapChipPosition(float x, float y) const;
 	Vector3 GetMapChipPositionByIndex(uint32_t xIndex, uint32_t yIndex) const;
 	uint32_t GetNumBlockVirtical() { return numBlockVertical_; };
 	uint32_t GetNumBlockHorizontal() { return numBlockHorizontal_; };
 	IndexSet GetMapChipIndexSetByPosition(const Vector3& position) const;
 	Rect GetRectByIndex(uint32_t xIndex, uint32_t yIndex) const;
 	IndexSet GetMapChipIndexSetByCenter() const;
+
+	const std::vector<EnemySpawnData>& GetEnemySpawns() const { return enemySpawns_; }
 };

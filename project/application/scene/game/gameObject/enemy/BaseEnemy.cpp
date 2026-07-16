@@ -72,11 +72,20 @@ void BaseEnemy::Initialize(Object3D* model, Camera* camera, const Vector3& posit
 	chargeTimer_ = 0.0f;
 	uvScrollTimer_ = 0.0f;
 	expReward_ = 30;
+
+	searchRangeCircle_ = std::make_unique<DebugCircle3D>();
+	searchRangeCircle_->Initialize();
 }
 
 void BaseEnemy::Draw() {
 	if (model_ && !isDead_) {
 		model_->Draw();
+
+		// デバッグ用索敵範囲の円を描画
+		if (searchRangeCircle_ && camera_) {
+			searchRangeCircle_->Update(GetWorldPosition(), searchRadius_, camera_, { 1.0f, 0.0f, 0.0f, 1.0f });
+			searchRangeCircle_->Draw();
+		}
 	}
 	for (auto& bullet : bullets_) {
 		bullet->Draw();

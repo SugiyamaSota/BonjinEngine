@@ -58,43 +58,37 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	cameraController_ = std::make_unique<CameraController>();
 	cameraController_->Initialize(camera_, playerPosition);
 
-	for (uint32_t i = 0; i < vertical; ++i) {
-		for (uint32_t j = 0; j < horizontal; ++j) {
-			if (mapChipField_->GetMapChipTypeByIndex(j, i) != MapChipType::kEnemy) {
-				continue;
-			}
+	// 敵の生成
+	const auto& enemySpawns = mapChipField_->GetEnemySpawns();
+	for (const auto& spawn : enemySpawns) {
+		enemyModels_.push_back(std::make_unique<Object3D>());
+		enemyModels_.back()->CreateModel(
+			ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+		enemyModels_.back()->SetEnableEnableEnvironmentMap(false);
 
-			enemyModels_.push_back(std::make_unique<Object3D>());
-			enemyModels_.back()->CreateModel(
-				ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
-			enemyModels_.back()->SetEnableEnableEnvironmentMap(false);
+		const Vector3 enemyPosition = mapChipField_->GetMapChipPosition(spawn.x, spawn.y);
 
-			bool isNoGravity = (std::uniform_real_distribution<float>(0.0f, 1.0f)(randomEngine_) < 0.4f);
-			isNoGravity = true;
-			const Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(j, i);
+		if (spawn.type == "nogravityenemy" || spawn.type == "E2") {
+			// 空中敵は青みがかった色にする
+			enemyModels_.back()->SetColor({0.2f, 0.3f, 0.5f, 1.0f});
+			
+			Vector3 spawnPos = enemyPosition;
+			spawnPos.y += 1.0f; // 少し高めに出現させる
 
-			if (isNoGravity) {
-				// 空中敵は青みがかった色にする
-				enemyModels_.back()->SetColor({0.2f, 0.3f, 0.5f, 1.0f});
-				
-				Vector3 spawnPos = enemyPosition;
-				spawnPos.y += 1.0f; // 少し高めに出現させる
+			auto enemy = std::make_unique<NoGravityEnemy>();
+			enemy->Initialize(enemyModels_.back().get(), camera_, spawnPos);
+			enemy->SetMapChipField(mapChipField_.get());
+			enemy->SetPlayer(player_.get());
+			enemies_.push_back(std::move(enemy));
+		} else {
+			// 地上敵はグレーがかった赤色にする
+			enemyModels_.back()->SetColor({0.3f, 0.2f, 0.2f, 1.0f});
 
-				auto enemy = std::make_unique<NoGravityEnemy>();
-				enemy->Initialize(enemyModels_.back().get(), camera_, spawnPos);
-				enemy->SetMapChipField(mapChipField_.get());
-				enemy->SetPlayer(player_.get());
-				enemies_.push_back(std::move(enemy));
-			} else {
-				// 地上敵はグレーがかった赤色にする
-				enemyModels_.back()->SetColor({0.3f, 0.2f, 0.2f, 1.0f});
-
-				auto enemy = std::make_unique<Enemy>();
-				enemy->Initialize(enemyModels_.back().get(), camera_, enemyPosition);
-				enemy->SetMapChipField(mapChipField_.get());
-				enemy->SetPlayer(player_.get());
-				enemies_.push_back(std::move(enemy));
-			}
+			auto enemy = std::make_unique<Enemy>();
+			enemy->Initialize(enemyModels_.back().get(), camera_, enemyPosition);
+			enemy->SetMapChipField(mapChipField_.get());
+			enemy->SetPlayer(player_.get());
+			enemies_.push_back(std::move(enemy));
 		}
 	}
 
@@ -200,6 +194,8 @@ void BattleController::Update(float deltaTime) {
 }
 
 void BattleController::Draw() {
+	skyBox_->Draw();
+
 	const uint32_t vertical = mapChipField_->GetNumBlockVirtical();
 	const uint32_t horizontal = mapChipField_->GetNumBlockHorizontal();
 	for (uint32_t i = 0; i < vertical; ++i) {
@@ -220,7 +216,6 @@ void BattleController::Draw() {
 			enemy->Draw();
 		}
 	}
-	skyBox_->Draw();
 	particleManager_->Draw();
 
 	if (player_) {
