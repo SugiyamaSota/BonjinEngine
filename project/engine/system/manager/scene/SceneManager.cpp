@@ -155,6 +155,26 @@ DirectXCommon::PostEffect SceneManager::GetPostEffect() const {
 	return DirectXCommon::GetInstance()->GetPostEffect();
 }
 
+void SceneManager::ClearPostEffects() {
+	DirectXCommon::GetInstance()->ClearPostEffects();
+}
+
+void SceneManager::AddPostEffect(DirectXCommon::PostEffect effect) {
+	DirectXCommon::GetInstance()->AddPostEffect(effect);
+}
+
+void SceneManager::RemovePostEffect(DirectXCommon::PostEffect effect) {
+	DirectXCommon::GetInstance()->RemovePostEffect(effect);
+}
+
+void SceneManager::SetActiveEffects(const std::vector<DirectXCommon::PostEffect>& effects) {
+	DirectXCommon::GetInstance()->SetActiveEffects(effects);
+}
+
+const std::vector<DirectXCommon::PostEffect>& SceneManager::GetActiveEffects() const {
+	return DirectXCommon::GetInstance()->GetActiveEffects();
+}
+
 void SceneManager::SetFullScreenGray(bool isGray) {
 	DirectXCommon::GetInstance()->SetFullScreenGray(isGray);
 }

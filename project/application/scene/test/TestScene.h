@@ -8,6 +8,7 @@
 #include "SkyBox.h"
 #include "Sprite.h"
 #include"ParticleManager.h"
+#include "TextSprite.h"
 
 namespace Bonjin
 {
@@ -60,6 +61,16 @@ namespace Bonjin
 
 		ParticleManager* pm = nullptr;
 		ParticleConfig ringEffect;
+
+		std::unique_ptr<TextSprite> testTextSprite_ = nullptr;
+		char textBuffer_[256] = {};
+
+
+	private:	// デバッグ用ポストエフェクト変数
+		float damageTimer_ = 0.0f;
+		bool isLowHP_ = false;
+		bool isPaused_ = false;
+		bool isManualPostEffect_ = false;
 
 	private:
 		// --- ゲーム固有の関数 ---

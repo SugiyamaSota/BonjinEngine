@@ -129,6 +129,9 @@
     <ClCompile Include="engine\system\platform\input\Input.cpp">
       <Filter>engine\input</Filter>
     </ClCompile>
+    <ClCompile Include="engine\system\platform\input\Gamepad.cpp">
+      <Filter>engine\input</Filter>
+    </ClCompile>
     <ClCompile Include="engine\audio\AudioPlayer.cpp">
       <Filter>engine\audio</Filter>
     </ClCompile>
@@ -144,7 +147,13 @@
     <ClCompile Include="engine\core\bonjin\BonjinEngine.cpp">
       <Filter>engine</Filter>
     </ClCompile>
+    <ClCompile Include="engine\graphics\2d\sprite\BaseSprite.cpp">
+      <Filter>engine\sprite</Filter>
+    </ClCompile>
     <ClCompile Include="engine\graphics\2d\sprite\Sprite.cpp">
+      <Filter>engine\sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\graphics\2d\sprite\TextSprite.cpp">
       <Filter>engine\sprite</Filter>
     </ClCompile>
     <ClCompile Include="engine\graphics\utility\color\Color.cpp">
@@ -345,6 +354,9 @@
     <ClInclude Include="engine\system\platform\input\Input.h">
       <Filter>engine\input</Filter>
     </ClInclude>
+    <ClInclude Include="engine\system\platform\input\Gamepad.h">
+      <Filter>engine\input</Filter>
+    </ClInclude>
     <ClInclude Include="engine\audio\AudioPlayer.h">
       <Filter>engine\audio</Filter>
     </ClInclude>
@@ -363,7 +375,13 @@
     <ClInclude Include="engine\system\utility\math\Struct.h">
       <Filter>engine\math\ヘッダー</Filter>
     </ClInclude>
+    <ClInclude Include="engine\graphics\2d\sprite\BaseSprite.h">
+      <Filter>engine\sprite</Filter>
+    </ClInclude>
     <ClInclude Include="engine\graphics\2d\sprite\Sprite.h">
+      <Filter>engine\sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\graphics\2d\sprite\TextSprite.h">
       <Filter>engine\sprite</Filter>
     </ClInclude>
     <ClInclude Include="engine\core\common\DirectXCommon.h">

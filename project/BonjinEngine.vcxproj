@@ -205,6 +205,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="engine\core\common\DirectXCommon.cpp" />
     <ClCompile Include="engine\system\utility\function\function.cpp" />
     <ClCompile Include="engine\system\platform\input\Input.cpp" />
+    <ClCompile Include="engine\system\platform\input\Gamepad.cpp" />
     <ClCompile Include="engine\graphics\core\pso\graphicsPipelineStateBuilder\GraphicsPipelineStateBuilder.cpp" />
     <ClCompile Include="engine\graphics\core\pso\PSOManager.cpp" />
     <ClCompile Include="engine\graphics\core\pso\rootSignatureBuilder\RootSignatureBuilder.cpp" />
@@ -239,7 +240,9 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="engine\system\utility\math\Convert.cpp" />
     <ClCompile Include="engine\system\utility\math\Matrix.cpp" />
     <ClCompile Include="engine\system\utility\math\vector.cpp" />
+    <ClCompile Include="engine\graphics\2d\sprite\BaseSprite.cpp" />
     <ClCompile Include="engine\graphics\2d\sprite\Sprite.cpp" />
+    <ClCompile Include="engine\graphics\2d\sprite\TextSprite.cpp" />
     <ClCompile Include="engine\system\platform\windows\WinApp.cpp" />
     <ClCompile Include="engine\system\utility\time\Time.cpp" />
     <ClCompile Include="application\scene\title\TitleScene.cpp" />
@@ -303,6 +306,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\core\common\DirectXCommon.h" />
     <ClInclude Include="engine\system\utility\function\function.h" />
     <ClInclude Include="engine\system\platform\input\Input.h" />
+    <ClInclude Include="engine\system\platform\input\Gamepad.h" />
     <ClInclude Include="engine\graphics\core\pso\graphicsPipelineStateBuilder\GraphicsPipelineStateBuilder.h" />
     <ClInclude Include="engine\graphics\core\pso\PSOManager.h" />
     <ClInclude Include="engine\graphics\core\pso\rootSignatureBuilder\RootSignatureBuilder.h" />
@@ -322,7 +326,9 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\system\utility\math\Matrix.h" />
     <ClInclude Include="engine\system\utility\math\Struct.h" />
     <ClInclude Include="engine\system\utility\math\vector.h" />
+    <ClInclude Include="engine\graphics\2d\sprite\BaseSprite.h" />
     <ClInclude Include="engine\graphics\2d\sprite\Sprite.h" />
+    <ClInclude Include="engine\graphics\2d\sprite\TextSprite.h" />
     <ClInclude Include="engine\system\platform\windows\WinApp.h" />
     <ClInclude Include="engine\system\utility\time\Time.h" />
     <ClInclude Include="application\scene\title\TitleScene.h" />
