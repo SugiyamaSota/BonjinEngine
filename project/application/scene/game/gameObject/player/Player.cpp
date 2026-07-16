@@ -1,5 +1,6 @@
 #define NOMINMAX
 #include "Player.h"
+#include "input/Gamepad.h"
 #include "../enemy/BaseEnemy.h"
 #include "ImGuiManager.h"
 #include"../../mapchip/MapChipField.h"
@@ -51,7 +52,7 @@ void Player::Move() {
 	// 接地状態
 	if (onGround_) {
 		// ゲームパッドの左スティックのX軸の値を取得
-		long lStickX = Input::GetInstance()->GetPadLStickX();
+		long lStickX = Gamepad::GetInstance()->GetLStickX();
 
 		// 💡 キーボードとスティックの入力を統合して左右の移動フラグを作成
 		// 💡 キーボードの移動には、押し続けている間反応するIsPress()を使用します
@@ -100,13 +101,13 @@ void Player::Move() {
 		}
 
 		// Aボタンでジャンプ (DIK_SPACEはIsTriggerのままでOK)
-		if (Input::GetInstance()->IsPadPress(0) || Input::GetInstance()->IsTrigger(DIK_SPACE)) {
+		if (Gamepad::GetInstance()->IsPress(XINPUT_GAMEPAD_A) || Input::GetInstance()->IsTrigger(DIK_SPACE)) {
 			velocity_ = Add(velocity_, Vector3(0, kJumpAcceleration, 0));
 		}
 	} else {
 		// 空中
 		// === ここから空中での移動処理を修正 ===
-		long lStickX = Input::GetInstance()->GetPadLStickX();
+		long lStickX = Gamepad::GetInstance()->GetLStickX();
 
 		// 💡 空中でのキーボード入力とスティック入力を統合
 		bool isMovingRightInAir = (lStickX > kPadDeadZone_) || Input::GetInstance()->IsPress(DIK_D);
@@ -190,7 +191,7 @@ void Player::Update() {
 	}
 
 	// XボタンでshootAnchor
-	if (Input::GetInstance()->IsPadTrigger(2) || Input::GetInstance()->IsTrigger(DIK_J)) {
+	if (Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_X) || Input::GetInstance()->IsTrigger(DIK_J)) {
 		if (!isKnockedBack_) {
 			shootAnchor();
 		}
@@ -214,8 +215,8 @@ void Player::Update() {
 		anchorLine_->Update(GetPosition(), anchor_->GetPosition(), camera_, lineColor_);
 	}
 
-	// Yボタンでテレポート
-	if (Input::GetInstance()->IsPadTrigger(1) || Input::GetInstance()->IsTrigger(DIK_K)) {
+	// Bボタンでテレポート
+	if (Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_B) || Input::GetInstance()->IsTrigger(DIK_K)) {
 		if (!isKnockedBack_) {
 			// アンカーが存在し、isStandByがtrueの場合
 			if (anchor_ && anchor_->GetStandBy()) {
@@ -286,8 +287,8 @@ void Player::shootAnchor() {
 	}
 
 	// ゲームパッドの左スティックのX軸とY軸の値を取得
-	long lStickX = Input::GetInstance()->GetPadLStickX();
-	long lStickY = Input::GetInstance()->GetPadLStickY();
+	long lStickX = Gamepad::GetInstance()->GetLStickX();
+	long lStickY = Gamepad::GetInstance()->GetLStickY();
 
 	// プレイヤーが向いている方向を考慮してアンカーを生成
 	Vector3 initialVelocity;
@@ -393,7 +394,7 @@ void Player::HandleLockOnRemovalInput() {
 
 	// Lキーまたは対応するパッドボタンが押されたら、ロックオン中の敵をすべて削除する
 	// GameSceneで使われていた入力判定をそのまま使用
-	if (Input::GetInstance()->IsPadTrigger(3) || Input::GetInstance()->IsTrigger(DIK_L)) {
+	if (Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_Y) || Input::GetInstance()->IsTrigger(DIK_L)) {
 		RemoveLockedOnEnemies(*lockedOnEnemies_);
 	}
 }

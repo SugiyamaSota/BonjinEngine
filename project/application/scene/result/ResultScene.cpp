@@ -11,10 +11,10 @@ void ResultScene::Initialize(Camera* camera) {
 	clearSprite_ = std::make_unique<Sprite>();
 	clearSprite_->Initialize("stage_clear.png");
 	// 画面サイズ 1280x720 の中央に配置する
-	clearSprite_->Translate() = { 640.0f, 360.0f };
-	clearSprite_->Size() = { 1280.0f, 720.0f };
-	clearSprite_->Scale() = { 1.0f, 1.0f };
-	clearSprite_->Anchor() = { 0.5f, 0.5f, 0.0f };
+	clearSprite_->SetTranslate({ 640.0f, 360.0f });
+	clearSprite_->SetSize({ 1280.0f, 720.0f });
+	clearSprite_->SetScale({ 1.0f, 1.0f });
+	clearSprite_->SetAnchor({ 0.5f, 0.5f, 0.0f });
 }
 
 void ResultScene::Unload() {
