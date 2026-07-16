@@ -49,6 +49,12 @@ namespace Bonjin
         bool IsFullScreenGray() const;
         void SetFullScreenVignette(bool isVignette);
         bool IsFullScreenVignette() const;
+        void SetFullScreenVignetteColor(const Vector3& color);
+        Vector3 GetFullScreenVignetteColor() const;
+        void SetFullScreenVignetteScale(float scale);
+        float GetFullScreenVignetteScale() const;
+        void SetFullScreenVignettePower(float power);
+        float GetFullScreenVignettePower() const;
         void SetRadialBlurCenter(const Vector2& center);
         Vector2 GetRadialBlurCenter() const;
         void SetRadialBlurWidth(float blurWidth);
