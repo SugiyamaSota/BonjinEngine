@@ -97,6 +97,19 @@ void ImGuiEditorWindows::DrawSystemSettings(SceneManager* sceneManager) {
 			if (ImGui::Checkbox("Vignette", &isVignette)) {
 				sceneManager->SetFullScreenVignette(isVignette);
 			}
+			Vector3 vignetteColor = sceneManager->GetFullScreenVignetteColor();
+			float vigColor[3] = { vignetteColor.x, vignetteColor.y, vignetteColor.z };
+			if (ImGui::ColorEdit3("Vignette Color", vigColor)) {
+				sceneManager->SetFullScreenVignetteColor({ vigColor[0], vigColor[1], vigColor[2] });
+			}
+			float vignetteScale = sceneManager->GetFullScreenVignetteScale();
+			if (ImGui::SliderFloat("Vignette Scale", &vignetteScale, 0.0f, 32.0f)) {
+				sceneManager->SetFullScreenVignetteScale(vignetteScale);
+			}
+			float vignettePower = sceneManager->GetFullScreenVignettePower();
+			if (ImGui::SliderFloat("Vignette Power", &vignettePower, 0.0f, 5.0f)) {
+				sceneManager->SetFullScreenVignettePower(vignettePower);
+			}
 		}
 
 		if (ImGui::CollapsingHeader("RadialBlur Settings")) {
