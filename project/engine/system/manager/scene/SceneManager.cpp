@@ -116,6 +116,9 @@ void SceneManager::ChangeScene(SceneType nextSceneType) {
 	auto it = scenes_.find(nextSceneType);
 	if (it == scenes_.end()) return;
 
+	// シーン切り替え時にVignette等のエフェクトをデフォルトに戻す
+	ResetPostEffects();
+
 	// unique_ptr が管理する実体のアドレスをセット
 	currentScene_ = it->second.get();
 	currentScene_->Initialize(camera_.get());
@@ -136,6 +139,10 @@ void SceneManager::RestartCurrentScene() {
 	}
 
 	currentScene_->Unload();
+
+	// リスタート時にVignette等のエフェクトをデフォルトに戻す
+	ResetPostEffects();
+
 	currentScene_->Initialize(camera_.get());
 }
 
@@ -157,6 +164,13 @@ DirectXCommon::PostEffect SceneManager::GetPostEffect() const {
 
 void SceneManager::ClearPostEffects() {
 	DirectXCommon::GetInstance()->ClearPostEffects();
+}
+
+void SceneManager::ResetPostEffects() {
+	SetFullScreenVignette(false);
+	SetFullScreenVignetteColor({ 0.0f, 0.0f, 0.0f });
+	SetFullScreenVignetteScale(16.0f);
+	SetFullScreenVignettePower(0.8f);
 }
 
 void SceneManager::AddPostEffect(DirectXCommon::PostEffect effect) {

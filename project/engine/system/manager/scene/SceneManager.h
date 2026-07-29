@@ -40,6 +40,7 @@ namespace Bonjin
         void SetPostEffect(DirectXCommon::PostEffect effect);
         DirectXCommon::PostEffect GetPostEffect() const;
         void ClearPostEffects();
+        void ResetPostEffects();
         void AddPostEffect(DirectXCommon::PostEffect effect);
         void RemovePostEffect(DirectXCommon::PostEffect effect);
         void SetActiveEffects(const std::vector<DirectXCommon::PostEffect>& effects);

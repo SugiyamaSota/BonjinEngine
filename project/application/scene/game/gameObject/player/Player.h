@@ -93,7 +93,7 @@ public:
 	int GetHp() const { return hp_; }
 	int GetMaxHp() const { return maxHp_; }
 	void SetHp(int hp) { hp_ = hp; }
-	void ApplyDamage(int damage) { hp_ = (hp_ > damage) ? hp_ - damage : 0; }
+	void ApplyDamage(int damage);
 	bool GetIsDead() const { return hp_ <= 0; }
 
 	// レベル・経験値関連
@@ -201,4 +201,16 @@ private:
 	float lightningMaxOffsetLimit_ = 1.5f;
 
 	bool hitStopRequested_ = false;
+
+	// ダメージVignette演出用
+	float damageEffectTimer_ = 0.0f;
+	static inline const float kDamageEffectMaxTime = 0.5f;
+	bool wasVignette_ = false;
+	Vector3 origVignetteColor_ = { 0.0f, 0.0f, 0.0f };
+	float origVignetteScale_ = 16.0f;
+	float origVignettePower_ = 0.8f;
+
+	// テレポートラジアルブラー演出用
+	float teleportBlurTimer_ = 0.0f;
+	static inline const float kTeleportBlurMaxTime = 0.2f;
 };

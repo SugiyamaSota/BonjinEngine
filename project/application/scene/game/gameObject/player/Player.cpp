@@ -3,6 +3,7 @@
 #include "input/Gamepad.h"
 #include "Lightning3D.h"
 #include "../enemy/BaseEnemy.h"
+#include "SceneManager.h"
 #include "ImGuiManager.h"
 #include"../../mapchip/MapChipField.h"
 #include "../../logic/Collision.h"
@@ -145,6 +146,53 @@ void Player::Move() {
 }
 
 void Player::Update() {
+	// ダメージVignette演出の更新
+	if (damageEffectTimer_ > 0.0f) {
+		damageEffectTimer_ -= 1.0f / 60.0f;
+		auto sceneManager = Bonjin::SceneManager::GetInstance();
+		if (damageEffectTimer_ <= 0.0f) {
+			damageEffectTimer_ = 0.0f;
+			sceneManager->SetFullScreenVignette(wasVignette_);
+			sceneManager->SetFullScreenVignetteColor(origVignetteColor_);
+			sceneManager->SetFullScreenVignetteScale(origVignetteScale_);
+			sceneManager->SetFullScreenVignettePower(origVignettePower_);
+		} else {
+			float t = 1.0f - (damageEffectTimer_ / kDamageEffectMaxTime);
+			// EaseOutQuad を使って一瞬で画面が赤くなり、最初は速く、後からゆっくり消えるようにする
+			float easedT = 1.0f - (1.0f - t) * (1.0f - t);
+
+			float targetScale = (origVignetteScale_ > 24.0f) ? origVignetteScale_ : 24.0f;
+			float initialScale = 3.0f;
+			float currentScaleVal = initialScale + easedT * (targetScale - initialScale);
+			sceneManager->SetFullScreenVignetteScale(currentScaleVal);
+
+			Vector3 redColor = { 1.0f, 0.0f, 0.0f };
+			Vector3 currentVigColor = {
+				origVignetteColor_.x + (1.0f - easedT) * (redColor.x - origVignetteColor_.x),
+				origVignetteColor_.y + (1.0f - easedT) * (redColor.y - origVignetteColor_.y),
+				origVignetteColor_.z + (1.0f - easedT) * (redColor.z - origVignetteColor_.z)
+			};
+		}
+	}
+
+	// テレポートブラー演出の更新
+	if (teleportBlurTimer_ > 0.0f) {
+		teleportBlurTimer_ -= 1.0f / 60.0f;
+		auto sceneManager = Bonjin::SceneManager::GetInstance();
+		if (teleportBlurTimer_ <= 0.0f) {
+			teleportBlurTimer_ = 0.0f;
+			sceneManager->RemovePostEffect(DirectXCommon::PostEffect::kRadialBlur);
+			sceneManager->SetRadialBlurWidth(0.0f);
+		} else {
+			auto activeEffects = sceneManager->GetActiveEffects();
+			if (std::find(activeEffects.begin(), activeEffects.end(), DirectXCommon::PostEffect::kRadialBlur) == activeEffects.end()) {
+				sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRadialBlur);
+			}
+			float t = teleportBlurTimer_ / kTeleportBlurMaxTime; // 1.0 -> 0.0
+			float easedT = t * t;
+			sceneManager->SetRadialBlurWidth(easedT * 0.025f);
+		}
+	}
 
 	HandleLockOnRemovalInput();
 	const bool wasOnGround = onGround_;
@@ -160,6 +208,7 @@ void Player::Update() {
 			teleportTimer_ = teleportInterval_;
 
 			lightningActiveTimer_ = lightningShowDuration_; // 雷を発生させる
+			teleportBlurTimer_ = kTeleportBlurMaxTime;      // テレポートブラーを開始
 
 			velocity_ = { 0.0f, 0.0f, 0.0f }; // 速度のリセット
 
@@ -433,6 +482,7 @@ void Player::RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies) {
 		teleportTimer_ = teleportInterval_;
 
 		lightningActiveTimer_ = lightningShowDuration_; // 雷を発生させる
+		teleportBlurTimer_ = kTeleportBlurMaxTime;      // テレポートブラーを開始
 
 		velocity_ = { 0.0f, 0.0f, 0.0f };
 
@@ -548,4 +598,24 @@ void Player::EmitAnchorHitEffect(const Vector3& position) {
 		particle.transform.scale.y += expansion;
 	};
 	particleManager->Emit("anchorHitFlash", flash);
+}
+
+void Player::ApplyDamage(int damage) {
+	hp_ = (hp_ > damage) ? hp_ - damage : 0;
+
+	// ダメージ演出の開始
+	if (damageEffectTimer_ <= 0.0f) {
+		auto sceneManager = Bonjin::SceneManager::GetInstance();
+		wasVignette_ = sceneManager->IsFullScreenVignette();
+		origVignetteColor_ = sceneManager->GetFullScreenVignetteColor();
+		origVignetteScale_ = sceneManager->GetFullScreenVignetteScale();
+		origVignettePower_ = sceneManager->GetFullScreenVignettePower();
+	}
+
+	damageEffectTimer_ = kDamageEffectMaxTime;
+
+	auto sceneManager = Bonjin::SceneManager::GetInstance();
+	sceneManager->SetFullScreenVignette(true);
+	sceneManager->SetFullScreenVignetteColor({ 1.0f, 0.0f, 0.0f });
+	sceneManager->SetFullScreenVignetteScale(3.0f); // 画面を少し赤く
 }
