@@ -26,10 +26,17 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 	config.tag = "Player";
 	GameObject::Initialize(model, camera, position, config);
 
-	hp_ = 3;
-	maxHp_ = 3;
 	level_ = 1;
 	exp_ = 0;
+
+	// レベルで変化する値
+	// HP
+	hp_ = 3;
+	status_.maxHp = 3;
+	// 攻撃力
+	status_.attackPower = 1;
+	//
+	status_.required_exp = 100;
 
 	anchorLine_ = std::make_unique<Bonjin::Line3D>();
 	anchorLine_->Initialize();
@@ -359,6 +366,10 @@ void Player::Draw() {
 	}
 }
 
+void Player::GetStatusByTable() {
+
+}
+
 void Player::DrawAnchorLine() {
 	if (anchor_ != nullptr) {
 		anchorLine_->Draw();
@@ -452,11 +463,13 @@ void Player::GainExp(int amount) {
 	}
 
 	exp_ += amount;
+
+	// レベルアップ処理
 	while (exp_ >= GetRequiredExp()) {
 		exp_ -= GetRequiredExp();
 		level_++;
-		maxHp_++;
-		hp_ = maxHp_; // レベルアップで全回復
+		status_.maxHp++;
+		hp_ = status_.maxHp; // レベルアップで全回復
 	}
 }
 
@@ -528,7 +541,8 @@ void Player::DrawImGui() {
 		ImGui::InputInt("Player HP", &hp_);
 		ImGui::Text("Player Level: %d", level_);
 		ImGui::Text("Player Exp: %d / %d", exp_, GetRequiredExp());
-		ImGui::Text("Player Max HP: %d", maxHp_);
+		ImGui::Text("Player Max HP: %d", status_.maxHp);
+		ImGui::Text("Player Attack Power: %d", status_.attackPower);
 		bool hasAnchor = HasAnchor();
 		ImGui::Text("Has Anchor: %s", hasAnchor ? "true" : "false");
 
