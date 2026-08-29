@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <numbers>
 #include <cmath>
+#include<fstream>
 
 using namespace Bonjin;
 
@@ -28,6 +29,10 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 
 	level_ = 1;
 	exp_ = 0;
+
+	LoadStatusTable("resources/data/player_status.json");
+	GetStatusByTable();
+	hp_ = status_.maxHp;
 
 	// レベルで変化する値
 	// HP
@@ -366,10 +371,6 @@ void Player::Draw() {
 	}
 }
 
-void Player::GetStatusByTable() {
-
-}
-
 void Player::DrawAnchorLine() {
 	if (anchor_ != nullptr) {
 		anchorLine_->Draw();
@@ -458,18 +459,18 @@ bool Player::ConsumeLandingEffectRequest() {
 }
 
 void Player::GainExp(int amount) {
-	if (hp_ <= 0) {
-		return;
-	}
+	if (hp_ <= 0) return;
 
 	exp_ += amount;
 
-	// レベルアップ処理
+	// レベルアップ判定
 	while (exp_ >= GetRequiredExp()) {
 		exp_ -= GetRequiredExp();
 		level_++;
-		status_.maxHp++;
-		hp_ = status_.maxHp; // レベルアップで全回復
+
+		// 新レベルのステータス取得・適用
+		GetStatusByTable();
+		hp_ = status_.maxHp; // レベルアップ時全回復
 	}
 }
 
@@ -632,4 +633,36 @@ void Player::ApplyDamage(int damage) {
 	sceneManager->SetFullScreenVignette(true);
 	sceneManager->SetFullScreenVignetteColor({ 1.0f, 0.0f, 0.0f });
 	sceneManager->SetFullScreenVignetteScale(3.0f); // 画面を少し赤く
+}
+
+void Player::LoadStatusTable(const std::string& filePath) {
+	std::ifstream file(filePath);
+	if (!file.is_open()) {
+		return;
+	}
+
+	nlohmann::json jsonData;
+	file >> jsonData;
+
+	statusTable_.clear();
+
+	// JSON配列をループ処理
+	if (jsonData.contains("status_table") && jsonData["status_table"].is_array()) {
+		for (const auto& item : jsonData["status_table"]) {
+			int level = item.value("level", 1);
+			CharacterStatus status{};
+			status.maxHp = item.value("maxHp", 3);
+			status.attackPower = item.value("attackPower", 1);
+			status.required_exp = item.value("required_exp", 100);
+
+			statusTable_[level] = status;
+		}
+	}
+}
+
+void Player::GetStatusByTable() {
+	auto it = statusTable_.find(level_);
+	if (it != statusTable_.end()) {
+		status_ = it->second;
+	}
 }

@@ -11,6 +11,10 @@
 #include "Line3D.h"
 #include "Lightning3D.h"
 
+#include <unordered_map>
+#include <string>
+#include "../../../externals/nlohmann/json.hpp"
+
 class MapChipField;
 namespace Bonjin {
 	class BaseEnemy;
@@ -47,6 +51,11 @@ public:
 	/// 移動処理
 	/// </summary>
 	void Move();
+
+	/// <summary>
+	/// JSONファイルからステータステーブルを読み込む
+	/// </summary>
+	void LoadStatusTable(const std::string& filePath);
 
 protected:
 	void OnMapCollision(const CollisionMapInfo& collisionMapinfo) override;
@@ -131,6 +140,8 @@ private:
 		int required_exp = 0;
 	};
 
+	// レベルをキーとしたステータスマップ
+	std::unordered_map<int, CharacterStatus> statusTable_;
 
 	static inline const float kAcceleration = 0.010f;
 	static inline const float kAttenuation = 0.8f;
