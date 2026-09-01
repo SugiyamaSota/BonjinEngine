@@ -170,6 +170,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="application\scene\game\gameObject\player\Player.cpp" />
     <ClCompile Include="application\scene\game\gameObject\camera\CameraController.cpp" />
     <ClCompile Include="application\scene\game\gameObject\GameObject.cpp" />
+    <ClCompile Include="application\scene\game\gameObject\player\PlayerStatusComponent.cpp" />
     <ClCompile Include="application\scene\game\gameObject\player\PlayerStatusRepository.cpp" />
     <ClCompile Include="application\scene\game\GameScene.cpp" />
     <ClCompile Include="application\scene\game\BattleController.cpp" />
@@ -269,7 +270,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="application\scene\game\gameObject\player\Player.h" />
     <ClInclude Include="application\scene\game\gameObject\GameObject.h" />
     <ClInclude Include="application\scene\game\gameObject\camera\CameraController.h" />
-    <ClInclude Include="application\scene\game\gameObject\player\PlayerStatusData.h" />
+    <ClInclude Include="application\scene\game\gameObject\player\PlayerStatusComponent.h" />
     <ClInclude Include="application\scene\game\gameObject\player\PlayerStatusRepository.h" />
     <ClInclude Include="application\scene\game\logic\Collision.h" />
     <ClInclude Include="application\scene\game\logic\CollisionConfig.h" />

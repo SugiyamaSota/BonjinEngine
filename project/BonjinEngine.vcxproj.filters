@@ -330,6 +330,9 @@
     <ClCompile Include="application\scene\game\gameObject\player\PlayerStatusRepository.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="application\scene\game\gameObject\player\PlayerStatusComponent.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -593,7 +596,7 @@
     <ClInclude Include="application\scene\game\gameObject\player\PlayerStatusRepository.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="application\scene\game\gameObject\player\PlayerStatusData.h">
+    <ClInclude Include="application\scene\game\gameObject\player\PlayerStatusComponent.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

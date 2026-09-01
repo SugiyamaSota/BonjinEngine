@@ -2,7 +2,11 @@
 #include <unordered_map>
 #include <string>
 
-#include "PlayerStatusData.h"
+struct PlayerStatusData {
+	int maxHp = 3;
+	int attackPower = 1;
+	int requiredExp = 100;
+};
 
 // プレイヤーステータスのテーブルを管理するクラス
 class PlayerStatusRepository

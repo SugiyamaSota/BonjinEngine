@@ -15,7 +15,7 @@
 #include <string>
 #include "../../../externals/nlohmann/json.hpp"
 
-#include "PlayerStatusData.h"
+#include "PlayerStatusComponent.h"
 
 class MapChipField;
 namespace Bonjin {
@@ -96,16 +96,9 @@ public:
 	}
 
 	// HP関連
-	int GetHp() const { return hp_; }
-	int GetMaxHp() const { return status_.maxHp; }
-	void SetHp(int hp) { hp_ = hp; }
 	void ApplyDamage(int damage);
-	bool GetIsDead() const { return hp_ <= 0; }
 
 	// レベル・経験値関連
-	int GetLevel() const { return level_; }
-	int GetExp() const { return exp_; }
-	int GetRequiredExp() const { return status_.requiredExp; }
 	void GainExp(int amount);
 
 	bool GetIsInvincible() const { return isInvincible_; }
@@ -127,6 +120,8 @@ public:
 	void EmitAnchorHitEffect(const Vector3& position);
 
 	void UpdateWorldTransform(){ model_->Update(worldTransform_, camera_); }
+
+	PlayerStatusComponent GetStatus() const { return statusComponent_; }
 
 private:
 
@@ -182,13 +177,7 @@ private:
 	// ロックオンされた敵のリストへのポインタ
 	std::list<Bonjin::BaseEnemy*>* lockedOnEnemies_ = nullptr;
 
-	// レベル・経験値
-	int level_ = 1;
-	int exp_ = 0;
-	int hp_ = 3;
-
-	// レベルで変化する値
-	PlayerStatusData status_;
+	PlayerStatusComponent statusComponent_;
 
 	bool isGoalReached_ = false;
 
