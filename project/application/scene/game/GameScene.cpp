@@ -1,5 +1,7 @@
 #include "GameScene.h"
 
+#include "gameObject/player/PlayerStatusRepository.h"
+
 using namespace Bonjin;
 
 void GameScene::Initialize(Camera* camera)
@@ -13,6 +15,10 @@ void GameScene::Initialize(Camera* camera)
 
 	battleController_ = std::make_unique<BattleController>();
 	battleController_->Initialize(camera_, "resources/maps/tutorial.csv");
+
+	// プレイヤーステータスの読み込み
+	PlayerStatusRepository::GetInstance()->Load("resources/data/player_status.json");
+
 }
 
 void GameScene::Unload() {

@@ -15,6 +15,8 @@
 #include <string>
 #include "../../../externals/nlohmann/json.hpp"
 
+#include "PlayerStatusData.h"
+
 class MapChipField;
 namespace Bonjin {
 	class BaseEnemy;
@@ -51,11 +53,6 @@ public:
 	/// 移動処理
 	/// </summary>
 	void Move();
-
-	/// <summary>
-	/// JSONファイルからステータステーブルを読み込む
-	/// </summary>
-	void LoadStatusTable(const std::string& filePath);
 
 protected:
 	void OnMapCollision(const CollisionMapInfo& collisionMapinfo) override;
@@ -108,7 +105,7 @@ public:
 	// レベル・経験値関連
 	int GetLevel() const { return level_; }
 	int GetExp() const { return exp_; }
-	int GetRequiredExp() const { return status_.required_exp; }
+	int GetRequiredExp() const { return status_.requiredExp; }
 	void GainExp(int amount);
 
 	bool GetIsInvincible() const { return isInvincible_; }
@@ -132,16 +129,6 @@ public:
 	void UpdateWorldTransform(){ model_->Update(worldTransform_, camera_); }
 
 private:
-
-	// ステータス定義
-	struct CharacterStatus {
-		int maxHp;
-		int attackPower;
-		int required_exp = 0;
-	};
-
-	// レベルをキーとしたステータスマップ
-	std::unordered_map<int, CharacterStatus> statusTable_;
 
 	static inline const float kAcceleration = 0.010f;
 	static inline const float kAttenuation = 0.8f;
@@ -198,11 +185,10 @@ private:
 	// レベル・経験値
 	int level_ = 1;
 	int exp_ = 0;
+	int hp_ = 3;
 
 	// レベルで変化する値
-	// HP
-	int hp_ = 3;
-	CharacterStatus status_;
+	PlayerStatusData status_;
 
 	bool isGoalReached_ = false;
 
@@ -234,10 +220,5 @@ private:
 	// テレポートラジアルブラー演出用
 	float teleportBlurTimer_ = 0.0f;
 	static inline const float kTeleportBlurMaxTime = 0.2f;
-
-	/// <summary>
-	/// 外部ファイルのテーブルから現在のレベルをもとにステータスを取得する
-	/// </summary>
-	void GetStatusByTable();
 
 };
