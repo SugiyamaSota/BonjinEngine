@@ -10,6 +10,7 @@
 #include "Object3D.h"
 #include "Line3D.h"
 #include "Lightning3D.h"
+#include "FrayLine3D.h"
 
 #include "PlayerStatusComponent.h"
 
@@ -182,6 +183,16 @@ private:
 	std::unique_ptr<Bonjin::Line3D> anchorLine_;
 	Vector4 lineColor_ = { 0.5f, 0.85f, 1.f, 0.5f };
 	void shootAnchor();
+
+	// アンカー回収用（長押し判定・ほつれ演出）
+	float anchorHoldTimer_ = 0.0f;
+	static inline const float kAnchorHoldTime = 0.35f;
+
+	std::unique_ptr<Bonjin::FrayLine3D> frayLineEffect_;
+	float frayTimer_ = 0.0f;
+	static inline const float kFrayDuration = 0.25f;
+	Vector3 lastAnchorRetractPos_{};
+	bool isFrayActive_ = false;
 
 	// ロックオンされた敵のリストへのポインタ
 	std::list<Bonjin::BaseEnemy*>* lockedOnEnemies_ = nullptr;

@@ -112,7 +112,7 @@ void TutorialManager::UpdateBannerTexts() {
 
 	case TutorialStep::kGoToGoal:
 		titleTextSprite_->SetText(L"【MISSION CLEAR!】ゴールへ向かおう", 48, RGB(80, 255, 140));
-		detailTextSprite_->SetText(L"マップ奥にあるゴールに到達して本次へ進もう！", 32, RGB(220, 255, 230));
+		detailTextSprite_->SetText(L"マップ奥にあるゴールに到達して次へ進もう！", 32, RGB(220, 255, 230));
 		break;
 
 	case TutorialStep::kCompleted:
@@ -218,10 +218,12 @@ void TutorialManager::Update(BattleController* battleController, float deltaTime
 		}
 
 		case TutorialStep::kAnchor: {
-			if (player && player->HasAnchor() && !player->GetAnchor().GetStandBy()) {
+			if (player && player->HasAnchor()) {
 				hasShotAnchor_ = true;
 			}
-			if (hasShotAnchor_ && stepTimer_ >= 1.0f) {
+			bool teleportTrigger = Input::GetInstance()->IsTrigger(DIK_K) ||
+			                       Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_B);
+			if (hasShotAnchor_ && (teleportTrigger || stepTimer_ >= 2.0f)) {
 				ChangeStep(TutorialStep::kLockOn);
 			}
 			break;

@@ -312,6 +312,9 @@
     <ClCompile Include="engine\graphics\3d\line\Lightning3D.cpp">
       <Filter>engine\draw\line</Filter>
     </ClCompile>
+    <ClCompile Include="engine\graphics\3d\line\FrayLine3D.cpp">
+      <Filter>engine\draw\line</Filter>
+    </ClCompile>
     <ClCompile Include="application\scene\game\gameObject\enemy\Enemy.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -576,6 +579,9 @@
       <Filter>engine\draw\line</Filter>
     </ClInclude>
     <ClInclude Include="engine\graphics\3d\line\Lightning3D.h">
+      <Filter>engine\draw\line</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\graphics\3d\line\FrayLine3D.h">
       <Filter>engine\draw\line</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\game\gameObject\enemy\Enemy.h">

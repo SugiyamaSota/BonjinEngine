@@ -34,6 +34,9 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 
 	lightningEffect_ = std::make_unique<Bonjin::Lightning3D>();
 	lightningEffect_->Initialize();
+
+	frayLineEffect_ = std::make_unique<Bonjin::FrayLine3D>();
+	frayLineEffect_->Initialize();
 }
 
 void Player::OnCollision(Bonjin::Collider* other) {
@@ -265,10 +268,52 @@ void Player::Update() {
 		}
 	}
 
-	// XボタンでshootAnchor
-	if (Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_X) || Input::GetInstance()->IsTrigger(DIK_J)) {
-		if (!isKnockedBack_) {
-			shootAnchor();
+	// アンカー操作（発射 / 長押し回収）
+	bool isAnchorKeyPressed = Gamepad::GetInstance()->IsPress(XINPUT_GAMEPAD_X) || Input::GetInstance()->IsPress(DIK_J);
+	bool isAnchorKeyTriggered = Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_X) || Input::GetInstance()->IsTrigger(DIK_J);
+
+	if (anchor_ != nullptr) {
+		// すでにアンカーが存在する場合：長押しで回収
+		if (isAnchorKeyPressed) {
+			anchorHoldTimer_ += 1.0f / 60.0f;
+			if (anchorHoldTimer_ >= kAnchorHoldTime) {
+				// ほつれ切断エフェクト開始
+				isFrayActive_ = true;
+				frayTimer_ = 0.0f;
+				lastAnchorRetractPos_ = anchor_->GetPosition();
+
+				anchor_ = nullptr; // アンカーを削除（回収）
+				anchorHoldTimer_ = 0.0f;
+			}
+		} else {
+			anchorHoldTimer_ = 0.0f;
+		}
+	} else {
+		// アンカーが存在しない場合：トリガーで発射
+		anchorHoldTimer_ = 0.0f;
+		if (isAnchorKeyTriggered) {
+			if (!isKnockedBack_) {
+				shootAnchor();
+			}
+		}
+	}
+
+	// ほつれ切断エフェクトの進行
+	if (isFrayActive_) {
+		frayTimer_ += 1.0f / 60.0f;
+		float progress = frayTimer_ / kFrayDuration;
+		if (frayLineEffect_) {
+			frayLineEffect_->Update(GetPosition(), lastAnchorRetractPos_, camera_, lineColor_, progress, 0.0f);
+		}
+		if (frayTimer_ >= kFrayDuration) {
+			isFrayActive_ = false;
+		}
+	}
+	// 長押しチャージ中（アンカーが存在し、長押しタイマー進行中）のテンション振動
+	else if (anchor_ != nullptr && anchorHoldTimer_ > 0.0f) {
+		float tension = anchorHoldTimer_ / kAnchorHoldTime;
+		if (frayLineEffect_) {
+			frayLineEffect_->Update(GetPosition(), anchor_->GetPosition(), camera_, lineColor_, 0.0f, tension);
 		}
 	}
 
@@ -290,7 +335,7 @@ void Player::Update() {
 		anchorLine_->Update(GetPosition(), anchor_->GetPosition(), camera_, lineColor_);
 	}
 
-	// Bボタンでテレポート
+	// BボタンまたはKキーでテレポート
 	if (Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_B) || Input::GetInstance()->IsTrigger(DIK_K)) {
 		if (!isKnockedBack_) {
 			// アンカーが存在し、isStandByがtrueの場合
@@ -356,7 +401,11 @@ void Player::Draw() {
 }
 
 void Player::DrawAnchorLine() {
-	if (anchor_ != nullptr) {
+	if (isFrayActive_ || (anchor_ != nullptr && anchorHoldTimer_ > 0.0f)) {
+		if (frayLineEffect_) {
+			frayLineEffect_->Draw();
+		}
+	} else if (anchor_ != nullptr) {
 		anchorLine_->Draw();
 	}
 }
@@ -533,6 +582,13 @@ void Player::DrawImGui() {
 			if (ImGui::Button("Force Delete Anchor")) {
 				anchor_ = nullptr;
 			}
+		}
+
+		if (ImGui::TreeNode("Anchor Fray & Hold Retract")) {
+			ImGui::Text("Hold Timer: %.2f / %.2f", anchorHoldTimer_, kAnchorHoldTime);
+			ImGui::Text("Fray Active: %s (Timer: %.2f / %.2f)", isFrayActive_ ? "true" : "false", frayTimer_, kFrayDuration);
+			ImGui::ColorEdit4("Line Color", &lineColor_.x);
+			ImGui::TreePop();
 		}
 
 		// 雷霆テレポートエフェクトの調整UI
