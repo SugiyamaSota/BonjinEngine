@@ -14,11 +14,11 @@ void GameScene::Initialize(Camera* camera)
 	currentSceneType_ = "GameScene";
 	nextSceneType_ = "GameScene";
 
-	battleController_ = std::make_unique<BattleController>();
-	battleController_->Initialize(camera_, "resources/maps/tutorial.csv");
-
 	// プレイヤーステータスの読み込み
 	PlayerStatusRepository::GetInstance()->Load("resources/data/player_status.json");
+
+	battleController_ = std::make_unique<BattleController>();
+	battleController_->Initialize(camera_, "resources/maps/tutorial.csv");
 
 }
 

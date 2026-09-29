@@ -37,6 +37,11 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 
 	frayLineEffect_ = std::make_unique<Bonjin::FrayLine3D>();
 	frayLineEffect_->Initialize();
+
+	retractAnchorModel_ = std::make_unique<Object3D>();
+	retractAnchorModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+	retractAnchorModel_->SetBlendMode(BlendMode::kNormal);
+	retractAnchorModel_->SetEnableEnableEnvironmentMap(false);
 }
 
 void Player::OnCollision(Bonjin::Collider* other) {
@@ -268,6 +273,20 @@ void Player::Update() {
 		}
 	}
 
+	// アンカーの時間経過リチャージ処理
+	if (anchorStock_ < kMaxAnchorStock) {
+		float rechargeDuration = GetAnchorRechargeDuration();
+		if (rechargeDuration > 0.0f) {
+			anchorRechargeTimer_ += 1.0f / 60.0f;
+			if (anchorRechargeTimer_ >= rechargeDuration) {
+				anchorStock_++;
+				anchorRechargeTimer_ = 0.0f;
+			}
+		}
+	} else {
+		anchorRechargeTimer_ = 0.0f;
+	}
+
 	// アンカー操作（発射 / 長押し回収）
 	bool isAnchorKeyPressed = Gamepad::GetInstance()->IsPress(XINPUT_GAMEPAD_X) || Input::GetInstance()->IsPress(DIK_J);
 	bool isAnchorKeyTriggered = Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_X) || Input::GetInstance()->IsTrigger(DIK_J);
@@ -281,6 +300,10 @@ void Player::Update() {
 				isFrayActive_ = true;
 				frayTimer_ = 0.0f;
 				lastAnchorRetractPos_ = anchor_->GetPosition();
+
+				retractAnchorTransform_.translate = lastAnchorRetractPos_;
+				retractAnchorTransform_.scale = { 1.0f, 1.0f, 1.0f };
+				retractAnchorTransform_.rotate = { 0.0f, 0.0f, anchor_->GetAngle() };
 
 				anchor_ = nullptr; // アンカーを削除（回収）
 				anchorHoldTimer_ = 0.0f;
@@ -301,10 +324,29 @@ void Player::Update() {
 	// ほつれ切断エフェクトの進行
 	if (isFrayActive_) {
 		frayTimer_ += 1.0f / 60.0f;
-		float progress = frayTimer_ / kFrayDuration;
+		float progress = (std::clamp)(frayTimer_ / kFrayDuration, 0.0f, 1.0f);
+
+		// 重力による自然な落下計算（初速ゼロから下へ加速落下）
+		float dropDistance = progress * progress * 0.9f;
+		retractAnchorTransform_.translate.x = lastAnchorRetractPos_.x;
+		retractAnchorTransform_.translate.y = lastAnchorRetractPos_.y - dropDistance;
+		retractAnchorTransform_.translate.z = lastAnchorRetractPos_.z;
+		retractAnchorTransform_.rotate.z += 0.04f;
+
+		// ほつれ糸の更新（落下するアンカー位置に連動）
 		if (frayLineEffect_) {
-			frayLineEffect_->Update(GetPosition(), lastAnchorRetractPos_, camera_, lineColor_, progress, 0.0f);
+			frayLineEffect_->Update(GetPosition(), retractAnchorTransform_.translate, camera_, lineColor_, progress, 0.0f);
 		}
+
+		// アンカー本体のゆっくりフェードアウト処理（落下＋縮小＋透明化）
+		if (retractAnchorModel_) {
+			float fadeAlpha = (std::max)(0.0f, 1.0f - progress * progress);
+			float scale = (std::max)(0.0f, 1.0f - progress * 0.4f);
+			retractAnchorTransform_.scale = { scale, scale, scale };
+			retractAnchorModel_->SetColor({ 0.0f, 0.0f, 1.0f, fadeAlpha });
+			retractAnchorModel_->Update(retractAnchorTransform_, camera_);
+		}
+
 		if (frayTimer_ >= kFrayDuration) {
 			isFrayActive_ = false;
 		}
@@ -392,6 +434,11 @@ void Player::Draw() {
 	{
 		anchor_->Draw();
 	}
+	else if (isFrayActive_ && retractAnchorModel_)
+	{
+		// 回収中のアンカー本体フェードアウト描画
+		retractAnchorModel_->Draw();
+	}
 
 	// 雷霆エフェクトの描画
 	if (lightningActiveTimer_ > 0.0f && lightningEffect_) {
@@ -411,10 +458,13 @@ void Player::DrawAnchorLine() {
 }
 
 void Player::shootAnchor() {
-	// アンカーがすでに存在する場合は何もしない
-	if (anchor_ != nullptr) {
+	// アンカーがすでに存在する場合、またはストックが0の場合は何もしない
+	if (anchor_ != nullptr || anchorStock_ <= 0) {
 		return;
 	}
+
+	// ストックを1消費
+	anchorStock_--;
 
 	// ゲームパッドの左スティックのX軸とY軸の値を取得
 	long lStickX = Gamepad::GetInstance()->GetLStickX();
@@ -500,6 +550,7 @@ void Player::GainExp(int amount) {
 	}
 }
 void Player::RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies) {
+	size_t defeatedCount = 0;
 	for (Bonjin::BaseEnemy* enemy : enemies) {
 		if (enemy != nullptr && !enemy->GetIsDead()) {
 			// 敵の座標をテレポートキューに追加
@@ -508,9 +559,17 @@ void Player::RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies) {
 			GainExp(enemy->GetExpReward());
 			enemy->SetIsDead(true);
 			enemy->SetIsLockedOn(false);
+			defeatedCount++;
 		}
 	}
 	enemies.clear();
+
+	// 撃破ボーナス: 2体以上の連続撃破で即座に1個回復、1体撃破でリチャージゲージ短縮
+	if (defeatedCount >= 2) {
+		RestoreAnchorStock(1);
+	} else if (defeatedCount == 1) {
+		AddAnchorRechargeProgress(1.0f);
+	}
 
 	// 最初のテレポートを開始
 	if (!teleportQueue_.empty()) {
@@ -534,6 +593,29 @@ void Player::RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies) {
 		// 演出終了まで無敵状態にする
 		isInvincible_ = true;
 		invincibleTimer_ = teleportInterval_ * (teleportQueue_.size() + 2);
+	}
+}
+
+void Player::AddAnchorRechargeProgress(float seconds) {
+	if (anchorStock_ >= kMaxAnchorStock) {
+		return;
+	}
+	anchorRechargeTimer_ += seconds;
+	float rechargeDuration = GetAnchorRechargeDuration();
+	while (anchorRechargeTimer_ >= rechargeDuration && anchorStock_ < kMaxAnchorStock) {
+		anchorStock_++;
+		anchorRechargeTimer_ -= rechargeDuration;
+		if (anchorStock_ >= kMaxAnchorStock) {
+			anchorRechargeTimer_ = 0.0f;
+			break;
+		}
+	}
+}
+
+void Player::RestoreAnchorStock(int count) {
+	anchorStock_ = (std::min)(kMaxAnchorStock, anchorStock_ + count);
+	if (anchorStock_ >= kMaxAnchorStock) {
+		anchorRechargeTimer_ = 0.0f;
 	}
 }
 
@@ -569,6 +651,7 @@ void Player::DrawImGui() {
 		ImGui::Text("Player Exp: %d / %d", statusComponent_.GetExp(), statusComponent_.GetRequiredExp());
 		ImGui::Text("Player Max HP: %d", statusComponent_.GetMaxHp());
 		ImGui::Text("Player Attack Power: %d", statusComponent_.GetAttackPower());
+		ImGui::Text("Anchor Stock: %d / %d (Recharge: %.2fs / %.2fs)", anchorStock_, kMaxAnchorStock, anchorRechargeTimer_, GetAnchorRechargeDuration());
 		bool hasAnchor = HasAnchor();
 		ImGui::Text("Has Anchor: %s", hasAnchor ? "true" : "false");
 

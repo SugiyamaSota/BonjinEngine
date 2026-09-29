@@ -6,6 +6,7 @@ struct PlayerStatusData {
 	int maxHp = 3;
 	int attackPower = 1;
 	int requiredExp = 100;
+	float anchorRechargeTime = 3.0f;
 };
 
 // プレイヤーステータスのテーブルを管理するクラス

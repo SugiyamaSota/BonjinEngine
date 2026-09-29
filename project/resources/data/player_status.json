@@ -1,7 +1,7 @@
 {
   "status_table": [
-    { "level": 1, "maxHp": 3, "attackPower": 1, "required_exp": 100 },
-    { "level": 2, "maxHp": 5, "attackPower": 2, "required_exp": 250 },
-    { "level": 3, "maxHp": 8, "attackPower": 3, "required_exp": 500 }
+    { "level": 1, "maxHp": 3, "attackPower": 1, "requiredExp": 100, "anchor_recharge_time": 10.0 },
+    { "level": 2, "maxHp": 5, "attackPower": 2, "requiredExp": 250, "anchor_recharge_time": 9.5 },
+    { "level": 3, "maxHp": 8, "attackPower": 3, "requiredExp": 500, "anchor_recharge_time": 9.0 }
   ]
 }

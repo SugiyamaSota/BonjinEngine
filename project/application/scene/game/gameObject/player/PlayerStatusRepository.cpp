@@ -25,9 +25,10 @@ void PlayerStatusRepository::Load(const std::string& filePath) {
 		for (const auto& item : jsonData["status_table"]) {
 			int level = item.value("level", 1);
 			PlayerStatusData status{};
-			status.maxHp = item.value("maxHp", 3);
-			status.attackPower = item.value("attackPower", 1);
-			status.requiredExp = item.value("requiredExp", 100);
+			status.maxHp = item.value("maxHp", item.value("max_hp", 3));
+			status.attackPower = item.value("attackPower", item.value("attack_power", 1));
+			status.requiredExp = item.value("requiredExp", item.value("required_exp", 100));
+			status.anchorRechargeTime = item.value("anchor_recharge_time", item.value("anchorRechargeTime", 3.0f));
 
 			statusTable_[level] = status;
 		}

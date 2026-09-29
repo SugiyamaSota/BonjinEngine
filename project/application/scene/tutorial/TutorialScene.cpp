@@ -1,4 +1,5 @@
 #include "TutorialScene.h"
+#include "../game/gameObject/player/PlayerStatusRepository.h"
 
 using namespace Bonjin;
 
@@ -7,6 +8,9 @@ void TutorialScene::Initialize(Camera* camera) {
 	nextSceneType_ = currentSceneType_;
 	phase_ = TutorialPhase::kStart;
 	camera_ = camera;
+
+	// プレイヤーステータスの読み込み
+	PlayerStatusRepository::GetInstance()->Load("resources/data/player_status.json");
 
 	battleController_ = std::make_unique<BattleController>();
 	battleController_->Initialize(camera_, "resources/maps/tutorial.csv");

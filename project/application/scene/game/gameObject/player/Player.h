@@ -132,6 +132,14 @@ public:
 	int GetLevel() const { return statusComponent_.GetLevel(); }
 	int GetExp() const { return statusComponent_.GetExp(); }
 	int GetRequiredExp() const { return statusComponent_.GetRequiredExp(); }
+	float GetAnchorRechargeDuration() const { return statusComponent_.GetAnchorRechargeTime(); }
+
+	// アンカーストック・リチャージ関連
+	int GetAnchorStock() const { return anchorStock_; }
+	int GetMaxAnchorStock() const { return kMaxAnchorStock; }
+	float GetAnchorRechargeTimer() const { return anchorRechargeTimer_; }
+	void AddAnchorRechargeProgress(float seconds);
+	void RestoreAnchorStock(int count = 1);
 
 private:
 
@@ -184,15 +192,24 @@ private:
 	Vector4 lineColor_ = { 0.5f, 0.85f, 1.f, 0.5f };
 	void shootAnchor();
 
+	// アンカーストック管理
+	static inline const int kMaxAnchorStock = 3;
+	int anchorStock_ = kMaxAnchorStock;
+	float anchorRechargeTimer_ = 0.0f;
+
 	// アンカー回収用（長押し判定・ほつれ演出）
 	float anchorHoldTimer_ = 0.0f;
 	static inline const float kAnchorHoldTime = 0.35f;
 
 	std::unique_ptr<Bonjin::FrayLine3D> frayLineEffect_;
 	float frayTimer_ = 0.0f;
-	static inline const float kFrayDuration = 0.25f;
+	static inline const float kFrayDuration = 0.45f;
 	Vector3 lastAnchorRetractPos_{};
 	bool isFrayActive_ = false;
+
+	// アンカー回収時のフェードアウト表示用モデル
+	std::unique_ptr<Object3D> retractAnchorModel_;
+	WorldTransform retractAnchorTransform_{};
 
 	// ロックオンされた敵のリストへのポインタ
 	std::list<Bonjin::BaseEnemy*>* lockedOnEnemies_ = nullptr;

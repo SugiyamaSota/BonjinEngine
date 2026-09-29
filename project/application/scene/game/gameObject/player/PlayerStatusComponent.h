@@ -21,6 +21,7 @@ public:
     int GetLevel() const { return level_; }
     int GetExp() const { return exp_; }
     int GetRequiredExp() const { return currentData_.requiredExp; }
+    float GetAnchorRechargeTime() const { return currentData_.anchorRechargeTime; }
     bool IsDead() const { return hp_ <= 0; }
 
     void SetHp(int hp) { hp_ = hp; }

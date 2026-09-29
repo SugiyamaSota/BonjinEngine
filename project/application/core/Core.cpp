@@ -5,6 +5,7 @@
 #include "GameScene.h"
 #include "../scene/tutorial/TutorialScene.h"
 #include "../scene/result/ResultScene.h"
+#include "../scene/game/gameObject/player/PlayerStatusRepository.h"
 #include "TestScene.h"
 
 using namespace Bonjin;
@@ -14,6 +15,9 @@ Core::~Core() {}
 
 void Core::Initialize() {
 	Bonjin::Initialize(); // エンジン本体の初期化
+
+	// マスターデータ・プレイヤーステータスの読み込み
+	PlayerStatusRepository::GetInstance()->Load("resources/data/player_status.json");
 
 	// シーンマネージャーのセットアップ
 	auto sceneManager = SceneManager::GetInstance();

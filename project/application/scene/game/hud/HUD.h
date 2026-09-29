@@ -49,6 +49,7 @@ private:
 	std::unique_ptr<TextSprite> levelTextSprite_;
 	std::unique_ptr<TextSprite> hpTextSprite_;
 	std::unique_ptr<TextSprite> statusTextSprite_;
+	std::unique_ptr<TextSprite> anchorTextSprite_;
 
 	// 前フレームの状態キャッシュ（テキスト更新頻度の最適化用）
 	int cachedLevel_ = -1;
@@ -57,6 +58,8 @@ private:
 	int cachedAttack_ = -1;
 	int cachedExp_ = -1;
 	int cachedRequiredExp_ = -1;
+	int cachedAnchorStock_ = -1;
+	int cachedMaxAnchorStock_ = -1;
 
 	// ダメージバーの遅延追従アニメーション用
 	float displayedDamageHp_ = 0.0f;

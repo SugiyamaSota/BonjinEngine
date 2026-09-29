@@ -3,6 +3,7 @@
 #include "../gameObject/player/Player.h"
 #include <algorithm>
 #include <sstream>
+#include <iomanip>
 #include <cmath>
 
 #ifdef USE_IMGUI
@@ -59,6 +60,10 @@ void HUD::Initialize() {
 	statusTextSprite_ = std::make_unique<TextSprite>();
 	statusTextSprite_->Initialize();
 	statusTextSprite_->SetAnchor({ 0.0f, 0.0f, 0.0f });
+
+	anchorTextSprite_ = std::make_unique<TextSprite>();
+	anchorTextSprite_->Initialize();
+	anchorTextSprite_->SetAnchor({ 0.0f, 0.0f, 0.0f });
 
 	// 初期表示テキスト設定
 	UpdateTextSprites(1, 3, 3, 1, 0, 100);
@@ -152,6 +157,29 @@ void HUD::Update(const Player* player, float deltaTime) {
 		hpBarFillSprite_->SetColor({ 0.95f, 0.25f, 0.25f, 1.0f }); // レッド
 	}
 
+	// アンカーストックとリチャージテキスト更新
+	int stock = player->GetAnchorStock();
+	int maxStock = player->GetMaxAnchorStock();
+	float rechargeTimer = player->GetAnchorRechargeTimer();
+	float rechargeDuration = player->GetAnchorRechargeDuration();
+
+	std::wstringstream anchorStream;
+	anchorStream << L"ANCHOR: ";
+	for (int i = 0; i < maxStock; ++i) {
+		if (i < stock) {
+			anchorStream << L"◆ ";
+		} else {
+			anchorStream << L"◇ ";
+		}
+	}
+	if (stock < maxStock && rechargeDuration > 0.0f) {
+		float remaining = (std::max)(0.0f, rechargeDuration - rechargeTimer);
+		anchorStream << L"(" << std::fixed << std::setprecision(1) << remaining << L"s)";
+	}
+	COLORREF anchorColor = (stock > 0) ? RGB(100, 220, 255) : RGB(255, 100, 100);
+	anchorTextSprite_->SetText(anchorStream.str(), 18, anchorColor);
+	anchorTextSprite_->SetTranslate({ basePosition_.x + 15.0f, basePosition_.y + 98.0f });
+
 	// 各スプライトの内部トランスフォーム更新
 	bgPanelSprite_->Update();
 	hpBarBgSprite_->Update();
@@ -161,6 +189,7 @@ void HUD::Update(const Player* player, float deltaTime) {
 	levelTextSprite_->Update();
 	hpTextSprite_->Update();
 	statusTextSprite_->Update();
+	anchorTextSprite_->Update();
 }
 
 void HUD::Draw() {
@@ -176,6 +205,7 @@ void HUD::Draw() {
 	if (levelTextSprite_) levelTextSprite_->Draw();
 	if (hpTextSprite_) hpTextSprite_->Draw();
 	if (statusTextSprite_) statusTextSprite_->Draw();
+	if (anchorTextSprite_) anchorTextSprite_->Draw();
 }
 
 void HUD::DrawImGui() {
