@@ -1,0 +1,7 @@
+{
+  "status_table": [
+    { "level": 1, "maxHp": 3, "attackPower": 1, "required_exp": 100 },
+    { "level": 2, "maxHp": 5, "attackPower": 2, "required_exp": 250 },
+    { "level": 3, "maxHp": 8, "attackPower": 3, "required_exp": 500 }
+  ]
+}
