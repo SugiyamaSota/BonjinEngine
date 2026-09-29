@@ -99,10 +99,6 @@ public:
 	void ApplyDamage(int damage);
 
 	// レベル・経験値関連
-	int GetLevel() const { return level_; }
-	int GetExp() const { return exp_; }
-	int GetRequiredExp() const { return status_.required_exp; }
-	int GetAttackPower() const { return status_.attackPower; }
 	void GainExp(int amount);
 
 	bool GetIsInvincible() const { return isInvincible_; }
@@ -123,9 +119,18 @@ public:
 
 	void EmitAnchorHitEffect(const Vector3& position);
 
-	void UpdateWorldTransform(){ model_->Update(worldTransform_, camera_); }
+	void UpdateWorldTransform() { model_->Update(worldTransform_, camera_); }
 
-	PlayerStatusComponent GetStatus() const { return statusComponent_; }
+	// ステータス関連
+	const PlayerStatusComponent& GetStatus() const { return statusComponent_; }
+	PlayerStatusComponent& GetStatus() { return statusComponent_; }
+
+	int GetHp() const { return statusComponent_.GetHp(); }
+	int GetMaxHp() const { return statusComponent_.GetMaxHp(); }
+	int GetAttackPower() const { return statusComponent_.GetAttackPower(); }
+	int GetLevel() const { return statusComponent_.GetLevel(); }
+	int GetExp() const { return statusComponent_.GetExp(); }
+	int GetRequiredExp() const { return statusComponent_.GetRequiredExp(); }
 
 private:
 
