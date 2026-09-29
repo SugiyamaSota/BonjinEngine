@@ -2,6 +2,7 @@
 
 #include "../interface/BaseScene.h"
 #include "../game/BattleController.h"
+#include "TutorialManager.h"
 
 namespace Bonjin {
 
@@ -23,6 +24,7 @@ public:
 
 private:
 	std::unique_ptr<BattleController> battleController_;
+	std::unique_ptr<TutorialManager> tutorialManager_;
 };
 
 }

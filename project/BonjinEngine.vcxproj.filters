@@ -186,6 +186,9 @@
     <ClCompile Include="application\scene\tutorial\TutorialScene.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="application\scene\tutorial\TutorialManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="engine\system\utility\time\Time.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -573,6 +576,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\game\hud\HUD.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\scene\tutorial\TutorialManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\game\gameObject\enemy\EnemyBullet.h">

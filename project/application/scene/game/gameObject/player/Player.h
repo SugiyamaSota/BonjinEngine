@@ -83,6 +83,10 @@ public:
 		}
 	}
 
+	size_t GetLockedOnEnemiesCount() const {
+		return lockedOnEnemies_ ? lockedOnEnemies_->size() : 0;
+	}
+
 	bool ConsumeHitStopRequest() {
 		if (!hitStopRequested_) return false;
 		hitStopRequested_ = false;

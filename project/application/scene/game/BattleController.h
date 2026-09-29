@@ -31,6 +31,7 @@ public:
 	Player* GetPlayer() const { return player_.get(); }
 	MapChipField* GetMapChipField() const { return mapChipField_.get(); }
 	HUD* GetHUD() const { return hud_.get(); }
+	const std::list<std::unique_ptr<BaseEnemy>>& GetEnemies() const { return enemies_; }
 	void SetEnemyRespawnEnabled(bool enabled) { isEnemyRespawnEnabled_ = enabled; }
 	bool IsEnemyRespawnEnabled() const { return isEnemyRespawnEnabled_; }
 	bool IsGoalReached() const { return isGoalReached_; }
