@@ -1,7 +1,7 @@
 #pragma once
 #include "../interface/BaseScene.h"
 #include "../bonjin/BonjinEngine.h"
-#include "Sprite.h"
+#include "TextSprite.h"
 #include <memory>
 
 namespace Bonjin {
@@ -23,8 +23,17 @@ public:
 	SceneType GetNextScene() const override;
 	const char* GetScenename() const override { return "ResultScene"; }
 
+	// クリア / ゲームオーバー状態の設定
+	static void SetIsClear(bool isClear) { isClear_ = isClear; }
+	static bool IsClear() { return isClear_; }
+
 private:
-	std::unique_ptr<Sprite> clearSprite_;
+	static inline bool isClear_ = true;
+
+	std::unique_ptr<TextSprite> gameClearText_ = nullptr;
+	std::unique_ptr<TextSprite> gameOverText_ = nullptr;
+	std::unique_ptr<TextSprite> spaceToTitleText_ = nullptr;
+	float timer_ = 0.0f;
 };
 
 }

@@ -5,16 +5,10 @@
 #include "../enemy/BaseEnemy.h"
 #include "SceneManager.h"
 #include "ImGuiManager.h"
-#include"../../mapchip/MapChipField.h"
-#include "../../logic/Collision.h"
 #include "ParticleManager.h"
 #include <algorithm>
 #include <numbers>
 #include <cmath>
-#include<fstream>
-
-#include "gameObject/player/PlayerStatusRepository.h"
-
 
 using namespace Bonjin;
 

@@ -24,7 +24,7 @@ void Core::Initialize() {
 	sceneManager->AddScene("ResultScene", std::make_unique<ResultScene>());
 	sceneManager->AddScene("TitleScene", std::make_unique<TitleScene>());
 
-	sceneManager->ChangeScene("GameScene");
+	sceneManager->ChangeScene("TitleScene");
 
 }
 

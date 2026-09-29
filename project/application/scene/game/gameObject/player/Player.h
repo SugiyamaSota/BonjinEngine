@@ -11,10 +11,6 @@
 #include "Line3D.h"
 #include "Lightning3D.h"
 
-#include <unordered_map>
-#include <string>
-#include "../../../externals/nlohmann/json.hpp"
-
 #include "PlayerStatusComponent.h"
 
 class MapChipField;

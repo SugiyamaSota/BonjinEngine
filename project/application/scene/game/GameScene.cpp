@@ -1,6 +1,7 @@
 #include "GameScene.h"
 
 #include "gameObject/player/PlayerStatusRepository.h"
+#include "../result/ResultScene.h"
 
 using namespace Bonjin;
 
@@ -31,7 +32,11 @@ void GameScene::Unload() {
 void GameScene::Update(float deltaTime) {
 	battleController_->Update(deltaTime);
 
-	if (battleController_->IsGoalReached()||battleController_->GetPlayer()->GetStatus().IsDead()) {
+	if (battleController_->IsGoalReached()) {
+		ResultScene::SetIsClear(true);
+		ChangePhase(GamePhase::kGoal);
+	} else if (battleController_->GetPlayer() && battleController_->GetPlayer()->GetStatus().IsDead()) {
+		ResultScene::SetIsClear(false);
 		ChangePhase(GamePhase::kGoal);
 	}
 

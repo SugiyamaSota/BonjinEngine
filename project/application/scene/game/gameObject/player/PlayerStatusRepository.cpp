@@ -4,13 +4,9 @@
 
 #include "../../../externals/nlohmann/json.hpp"
 
-static PlayerStatusRepository* instance_ = nullptr;
-
 PlayerStatusRepository* PlayerStatusRepository::GetInstance() {
-	if (!instance_) {
-		instance_ = new PlayerStatusRepository();
-	}
-	return instance_;
+	static PlayerStatusRepository instance;
+	return &instance;
 }
 
 void PlayerStatusRepository::Load(const std::string& filePath) {
