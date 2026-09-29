@@ -100,6 +100,7 @@ public:
 	int GetLevel() const { return level_; }
 	int GetExp() const { return exp_; }
 	int GetRequiredExp() const { return status_.required_exp; }
+	int GetAttackPower() const { return status_.attackPower; }
 	void GainExp(int amount);
 
 	bool GetIsInvincible() const { return isInvincible_; }

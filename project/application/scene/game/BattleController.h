@@ -13,6 +13,7 @@
 #include "SkyBox.h"
 #include "gameObject/GameObject.h"
 #include "gameObject/camera/CameraController.h"
+#include "hud/HUD.h"
 
 namespace Bonjin {
 
@@ -29,6 +30,7 @@ public:
 
 	Player* GetPlayer() const { return player_.get(); }
 	MapChipField* GetMapChipField() const { return mapChipField_.get(); }
+	HUD* GetHUD() const { return hud_.get(); }
 	void SetEnemyRespawnEnabled(bool enabled) { isEnemyRespawnEnabled_ = enabled; }
 	bool IsEnemyRespawnEnabled() const { return isEnemyRespawnEnabled_; }
 	bool IsGoalReached() const { return isGoalReached_; }
@@ -53,6 +55,8 @@ private:
 
 	ParticleManager* particleManager_ = nullptr;
 	std::mt19937 randomEngine_{std::random_device{}()};
+
+	std::unique_ptr<HUD> hud_;
 
 	bool isEnemyRespawnEnabled_ = true;
 	float enemyRespawnTime_ = 3.0f;

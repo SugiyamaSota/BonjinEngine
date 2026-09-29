@@ -115,9 +115,14 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	particleManager_->Clear("enemyDefeatSpark");
 	particleManager_->Clear("enemyDefeatRing");
 	particleManager_->Clear("landingDust");
+
+	hud_ = std::make_unique<HUD>();
+	hud_->Initialize();
+
 }
 
 void BattleController::Unload() {
+	hud_.reset();
 	lockedOnEnemies_.clear();
 	enemies_.clear();
 	enemyModels_.clear();
@@ -210,6 +215,10 @@ void BattleController::Update(float deltaTime) {
 	}
 
 	particleManager_->Update(camera_);
+
+	if (hud_) {
+		hud_->Update(player_.get(), deltaTime);
+	}
 }
 
 void BattleController::Draw() {
@@ -240,6 +249,11 @@ void BattleController::Draw() {
 	if (player_) {
 		player_->DrawAnchorLine();
 	}
+
+	// 2D HUD / UIの描画 (最前面)
+	if (hud_) {
+		hud_->Draw();
+	}
 }
 
 void BattleController::DrawImGui() {
@@ -249,6 +263,9 @@ void BattleController::DrawImGui() {
 	ImGui::Checkbox("Enemy Respawn", &isEnemyRespawnEnabled_);
 	ImGui::SliderFloat("Enemy Respawn Time", &enemyRespawnTime_, 0.5f, 10.0f, "%.1f sec");
 
+	if (hud_) {
+		hud_->DrawImGui();
+	}
 	if (player_) {
 		player_->DrawImGui();
 	}

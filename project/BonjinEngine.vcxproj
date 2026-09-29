@@ -170,6 +170,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="application\scene\game\gameObject\player\Player.cpp" />
     <ClCompile Include="application\scene\game\gameObject\camera\CameraController.cpp" />
     <ClCompile Include="application\scene\game\gameObject\GameObject.cpp" />
+    <ClCompile Include="application\scene\game\hud\HUD.cpp" />
     <ClCompile Include="application\scene\game\GameScene.cpp" />
     <ClCompile Include="application\scene\game\BattleController.cpp" />
     <ClCompile Include="application\scene\tutorial\TutorialScene.cpp" />
@@ -293,6 +294,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\graphics\core\pso\config\line\LineConfig.h" />
     <ClInclude Include="engine\interface\BaseScene.h" />
     <ClInclude Include="engine\interface\IScene.h" />
+    <ClInclude Include="application\scene\game\hud\HUD.h" />
     <ClInclude Include="application\scene\game\GameScene.h" />
     <ClInclude Include="application\scene\game\BattleController.h" />
     <ClInclude Include="application\scene\tutorial\TutorialScene.h" />
