@@ -11,6 +11,8 @@
 #include "Line3D.h"
 #include "Lightning3D.h"
 
+#include "PlayerStatusComponent.h"
+
 class MapChipField;
 namespace Bonjin {
 	class BaseEnemy;
@@ -90,16 +92,9 @@ public:
 	}
 
 	// HP関連
-	int GetHp() const { return hp_; }
-	int GetMaxHp() const { return status_.maxHp; }
-	void SetHp(int hp) { hp_ = hp; }
 	void ApplyDamage(int damage);
-	bool GetIsDead() const { return hp_ <= 0; }
 
 	// レベル・経験値関連
-	int GetLevel() const { return level_; }
-	int GetExp() const { return exp_; }
-	int GetRequiredExp() const { return status_.required_exp; }
 	void GainExp(int amount);
 
 	bool GetIsInvincible() const { return isInvincible_; }
@@ -122,15 +117,9 @@ public:
 
 	void UpdateWorldTransform(){ model_->Update(worldTransform_, camera_); }
 
+	PlayerStatusComponent GetStatus() const { return statusComponent_; }
+
 private:
-
-	// ステータス定義
-	struct CharacterStatus {
-		int maxHp;
-		int attackPower;
-		int required_exp = 0;
-	};
-
 
 	static inline const float kAcceleration = 0.010f;
 	static inline const float kAttenuation = 0.8f;
@@ -184,14 +173,7 @@ private:
 	// ロックオンされた敵のリストへのポインタ
 	std::list<Bonjin::BaseEnemy*>* lockedOnEnemies_ = nullptr;
 
-	// レベル・経験値
-	int level_ = 1;
-	int exp_ = 0;
-
-	// レベルで変化する値
-	// HP
-	int hp_ = 3;
-	CharacterStatus status_;
+	PlayerStatusComponent statusComponent_;
 
 	bool isGoalReached_ = false;
 
@@ -223,10 +205,5 @@ private:
 	// テレポートラジアルブラー演出用
 	float teleportBlurTimer_ = 0.0f;
 	static inline const float kTeleportBlurMaxTime = 0.2f;
-
-	/// <summary>
-	/// 外部ファイルのテーブルから現在のレベルをもとにステータスを取得する
-	/// </summary>
-	void GetStatusByTable();
 
 };

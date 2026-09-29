@@ -1,5 +1,8 @@
 #include "GameScene.h"
 
+#include "gameObject/player/PlayerStatusRepository.h"
+#include "../result/ResultScene.h"
+
 using namespace Bonjin;
 
 void GameScene::Initialize(Camera* camera)
@@ -13,6 +16,10 @@ void GameScene::Initialize(Camera* camera)
 
 	battleController_ = std::make_unique<BattleController>();
 	battleController_->Initialize(camera_, "resources/maps/tutorial.csv");
+
+	// プレイヤーステータスの読み込み
+	PlayerStatusRepository::GetInstance()->Load("resources/data/player_status.json");
+
 }
 
 void GameScene::Unload() {
@@ -25,7 +32,11 @@ void GameScene::Unload() {
 void GameScene::Update(float deltaTime) {
 	battleController_->Update(deltaTime);
 
-	if (battleController_->IsGoalReached()||battleController_->GetPlayer()->GetIsDead()) {
+	if (battleController_->IsGoalReached()) {
+		ResultScene::SetIsClear(true);
+		ChangePhase(GamePhase::kGoal);
+	} else if (battleController_->GetPlayer() && battleController_->GetPlayer()->GetStatus().IsDead()) {
+		ResultScene::SetIsClear(false);
 		ChangePhase(GamePhase::kGoal);
 	}
 

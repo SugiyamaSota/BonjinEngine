@@ -5,8 +5,6 @@
 #include "../enemy/BaseEnemy.h"
 #include "SceneManager.h"
 #include "ImGuiManager.h"
-#include"../../mapchip/MapChipField.h"
-#include "../../logic/Collision.h"
 #include "ParticleManager.h"
 #include <algorithm>
 #include <numbers>
@@ -26,17 +24,8 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 	config.tag = "Player";
 	GameObject::Initialize(model, camera, position, config);
 
-	level_ = 1;
-	exp_ = 0;
-
-	// レベルで変化する値
-	// HP
-	hp_ = 3;
-	status_.maxHp = 3;
-	// 攻撃力
-	status_.attackPower = 1;
-	//
-	status_.required_exp = 100;
+	// プレイヤーステータスの初期化
+	statusComponent_.Initialize();
 
 	anchorLine_ = std::make_unique<Bonjin::Line3D>();
 	anchorLine_->Initialize();
@@ -366,10 +355,6 @@ void Player::Draw() {
 	}
 }
 
-void Player::GetStatusByTable() {
-
-}
-
 void Player::DrawAnchorLine() {
 	if (anchor_ != nullptr) {
 		anchorLine_->Draw();
@@ -427,7 +412,7 @@ AABB Player::GetAABB() {
 }
 
 void Player::OnCollision(Bonjin::BaseEnemy* enemy) {
-	if (isInvincible_|| hp_<=0) {
+	if (isInvincible_|| statusComponent_.GetHp() <= 0) {
 		return;
 	}
 
@@ -458,21 +443,13 @@ bool Player::ConsumeLandingEffectRequest() {
 }
 
 void Player::GainExp(int amount) {
-	if (hp_ <= 0) {
-		return;
-	}
+	if (statusComponent_.IsDead()) return;
 
-	exp_ += amount;
-
-	// レベルアップ処理
-	while (exp_ >= GetRequiredExp()) {
-		exp_ -= GetRequiredExp();
-		level_++;
-		status_.maxHp++;
-		hp_ = status_.maxHp; // レベルアップで全回復
+	bool levelUp = statusComponent_.GainExp(amount);
+	if (levelUp) {
+		// レベルアップ時の演出（エフェクト生成やSE再生など）をここに記述
 	}
 }
-
 void Player::RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies) {
 	for (Bonjin::BaseEnemy* enemy : enemies) {
 		if (enemy != nullptr && !enemy->GetIsDead()) {
@@ -538,11 +515,11 @@ void Player::DrawImGui() {
 		Vector3 pos = GetPosition();
 		ImGui::Text("Player Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
 		ImGui::Text("On Ground: %s", onGround_ ? "true" : "false");
-		ImGui::InputInt("Player HP", &hp_);
-		ImGui::Text("Player Level: %d", level_);
-		ImGui::Text("Player Exp: %d / %d", exp_, GetRequiredExp());
-		ImGui::Text("Player Max HP: %d", status_.maxHp);
-		ImGui::Text("Player Attack Power: %d", status_.attackPower);
+		ImGui::Text("Player HP: %d", statusComponent_.GetHp());
+		ImGui::Text("Player Level: %d", statusComponent_.GetLevel());
+		ImGui::Text("Player Exp: %d / %d", statusComponent_.GetExp(), statusComponent_.GetRequiredExp());
+		ImGui::Text("Player Max HP: %d", statusComponent_.GetMaxHp());
+		ImGui::Text("Player Attack Power: %d", statusComponent_.GetAttackPower());
 		bool hasAnchor = HasAnchor();
 		ImGui::Text("Has Anchor: %s", hasAnchor ? "true" : "false");
 
@@ -615,9 +592,9 @@ void Player::EmitAnchorHitEffect(const Vector3& position) {
 }
 
 void Player::ApplyDamage(int damage) {
-	hp_ = (hp_ > damage) ? hp_ - damage : 0;
+	statusComponent_.ApplyDamage(damage);
 
-	// ダメージ演出の開始
+	// ダメージ演出の開始処理
 	if (damageEffectTimer_ <= 0.0f) {
 		auto sceneManager = Bonjin::SceneManager::GetInstance();
 		wasVignette_ = sceneManager->IsFullScreenVignette();
@@ -627,9 +604,8 @@ void Player::ApplyDamage(int damage) {
 	}
 
 	damageEffectTimer_ = kDamageEffectMaxTime;
-
 	auto sceneManager = Bonjin::SceneManager::GetInstance();
 	sceneManager->SetFullScreenVignette(true);
 	sceneManager->SetFullScreenVignetteColor({ 1.0f, 0.0f, 0.0f });
-	sceneManager->SetFullScreenVignetteScale(3.0f); // 画面を少し赤く
+	sceneManager->SetFullScreenVignetteScale(3.0f);
 }
