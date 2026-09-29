@@ -91,7 +91,6 @@ private:
 
 	// UIスプライト
 	std::unique_ptr<Sprite> bannerBgSprite_;
-	std::unique_ptr<Sprite> bannerLineSprite_;
 	std::unique_ptr<TextSprite> titleTextSprite_;
 	std::unique_ptr<TextSprite> detailTextSprite_;
 	std::unique_ptr<TextSprite> skipGuideTextSprite_;
