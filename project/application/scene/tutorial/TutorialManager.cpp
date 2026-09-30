@@ -5,6 +5,9 @@
 #include "../game/gameObject/enemy/BaseEnemy.h"
 #include "input/Input.h"
 #include "input/Gamepad.h"
+#include "function/function.h"
+#include "../../../externals/nlohmann/json.hpp"
+#include <fstream>
 #include <algorithm>
 
 #ifdef USE_IMGUI
@@ -16,12 +19,11 @@ namespace Bonjin {
 TutorialManager::TutorialManager() = default;
 TutorialManager::~TutorialManager() = default;
 
-void TutorialManager::Initialize() {
-	currentStep_ = TutorialStep::kWelcome;
-	nextStep_ = TutorialStep::kWelcome;
+void TutorialManager::Initialize(const std::string& jsonFilePath) {
+	currentStepIndex_ = 0;
+	nextStepIndex_ = 0;
 	transitionState_ = TransitionState::kNone;
 	transitionTimer_ = 0.0f;
-	transitionDuration_ = 0.16f;
 	currentScaleY_ = 1.0f;
 
 	stepTimer_ = 0.0f;
@@ -31,15 +33,20 @@ void TutorialManager::Initialize() {
 	hasLockedOn_ = false;
 	hasKilledEnemy_ = false;
 
+	// JSON読み込み (失敗時はデフォルト初期化)
+	if (!LoadJson(jsonFilePath)) {
+		SetupDefaultSteps();
+	}
+
 	// 1. ミッションバナー背景 (中央上)
 	bannerBgSprite_ = std::make_unique<Sprite>();
 	bannerBgSprite_->Initialize("default.png");
 	bannerBgSprite_->SetAnchor({ 0.0f, 0.0f, 0.0f });
-	bannerBgSprite_->SetSize(bannerSize_);
-	bannerBgSprite_->SetTranslate(bannerPosition_);
-	bannerBgSprite_->SetColor({ 0.04f, 0.07f, 0.12f, 0.85f });
+	bannerBgSprite_->SetSize(bannerData_.size);
+	bannerBgSprite_->SetTranslate(bannerData_.position);
+	bannerBgSprite_->SetColor(bannerData_.color);
 
-	// 3. テキストスプライト
+	// 2. テキストスプライト
 	titleTextSprite_ = std::make_unique<TextSprite>();
 	titleTextSprite_->Initialize();
 	titleTextSprite_->SetAnchor({ 0.0f, 0.0f, 0.0f });
@@ -51,21 +58,120 @@ void TutorialManager::Initialize() {
 	skipGuideTextSprite_ = std::make_unique<TextSprite>();
 	skipGuideTextSprite_->Initialize();
 	skipGuideTextSprite_->SetAnchor({ 0.0f, 0.0f, 0.0f });
-	skipGuideTextSprite_->SetText(L"[TAB]: チュートリアルをスキップ", 32, RGB(160, 170, 190));
-	skipGuideTextSprite_->SetTranslate({ 1020.0f, 25.0f });
+	skipGuideTextSprite_->SetText(bannerData_.skipGuideText, bannerData_.skipGuideFontSize, bannerData_.skipGuideColor);
+	skipGuideTextSprite_->SetTranslate(bannerData_.skipGuidePosition);
 
 	UpdateBannerTexts();
 }
 
-void TutorialManager::ChangeStep(TutorialStep nextStep) {
-	if (currentStep_ == nextStep && transitionState_ == TransitionState::kNone) {
-		return;
+bool TutorialManager::LoadJson(const std::string& jsonFilePath) {
+	std::ifstream file(jsonFilePath);
+	if (!file.is_open()) {
+		return false;
 	}
 
-	// チュートリアル完了への即時スキップ
-	if (nextStep == TutorialStep::kCompleted) {
-		currentStep_ = TutorialStep::kCompleted;
-		nextStep_ = TutorialStep::kCompleted;
+	nlohmann::json jsonData;
+	try {
+		file >> jsonData;
+	} catch (...) {
+		return false;
+	}
+
+	// バナー設定の読み込み
+	if (jsonData.contains("banner") && jsonData["banner"].is_object()) {
+		const auto& b = jsonData["banner"];
+		if (b.contains("position") && b["position"].is_array() && b["position"].size() >= 2) {
+			bannerData_.position = { b["position"][0].get<float>(), b["position"][1].get<float>() };
+		}
+		if (b.contains("size") && b["size"].is_array() && b["size"].size() >= 2) {
+			bannerData_.size = { b["size"][0].get<float>(), b["size"][1].get<float>() };
+		}
+		if (b.contains("color") && b["color"].is_array() && b["color"].size() >= 4) {
+			bannerData_.color = {
+				b["color"][0].get<float>(),
+				b["color"][1].get<float>(),
+				b["color"][2].get<float>(),
+				b["color"][3].get<float>()
+			};
+		}
+		bannerData_.transitionDuration = b.value("transition_duration", 0.16f);
+		if (b.contains("skip_guide_text")) {
+			bannerData_.skipGuideText = ConvertString(b.value("skip_guide_text", ""));
+		}
+		if (b.contains("skip_guide_position") && b["skip_guide_position"].is_array() && b["skip_guide_position"].size() >= 2) {
+			bannerData_.skipGuidePosition = { b["skip_guide_position"][0].get<float>(), b["skip_guide_position"][1].get<float>() };
+		}
+		bannerData_.skipGuideFontSize = b.value("skip_guide_font_size", 32);
+		if (b.contains("skip_guide_color") && b["skip_guide_color"].is_array() && b["skip_guide_color"].size() >= 3) {
+			bannerData_.skipGuideColor = RGB(
+				b["skip_guide_color"][0].get<int>(),
+				b["skip_guide_color"][1].get<int>(),
+				b["skip_guide_color"][2].get<int>()
+			);
+		}
+	}
+
+	// ステップ設定の読み込み
+	steps_.clear();
+	if (jsonData.contains("steps") && jsonData["steps"].is_array()) {
+		for (const auto& item : jsonData["steps"]) {
+			TutorialStepData step{};
+			step.id = item.value("id", "");
+			step.titleText = ConvertString(item.value("title", ""));
+			step.detailKeyboard = ConvertString(item.value("detail_keyboard", ""));
+			step.detailGamepad = ConvertString(item.value("detail_gamepad", ""));
+			step.titleFontSize = item.value("title_font_size", 32);
+			step.detailFontSize = item.value("detail_font_size", 16);
+
+			if (item.contains("title_color") && item["title_color"].is_array() && item["title_color"].size() >= 3) {
+				step.titleColor = RGB(
+					item["title_color"][0].get<int>(),
+					item["title_color"][1].get<int>(),
+					item["title_color"][2].get<int>()
+				);
+			}
+			if (item.contains("detail_color") && item["detail_color"].is_array() && item["detail_color"].size() >= 3) {
+				step.detailColor = RGB(
+					item["detail_color"][0].get<int>(),
+					item["detail_color"][1].get<int>(),
+					item["detail_color"][2].get<int>()
+				);
+			}
+
+			if (item.contains("condition") && item["condition"].is_object()) {
+				step.conditionType = item["condition"].value("type", "none");
+				step.conditionDuration = item["condition"].value("duration", 0.0f);
+			}
+
+			steps_.push_back(step);
+		}
+	}
+
+	return !steps_.empty();
+}
+
+void TutorialManager::SetupDefaultSteps() {
+	bannerData_ = TutorialBannerData();
+	steps_ = {
+		{ "welcome", L"【TUTORIAL】基本操作をマスターしよう", L"", L"", 32, 16, RGB(255, 220, 80), RGB(220, 230, 245), "timer", 2.0f },
+		{ "move", L"【STEP 1】左右に移動してみよう", L"[A] [D] キー で移動", L"左スティック で移動", 48, 32, RGB(100, 220, 255), RGB(240, 245, 255), "move", 1.2f },
+		{ "jump", L"【STEP 2】ジャンプしてみよう", L"[SPACE] キー でジャンプ！", L"[A] ボタン でジャンプ！", 48, 32, RGB(100, 220, 255), RGB(240, 245, 255), "jump", 0.8f },
+		{ "anchor", L"【STEP 3】アンカーを壁や足場に放とう", L"[J] キー で発射！[K] キー で 即座に移動できます", L"[X] ボタン で発射！[B] ボタン で 即座に移動できます", 48, 32, RGB(100, 220, 255), RGB(240, 245, 255), "anchor", 2.0f },
+		{ "lock_on", L"【STEP 4】敵にアンカーを当ててロックオン！", L"敵にアンカーを刺すとロックオンされます", L"敵にアンカーを刺すとロックオンされます", 48, 32, RGB(255, 130, 80), RGB(255, 235, 220), "lock_on", 0.5f },
+		{ "teleport_kill", L"【STEP 5】雷撃テレポートで一括撃破！", L"[L] キー でロックオンした敵へ急襲！", L"[Y] ボタン でロックオンした敵へ急襲！", 48, 32, RGB(255, 230, 50), RGB(255, 255, 200), "teleport_kill", 1.2f },
+		{ "go_to_goal", L"【MISSION CLEAR!】ゴールへ向かおう", L"マップ奥にあるゴールに到達して次へ進もう！", L"マップ奥にあるゴールに到達して次へ進もう！", 48, 32, RGB(80, 255, 140), RGB(220, 255, 230), "goal", 0.0f },
+		{ "completed", L"【COMPLETE】本編へ遷移します...", L"", L"", 48, 32, RGB(255, 255, 255), RGB(255, 255, 255), "none", 0.0f }
+	};
+}
+
+void TutorialManager::ChangeStep(size_t nextStepIndex) {
+	if (nextStepIndex >= steps_.size()) return;
+	if (currentStepIndex_ == nextStepIndex && transitionState_ == TransitionState::kNone) return;
+
+	// チュートリアル完了（最後のステップ）への遷移
+	if (nextStepIndex == steps_.size() - 1) {
+		currentStepIndex_ = nextStepIndex;
+		nextStepIndex_ = nextStepIndex;
 		transitionState_ = TransitionState::kNone;
 		currentScaleY_ = 1.0f;
 		UpdateBannerTexts();
@@ -73,67 +179,122 @@ void TutorialManager::ChangeStep(TutorialStep nextStep) {
 	}
 
 	// 高さを潰すアニメーションを開始
-	nextStep_ = nextStep;
+	nextStepIndex_ = nextStepIndex;
 	transitionState_ = TransitionState::kClosing;
 	transitionTimer_ = 0.0f;
 }
 
+void TutorialManager::ChangeStep(TutorialStep nextStep) {
+	size_t targetIndex = static_cast<size_t>(nextStep);
+	if (targetIndex < steps_.size()) {
+		ChangeStep(targetIndex);
+	}
+}
+
+bool TutorialManager::IsCompleted() const {
+	if (steps_.empty()) return true;
+	return currentStepIndex_ >= steps_.size() - 1;
+}
+
+TutorialStep TutorialManager::GetCurrentStep() const {
+	return static_cast<TutorialStep>(currentStepIndex_);
+}
+
 void TutorialManager::UpdateBannerTexts() {
-	switch (currentStep_) {
-	case TutorialStep::kWelcome:
-		titleTextSprite_->SetText(L"【TUTORIAL】基本操作をマスターしよう", 32, RGB(255, 220, 80));
-		detailTextSprite_->SetText(L"", 16, RGB(220, 230, 245));
-		break;
+	if (currentStepIndex_ >= steps_.size()) return;
 
-	case TutorialStep::kMove:
-		titleTextSprite_->SetText(L"【STEP 1】左右に移動してみよう", 48, RGB(100, 220, 255));
-		detailTextSprite_->SetText(L"[A] [D] キー で移動", 32, RGB(240, 245, 255));
-		break;
+	const auto& step = steps_[currentStepIndex_];
+	titleTextSprite_->SetText(step.titleText, step.titleFontSize, step.titleColor);
 
-	case TutorialStep::kJump:
-		titleTextSprite_->SetText(L"【STEP 2】ジャンプしてみよう", 48, RGB(100, 220, 255));
-		detailTextSprite_->SetText(L"[SPACE] キー でジャンプ！", 32, RGB(240, 245, 255));
-		break;
+	// ゲームパッド接続状態に応じて詳細テキストを切り替え
+	bool hasGamepad = Gamepad::GetInstance()->IsConnected();
+	std::wstring detailText = (hasGamepad && !step.detailGamepad.empty()) ? step.detailGamepad : step.detailKeyboard;
+	detailTextSprite_->SetText(detailText, step.detailFontSize, step.detailColor);
 
-	case TutorialStep::kAnchor:
-		titleTextSprite_->SetText(L"【STEP 3】アンカーを壁や足場に放とう", 48, RGB(100, 220, 255));
-		detailTextSprite_->SetText(L"[J] キー で発射！[K] キー で 即座に移動できます", 32, RGB(240, 245, 255));
-		break;
+	titleTextSprite_->SetTranslate({ bannerData_.position.x + 10.0f, bannerData_.position.y + 12.0f });
+	detailTextSprite_->SetTranslate({ bannerData_.position.x + 20.0f, bannerData_.position.y + 48.0f });
+}
 
-	case TutorialStep::kLockOn:
-		titleTextSprite_->SetText(L"【STEP 4】敵にアンカーを当ててロックオン！", 48, RGB(255, 130, 80));
-		detailTextSprite_->SetText(L"敵にアンカーを刺すとロックオンされます", 32, RGB(255, 235, 220));
-		break;
+bool TutorialManager::CheckCondition(BattleController* battleController, float deltaTime) {
+	if (currentStepIndex_ >= steps_.size()) return false;
+	const auto& step = steps_[currentStepIndex_];
+	Player* player = battleController ? battleController->GetPlayer() : nullptr;
 
-	case TutorialStep::kTeleportKill:
-		titleTextSprite_->SetText(L"【STEP 5】雷撃テレポートで一括撃破！", 48, RGB(255, 230, 50));
-		detailTextSprite_->SetText(L"[L] キー でロックオンした敵へ急襲！", 32, RGB(255, 255, 200));
-		break;
-
-	case TutorialStep::kGoToGoal:
-		titleTextSprite_->SetText(L"【MISSION CLEAR!】ゴールへ向かおう", 48, RGB(80, 255, 140));
-		detailTextSprite_->SetText(L"マップ奥にあるゴールに到達して次へ進もう！", 32, RGB(220, 255, 230));
-		break;
-
-	case TutorialStep::kCompleted:
-		titleTextSprite_->SetText(L"【COMPLETE】本編へ遷移します...", 48, RGB(255, 255, 255));
-		detailTextSprite_->SetText(L"", 32, RGB(255, 255, 255));
-		break;
+	if (step.conditionType == "timer") {
+		return stepTimer_ >= step.conditionDuration;
+	}
+	else if (step.conditionType == "move") {
+		long lStickX = Gamepad::GetInstance()->GetLStickX();
+		bool isMoving = (lStickX > 750 || lStickX < -750) ||
+		                Input::GetInstance()->IsPress(DIK_A) ||
+		                Input::GetInstance()->IsPress(DIK_D);
+		if (isMoving) {
+			moveAccumulator_ += deltaTime;
+			if (moveAccumulator_ >= step.conditionDuration) {
+				return true;
+			}
+		}
+	}
+	else if (step.conditionType == "jump") {
+		bool jumpTrigger = Input::GetInstance()->IsTrigger(DIK_SPACE) ||
+		                   Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_A);
+		if (jumpTrigger) {
+			hasJumped_ = true;
+		}
+		if (hasJumped_ && stepTimer_ >= step.conditionDuration) {
+			return true;
+		}
+	}
+	else if (step.conditionType == "anchor") {
+		if (player && player->HasAnchor()) {
+			hasShotAnchor_ = true;
+		}
+		bool teleportTrigger = Input::GetInstance()->IsTrigger(DIK_K) ||
+		                       Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_B);
+		if (hasShotAnchor_ && (teleportTrigger || stepTimer_ >= step.conditionDuration)) {
+			return true;
+		}
+	}
+	else if (step.conditionType == "lock_on") {
+		if (player && player->GetLockedOnEnemiesCount() > 0) {
+			hasLockedOn_ = true;
+		}
+		if (hasLockedOn_ && stepTimer_ >= step.conditionDuration) {
+			return true;
+		}
+	}
+	else if (step.conditionType == "teleport_kill") {
+		bool anyDefeated = false;
+		if (battleController) {
+			for (const auto& enemy : battleController->GetEnemies()) {
+				if (enemy->GetIsDead()) {
+					anyDefeated = true;
+					break;
+				}
+			}
+		}
+		if (anyDefeated || (player && player->GetExp() > 0)) {
+			hasKilledEnemy_ = true;
+		}
+		if (hasKilledEnemy_ && stepTimer_ >= step.conditionDuration) {
+			return true;
+		}
+	}
+	else if (step.conditionType == "goal") {
+		if (battleController && battleController->IsGoalReached()) {
+			return true;
+		}
 	}
 
-	titleTextSprite_->SetTranslate({ bannerPosition_.x + 10.0f, bannerPosition_.y + 12.0f });
-	detailTextSprite_->SetTranslate({ bannerPosition_.x + 20.0f, bannerPosition_.y + 48.0f });
+	return false;
 }
 
 void TutorialManager::Update(BattleController* battleController, float deltaTime) {
-	if (!battleController) return;
-
-	Player* player = battleController->GetPlayer();
 	stepTimer_ += deltaTime;
 
 	// スキップキー判定 (TABキー)
 	if (Input::GetInstance()->IsTrigger(DIK_TAB)) {
-		ChangeStep(TutorialStep::kCompleted);
+		ChangeStep(steps_.size() - 1);
 		return;
 	}
 
@@ -142,12 +303,13 @@ void TutorialManager::Update(BattleController* battleController, float deltaTime
 	// -------------------------------------------------------------
 	if (transitionState_ == TransitionState::kClosing) {
 		transitionTimer_ += deltaTime;
-		float progress = (std::clamp)(transitionTimer_ / transitionDuration_, 0.0f, 1.0f);
+		float duration = (std::max)(0.01f, bannerData_.transitionDuration);
+		float progress = (std::clamp)(transitionTimer_ / duration, 0.0f, 1.0f);
 
 		if (progress >= 1.0f) {
 			// 高さが完全に潰れた瞬間！
 			currentScaleY_ = 0.0f;
-			currentStep_ = nextStep_; // ステップを更新
+			currentStepIndex_ = nextStepIndex_; // ステップを更新
 			stepTimer_ = 0.0f;
 			moveAccumulator_ = 0.0f;
 			hasJumped_ = false;
@@ -167,7 +329,8 @@ void TutorialManager::Update(BattleController* battleController, float deltaTime
 	}
 	else if (transitionState_ == TransitionState::kOpening) {
 		transitionTimer_ += deltaTime;
-		float progress = (std::clamp)(transitionTimer_ / transitionDuration_, 0.0f, 1.0f);
+		float duration = (std::max)(0.01f, bannerData_.transitionDuration);
+		float progress = (std::clamp)(transitionTimer_ / duration, 0.0f, 1.0f);
 
 		if (progress >= 1.0f) {
 			currentScaleY_ = 1.0f;
@@ -184,98 +347,20 @@ void TutorialManager::Update(BattleController* battleController, float deltaTime
 	// -------------------------------------------------------------
 	// 2. 各ステップの進行判定（トランジション中以外に判定）
 	// -------------------------------------------------------------
-	if (transitionState_ == TransitionState::kNone) {
-		switch (currentStep_) {
-		case TutorialStep::kWelcome:
-			if (stepTimer_ >= 2.0f) {
-				ChangeStep(TutorialStep::kMove);
-			}
-			break;
-
-		case TutorialStep::kMove: {
-			long lStickX = Gamepad::GetInstance()->GetLStickX();
-			bool isMoving = (lStickX > 750 || lStickX < -750) ||
-							Input::GetInstance()->IsPress(DIK_A) ||
-							Input::GetInstance()->IsPress(DIK_D);
-			if (isMoving) {
-				moveAccumulator_ += deltaTime;
-				if (moveAccumulator_ >= 1.2f) {
-					ChangeStep(TutorialStep::kJump);
-				}
-			}
-			break;
-		}
-
-		case TutorialStep::kJump: {
-			bool jumpTrigger = Input::GetInstance()->IsTrigger(DIK_SPACE);
-			if (jumpTrigger) {
-				hasJumped_ = true;
-			}
-			if (hasJumped_ && stepTimer_ >= 0.8f) {
-				ChangeStep(TutorialStep::kAnchor);
-			}
-			break;
-		}
-
-		case TutorialStep::kAnchor: {
-			if (player && player->HasAnchor()) {
-				hasShotAnchor_ = true;
-			}
-			bool teleportTrigger = Input::GetInstance()->IsTrigger(DIK_K) ||
-			                       Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_B);
-			if (hasShotAnchor_ && (teleportTrigger || stepTimer_ >= 2.0f)) {
-				ChangeStep(TutorialStep::kLockOn);
-			}
-			break;
-		}
-
-		case TutorialStep::kLockOn: {
-			if (player && player->GetLockedOnEnemiesCount() > 0) {
-				hasLockedOn_ = true;
-			}
-			if (hasLockedOn_ && stepTimer_ >= 0.5f) {
-				ChangeStep(TutorialStep::kTeleportKill);
-			}
-			break;
-		}
-
-		case TutorialStep::kTeleportKill: {
-			bool anyDefeated = false;
-			for (const auto& enemy : battleController->GetEnemies()) {
-				if (enemy->GetIsDead()) {
-					anyDefeated = true;
-					break;
-				}
-			}
-			if (anyDefeated || (player && player->GetExp() > 0)) {
-				hasKilledEnemy_ = true;
-			}
-			if (hasKilledEnemy_ && stepTimer_ >= 1.2f) {
-				ChangeStep(TutorialStep::kGoToGoal);
-			}
-			break;
-		}
-
-		case TutorialStep::kGoToGoal: {
-			if (battleController->IsGoalReached()) {
-				ChangeStep(TutorialStep::kCompleted);
-			}
-			break;
-		}
-
-		case TutorialStep::kCompleted:
-			break;
+	if (transitionState_ == TransitionState::kNone && currentStepIndex_ < steps_.size() - 1) {
+		if (CheckCondition(battleController, deltaTime)) {
+			ChangeStep(currentStepIndex_ + 1);
 		}
 	}
 
 	// -------------------------------------------------------------
 	// 3. バナースプライトのサイズ・座標更新（中心基準で潰す）
 	// -------------------------------------------------------------
-	float currentHeight = bannerSize_.y * currentScaleY_;
-	float offsetY = (bannerSize_.y - currentHeight) * 0.5f;
+	float currentHeight = bannerData_.size.y * currentScaleY_;
+	float offsetY = (bannerData_.size.y - currentHeight) * 0.5f;
 
-	bannerBgSprite_->SetSize({ bannerSize_.x, currentHeight });
-	bannerBgSprite_->SetTranslate({ bannerPosition_.x, bannerPosition_.y + offsetY });
+	bannerBgSprite_->SetSize({ bannerData_.size.x, currentHeight });
+	bannerBgSprite_->SetTranslate({ bannerData_.position.x, bannerData_.position.y + offsetY });
 
 	// テキストの透明度と位置（潰れている間は文字をフェードアウト）
 	float textAlpha = 0.0f;
@@ -286,8 +371,8 @@ void TutorialManager::Update(BattleController* battleController, float deltaTime
 	titleTextSprite_->SetColor({ 1.0f, 1.0f, 1.0f, textAlpha });
 	detailTextSprite_->SetColor({ 1.0f, 1.0f, 1.0f, textAlpha });
 
-	titleTextSprite_->SetTranslate({ bannerPosition_.x + 10.0f, bannerPosition_.y + offsetY + 12.0f * currentScaleY_ });
-	detailTextSprite_->SetTranslate({ bannerPosition_.x + 30.0f, bannerPosition_.y + offsetY + 48.0f * currentScaleY_ });
+	titleTextSprite_->SetTranslate({ bannerData_.position.x + 10.0f, bannerData_.position.y + offsetY + 12.0f * currentScaleY_ });
+	detailTextSprite_->SetTranslate({ bannerData_.position.x + 30.0f, bannerData_.position.y + offsetY + 48.0f * currentScaleY_ });
 
 	bannerBgSprite_->Update();
 	titleTextSprite_->Update();
@@ -305,31 +390,32 @@ void TutorialManager::Draw() {
 void TutorialManager::DrawImGui() {
 #ifdef USE_IMGUI
 	if (ImGui::TreeNode("Tutorial Manager Debug")) {
-		const char* stepNames[] = {
-			"0: Welcome",
-			"1: Move",
-			"2: Jump",
-			"3: Anchor",
-			"4: LockOn",
-			"5: TeleportKill",
-			"6: GoToGoal",
-			"7: Completed"
-		};
-		int currentIdx = static_cast<int>(currentStep_);
-		if (ImGui::Combo("Current Step", &currentIdx, stepNames, IM_ARRAYSIZE(stepNames))) {
-			ChangeStep(static_cast<TutorialStep>(currentIdx));
+		int currentIdx = static_cast<int>(currentStepIndex_);
+		std::vector<std::string> stepNames;
+		std::vector<const char*> stepNamePtrs;
+		for (size_t i = 0; i < steps_.size(); ++i) {
+			stepNames.push_back(std::to_string(i) + ": " + steps_[i].id);
+			stepNamePtrs.push_back(stepNames.back().c_str());
 		}
+
+		if (!stepNamePtrs.empty()) {
+			if (ImGui::Combo("Current Step", &currentIdx, stepNamePtrs.data(), static_cast<int>(stepNamePtrs.size()))) {
+				ChangeStep(static_cast<size_t>(currentIdx));
+			}
+		}
+
 		if (ImGui::Button("Next Step")) {
-			if (currentIdx < 7) {
-				ChangeStep(static_cast<TutorialStep>(currentIdx + 1));
+			if (currentStepIndex_ < steps_.size() - 1) {
+				ChangeStep(currentStepIndex_ + 1);
 			}
 		}
 		if (ImGui::Button("Skip to Complete")) {
-			ChangeStep(TutorialStep::kCompleted);
+			ChangeStep(steps_.size() - 1);
 		}
-		ImGui::SliderFloat("Transition Duration", &transitionDuration_, 0.05f, 0.5f, "%.2fs");
+
+		ImGui::SliderFloat("Transition Duration", &bannerData_.transitionDuration, 0.05f, 0.5f, "%.2fs");
 		ImGui::Text("ScaleY: %.2f", currentScaleY_);
-		ImGui::DragFloat2("Banner Pos", &bannerPosition_.x, 1.0f, 0.0f, 1280.0f);
+		ImGui::DragFloat2("Banner Pos", &bannerData_.position.x, 1.0f, 0.0f, 1280.0f);
 		ImGui::TreePop();
 	}
 #endif

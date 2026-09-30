@@ -16,7 +16,7 @@ void TutorialScene::Initialize(Camera* camera) {
 	battleController_->Initialize(camera_, "resources/maps/tutorial.csv");
 
 	tutorialManager_ = std::make_unique<TutorialManager>();
-	tutorialManager_->Initialize();
+	tutorialManager_->Initialize("resources/data/tutorial.json");
 }
 
 void TutorialScene::Unload() {
