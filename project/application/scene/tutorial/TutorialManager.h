@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <filesystem>
 #include "Sprite.h"
 #include "TextSprite.h"
 #include "Vector.h"
@@ -71,6 +72,49 @@ public:
 	/// JSONから設定とステップデータを読み込み
 	/// </summary>
 	bool LoadJson(const std::string& jsonFilePath);
+
+	/// <summary>
+	/// 現在の設定とステップデータをJSONファイルに書き出し
+	/// </summary>
+	bool SaveJson(const std::string& jsonFilePath = "");
+
+	/// <summary>
+	/// 現在設定されているJSONファイルから再読み込み
+	/// </summary>
+	bool ReloadJson();
+
+	/// <summary>
+	/// スプライト・テキスト表示を最新データで再構成
+	/// </summary>
+	void RefreshSprites();
+
+	/// <summary>
+	/// JSONファイルパスの取得
+	/// </summary>
+	const std::string& GetJsonFilePath() const { return jsonFilePath_; }
+
+	/// <summary>
+	/// JSONファイルパスの設定
+	/// </summary>
+	void SetJsonFilePath(const std::string& path) { jsonFilePath_ = path; }
+
+	/// <summary>
+	/// ステップデータリストの参照取得
+	/// </summary>
+	std::vector<TutorialStepData>& GetSteps() { return steps_; }
+	const std::vector<TutorialStepData>& GetSteps() const { return steps_; }
+
+	/// <summary>
+	/// バナー設定データの参照取得
+	/// </summary>
+	TutorialBannerData& GetBannerData() { return bannerData_; }
+	const TutorialBannerData& GetBannerData() const { return bannerData_; }
+
+	/// <summary>
+	/// 自動リロード有効/無効の取得・設定
+	/// </summary>
+	bool IsAutoReloadEnabled() const { return autoReloadEnabled_; }
+	void SetAutoReloadEnabled(bool enable) { autoReloadEnabled_ = enable; }
 
 	/// <summary>
 	/// 更新処理
@@ -149,9 +193,19 @@ private:
 	std::unique_ptr<TextSprite> detailTextSprite_;
 	std::unique_ptr<TextSprite> skipGuideTextSprite_;
 
+	// JSONファイル管理とホットリロード
+	std::string jsonFilePath_ = "resources/data/tutorial.json";
+	std::filesystem::file_time_type lastFileWriteTime_{};
+	bool autoReloadEnabled_ = true;
+	float fileCheckTimer_ = 0.0f;
+	std::string statusMessage_;
+	float statusMessageTimer_ = 0.0f;
+	int editingStepIndex_ = 0;
+
 	void UpdateBannerTexts();
 	bool CheckCondition(BattleController* battleController, float deltaTime);
 	void SetupDefaultSteps();
+	void CheckHotReload();
 };
 
 }
