@@ -177,6 +177,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="application\scene\game\BattleController.cpp" />
     <ClCompile Include="application\scene\tutorial\TutorialScene.cpp" />
     <ClCompile Include="application\scene\tutorial\TutorialManager.cpp" />
+    <ClCompile Include="application\scene\tutorial\TutorialEditor.cpp" />
     <ClCompile Include="application\core\Core.cpp" />
     <ClCompile Include="application\scene\game\logic\Collision.cpp" />
     <ClCompile Include="application\scene\game\logic\CollisionManager.cpp" />
@@ -250,6 +251,8 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="engine\system\platform\windows\WinApp.cpp" />
     <ClCompile Include="engine\system\utility\time\Time.cpp" />
     <ClCompile Include="application\scene\title\TitleScene.cpp" />
+    <ClCompile Include="application\scene\title\TitleWorld.cpp" />
+    <ClCompile Include="application\scene\title\TitleUI.cpp" />
     <ClCompile Include="application\scene\result\ResultScene.cpp" />
     <ClCompile Include="engine\system\utility\random\RandomEngine.cpp" />
     <ClCompile Include="engine\system\manager\srv\SrvManager.cpp" />
@@ -305,6 +308,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="application\scene\game\BattleController.h" />
     <ClInclude Include="application\scene\tutorial\TutorialScene.h" />
     <ClInclude Include="application\scene\tutorial\TutorialManager.h" />
+    <ClInclude Include="application\scene\tutorial\TutorialEditor.h" />
     <ClInclude Include="engine\system\manager\imgui\ImGuiManager.h" />
     <ClInclude Include="engine\system\manager\imgui\ImGuiEditorWindows.h" />
     <ClInclude Include="engine\system\manager\model\ModelManager.h" />
@@ -342,6 +346,8 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\system\platform\windows\WinApp.h" />
     <ClInclude Include="engine\system\utility\time\Time.h" />
     <ClInclude Include="application\scene\title\TitleScene.h" />
+    <ClInclude Include="application\scene\title\TitleWorld.h" />
+    <ClInclude Include="application\scene\title\TitleUI.h" />
     <ClInclude Include="application\scene\result\ResultScene.h" />
     <ClInclude Include="engine\system\utility\random\RandomEngine.h" />
     <ClInclude Include="engine\system\manager\light\LightManager.h" />
