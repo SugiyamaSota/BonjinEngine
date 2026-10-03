@@ -45,8 +45,6 @@ namespace Bonjin
     private:
         // 2Dテキストスプライト
         std::unique_ptr<TextSprite> titleText_ = nullptr;
-        std::unique_ptr<TextSprite> subTitleText_ = nullptr;
-        std::unique_ptr<TextSprite> systemText_ = nullptr;
         std::unique_ptr<TextSprite> startText_ = nullptr;
 
         // タイマー・演出パラメータ
