@@ -27,6 +27,7 @@ enum class PrimitiveType {
 	kPostEffectRandomNoise,
 	kSkinningObject3D,
 	kPostEffectHSVFilter,
+	kGpuLightning,
 	kCount,
 };
 

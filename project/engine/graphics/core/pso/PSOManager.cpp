@@ -9,6 +9,7 @@
 #include "config/skyBox/SkyBoxConfig.h"
 #include "config/copyImage/CopyImageConfig.h"
 #include "config/line/LineConfig.h"
+#include "GpuLightningPSOConfig.h"
 
 
 
@@ -22,6 +23,7 @@ PSOManager::PSOManager() {
 	configs_[static_cast<size_t>(PrimitiveType::kParticle)] = std::make_unique<ParticleConfigEx>(); // particle
 	configs_[static_cast<size_t>(PrimitiveType::kSkyBox)] = std::make_unique<SkyBoxConfig>();       // skyBox
 	configs_[static_cast<size_t>(PrimitiveType::kLine)] = std::make_unique<LineConfig>();            // debug line
+	configs_[static_cast<size_t>(PrimitiveType::kGpuLightning)] = std::make_unique<GpuLightningPSOConfig>(); // GPU Lightning
 
 	// 各種ポストエフェクトのConfig
 	configs_[static_cast<size_t>(PrimitiveType::kPostEffectFullScreen)] = std::make_unique<CopyImageConfig>(L"resources/shader/postEffect/FullScreen.PS.hlsl");
