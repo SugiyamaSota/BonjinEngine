@@ -173,6 +173,9 @@ void TestScene::Update(float deltaTime) {
 	}
 
 	testTextSprite_->Update();
+
+	// GPUパーティクル・雷の更新
+	GpuParticleManager::GetInstance()->Update(deltaTime, camera_);
 }
 
 void TestScene::Draw() {
@@ -188,11 +191,15 @@ void TestScene::Draw() {
 
 	pm->Draw();
 
+	// GPUパーティクル・雷の描画 (加算合成)
+	GpuParticleManager::GetInstance()->Draw(camera_);
+
 	skeletonDebugRenderer_->Draw();
 }
 void TestScene::DrawSceneImGui() {
 #ifdef USE_IMGUI
 	LightManager::GetInstance()->DrawImGui();
+	GpuParticleManager::GetInstance()->DrawImGui();
 
 	ImGui::Separator();
 	ImGui::Text("Game Post-Effect Presets:");
