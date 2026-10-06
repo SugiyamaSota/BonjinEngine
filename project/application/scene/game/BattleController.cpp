@@ -6,6 +6,7 @@
 #include "gameObject/anchor/anchor.h"
 #include "gameObject/enemy/Enemy.h"
 #include "gameObject/enemy/NoGravityEnemy.h"
+#include "GpuParticleManager.h"
 #include <algorithm>
 #include <cmath>
 #include <numbers>
@@ -119,9 +120,11 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	hud_ = std::make_unique<HUD>();
 	hud_->Initialize();
 
+	GpuParticleManager::GetInstance()->Clear();
 }
 
 void BattleController::Unload() {
+	GpuParticleManager::GetInstance()->Clear();
 	hud_.reset();
 	lockedOnEnemies_.clear();
 	enemies_.clear();
@@ -155,6 +158,7 @@ void BattleController::Update(float deltaTime) {
 		skyBox_->Update(InitializeWorldTransform(), camera_);
 		cameraController_->Update(player_->GetWorldPosition(), deltaTime);
 		particleManager_->Update(camera_);
+		GpuParticleManager::GetInstance()->Update(deltaTime, camera_);
 		return;
 	}
 
@@ -215,6 +219,7 @@ void BattleController::Update(float deltaTime) {
 	}
 
 	particleManager_->Update(camera_);
+	GpuParticleManager::GetInstance()->Update(deltaTime, camera_);
 
 	if (hud_) {
 		hud_->Update(player_.get(), deltaTime);
@@ -250,6 +255,9 @@ void BattleController::Draw() {
 		player_->DrawAnchorLine();
 	}
 
+	// GPUパーティクル（雷霆エフェクト・スパーク）の描画
+	GpuParticleManager::GetInstance()->Draw(camera_);
+
 	// 2D HUD / UIの描画 (最前面)
 	if (hud_) {
 		hud_->Draw();
@@ -269,6 +277,8 @@ void BattleController::DrawImGui() {
 	if (player_) {
 		player_->DrawImGui();
 	}
+
+	GpuParticleManager::GetInstance()->DrawImGui();
 
 	if (ImGui::TreeNode("Enemies")) {
 		int index = 0;

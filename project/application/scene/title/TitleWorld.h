@@ -1,8 +1,7 @@
 #pragma once
 #include "SkyBox.h"
 #include "Object3D.h"
-#include "Lightning3D.h"
-#include "Line3D.h"
+#include "GpuParticleStructs.h"
 #include "Convert.h"
 #include <memory>
 #include <vector>
@@ -54,6 +53,11 @@ namespace Bonjin
         void Draw();
 
         /// <summary>
+        /// ImGui描画
+        /// </summary>
+        void DrawImGui();
+
+        /// <summary>
         /// アンカーコアの座標を取得
         /// </summary>
         const Vector3& GetCorePosition() const { return anchorCoreTransform_.translate; }
@@ -67,13 +71,22 @@ namespace Bonjin
         WorldTransform anchorCoreTransform_{};
         std::vector<FloatingDataNode> dataNodes_;
 
-        // エフェクト
-        std::unique_ptr<Lightning3D> lightningEffect_ = nullptr;
+        // GPU雷霆演出設定
+        GpuLightningConfig lightningConfig_{};
+        float minLightningInterval_ = 0.8f;
+        float maxLightningInterval_ = 2.0f;
+        bool useNodeColorForLightning_ = true;
 
         // 演出パラメータ
         float timer_ = 0.0f;
         float lightningTimer_ = 0.0f;
         int activeLightningNodeIndex_ = -1;
+
+        bool enableLightningNoise_ = true;
+        float lightningNoiseTimer_ = 0.0f;
+        float lightningNoiseDuration_ = 0.4f;   // ノイズの持続時間（秒）
+        float lightningNoisePeakAlpha_ = 0.5f;  // 雷発生瞬間の最大ノイズ強度 (0.0f ~ 1.0f)
+        float baseNoiseAlpha_ = 0.0f;         // 平常時の微小ノイズ強度
 
         // カメラ初期位置
         Vector3 initialCameraPos_{ 0.0f, 1.5f, -9.5f };

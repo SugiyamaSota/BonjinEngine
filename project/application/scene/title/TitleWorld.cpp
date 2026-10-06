@@ -1,15 +1,21 @@
 #include "TitleWorld.h"
 #include "Camera.h"
+#include "GpuParticleManager.h"
+#include "SceneManager.h"
 #include <cmath>
 #include <random>
 #include <algorithm>
+
+#ifdef USE_IMGUI
+#include "../../externals/imgui/imgui.h"
+#endif
 
 using namespace Bonjin;
 
 void TitleWorld::Initialize(Camera* camera) {
 	camera_ = camera;
 	timer_ = 0.0f;
-	lightningTimer_ = 0.0f;
+	lightningTimer_ = 0.8f;
 	activeLightningNodeIndex_ = -1;
 
 	// カメラ初期設定
@@ -77,16 +83,24 @@ void TitleWorld::Initialize(Camera* camera) {
 		dataNodes_.push_back(std::move(node));
 	}
 
-	// 4. 電撃エフェクト
-	lightningEffect_ = std::make_unique<Lightning3D>();
-	lightningEffect_->Initialize();
+	// 4. GPU雷霆エフェクトの初期設定
+	lightningConfig_.coreColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+	lightningConfig_.glowColor = { 0.2f, 0.85f, 1.0f, 1.0f };
+	lightningConfig_.boltRadius = 2.0f;
+	lightningConfig_.boltScale = 0.5f;
+	lightningConfig_.subdivisions = 7;
+	lightningConfig_.mainBranches = 3;
+	lightningConfig_.sparksPerSegment = 2;
+	lightningConfig_.impactSparks = 60;
+	lightningConfig_.duration = 0.25f;
+	lightningConfig_.intensity = 4.0f;
+	lightningConfig_.sparkSpeed = 7.0f;
 }
 
 void TitleWorld::Unload() {
 	skyBox_.reset();
 	anchorCoreModel_.reset();
 	dataNodes_.clear();
-	lightningEffect_.reset();
 }
 
 void TitleWorld::Update(float deltaTime, bool isDiving, float diveProgress) {
@@ -102,14 +116,7 @@ void TitleWorld::UpdateCamera(float deltaTime, bool isDiving, float diveProgress
 	if (!camera_) return;
 
 	if (!isDiving) {
-		// 待機中：サイバー空間を滑らかに浮遊するカメラワーク
-		Vector3 floatingPos = initialCameraPos_;
-		floatingPos.x += std::sin(timer_ * 0.45f) * 1.2f;
-		floatingPos.y += std::cos(timer_ * 0.65f) * 0.35f;
-		floatingPos.z += std::sin(timer_ * 0.3f) * 0.5f;
-
-		camera_->SetTarget({ 0.0f, 1.0f, 0.0f });
-		camera_->SetPosition(floatingPos);
+		
 	} else {
 		// ダイブ遷移中：カメラがアンカーコアに向かって急加速突入
 		float eased = diveProgress * diveProgress * diveProgress; // EaseInCubic
@@ -155,20 +162,43 @@ void TitleWorld::UpdateDataNodes(float deltaTime) {
 void TitleWorld::UpdateLightning(float deltaTime) {
 	lightningTimer_ -= deltaTime;
 
-	// 一定間隔でランダムな浮遊ノードとアンカーコアの間に電撃を発生させる
+	if (lightningNoiseTimer_ > 0.0f) {
+		lightningNoiseTimer_ -= deltaTime;
+		float ratio = (std::max)(0.0f, lightningNoiseTimer_ / lightningNoiseDuration_);
+		// イージングをかけて瞬間的に光ってスッと消えるように減衰
+		float currentNoise = baseNoiseAlpha_ + (lightningNoisePeakAlpha_ - baseNoiseAlpha_) * (ratio * ratio);
+		SceneManager::GetInstance()->SetNoiseAlpha(currentNoise);
+	} else {
+		SceneManager::GetInstance()->SetNoiseAlpha(baseNoiseAlpha_);
+	}
+
+
+	// 一定間隔でランダムな浮遊ノードとアンカーコアの間にGPU雷霆を発生させる
 	if (lightningTimer_ <= 0.0f) {
 		if (!dataNodes_.empty()) {
 			activeLightningNodeIndex_ = rand() % static_cast<int>(dataNodes_.size());
-			lightningTimer_ = 0.8f + static_cast<float>(rand() % 100) / 100.0f * 1.2f; // 0.8〜2.0秒ごと
-		}
-	}
+			float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			lightningTimer_ = minLightningInterval_ + r * (maxLightningInterval_ - minLightningInterval_);
 
-	// 電撃エフェクトの更新
-	if (lightningEffect_ && activeLightningNodeIndex_ >= 0 && activeLightningNodeIndex_ < static_cast<int>(dataNodes_.size())) {
-		const Vector3& nodePos = dataNodes_[activeLightningNodeIndex_].transform.translate;
-		Vector3 corePos = anchorCoreTransform_.translate;
-		Vector4 lightningColor = { 0.2f, 0.85f, 1.0f, 1.0f };
-		lightningEffect_->Update(corePos, nodePos, camera_, lightningColor, 0.09f, 0.15f, 1.2f);
+			const Vector3& nodePos = dataNodes_[activeLightningNodeIndex_].transform.translate;
+			Vector3 corePos = anchorCoreTransform_.translate;
+
+			GpuLightningConfig cfg = lightningConfig_;
+			cfg.start = corePos;
+			cfg.end = nodePos;
+			if (useNodeColorForLightning_) {
+				cfg.glowColor = dataNodes_[activeLightningNodeIndex_].color;
+				cfg.glowColor.w = 1.0f;
+			}
+
+			// --- 設定したコンフィグでGPU雷霆を発生 ---
+			GpuParticleManager::GetInstance()->EmitLightning(cfg);
+
+			// --- 雷発生時にノイズをトリガー ---
+			if (enableLightningNoise_) {
+				lightningNoiseTimer_ = lightningNoiseDuration_;
+			}
+		}
 	}
 }
 
@@ -184,7 +214,44 @@ void TitleWorld::Draw() {
 	if (anchorCoreModel_) {
 		anchorCoreModel_->Draw();
 	}
-	if (lightningEffect_ && activeLightningNodeIndex_ >= 0) {
-		lightningEffect_->Draw();
-	}
 }
+
+void TitleWorld::DrawImGui() {
+#ifdef USE_IMGUI
+	if (ImGui::TreeNode("Title World & Background Lightning")) {
+		if (ImGui::Button("Trigger Lightning Now")) {
+			if (!dataNodes_.empty()) {
+				activeLightningNodeIndex_ = rand() % static_cast<int>(dataNodes_.size());
+				const Vector3& nodePos = dataNodes_[activeLightningNodeIndex_].transform.translate;
+				Vector3 corePos = anchorCoreTransform_.translate;
+
+				GpuLightningConfig cfg = lightningConfig_;
+				cfg.start = corePos;
+				cfg.end = nodePos;
+				if (useNodeColorForLightning_) {
+					cfg.glowColor = dataNodes_[activeLightningNodeIndex_].color;
+					cfg.glowColor.w = 1.0f;
+				}
+				GpuParticleManager::GetInstance()->EmitLightning(cfg);
+			}
+		}
+
+		ImGui::Checkbox("Use Node Color For Glow", &useNodeColorForLightning_);
+		ImGui::DragFloatRange2("Interval Range", &minLightningInterval_, &maxLightningInterval_, 0.05f, 0.1f, 10.0f, "Min: %.2fs", "Max: %.2fs");
+		ImGui::ColorEdit4("Default Core Color", &lightningConfig_.coreColor.x);
+		ImGui::ColorEdit4("Default Glow Color", &lightningConfig_.glowColor.x);
+		ImGui::DragFloat("Bolt Radius (Jitter)", &lightningConfig_.boltRadius, 0.01f, 0.0f, 2.0f, "%.2f");
+		ImGui::DragFloat("Bolt Scale (Thickness)", &lightningConfig_.boltScale, 0.01f, 0.01f, 1.0f, "%.2f");
+		ImGui::SliderInt("Subdivisions", &lightningConfig_.subdivisions, 2, 9);
+		ImGui::SliderInt("Main Branches", &lightningConfig_.mainBranches, 0, 8);
+		ImGui::SliderInt("Sparks Per Segment", &lightningConfig_.sparksPerSegment, 0, 5);
+		ImGui::SliderInt("Impact Sparks", &lightningConfig_.impactSparks, 0, 200);
+		ImGui::DragFloat("Duration (s)", &lightningConfig_.duration, 0.01f, 0.05f, 1.0f, "%.2fs");
+		ImGui::DragFloat("Intensity (Bloom)", &lightningConfig_.intensity, 0.1f, 0.5f, 15.0f, "%.1f");
+		ImGui::DragFloat("Spark Speed", &lightningConfig_.sparkSpeed, 0.2f, 1.0f, 30.0f, "%.1f");
+
+		ImGui::TreePop();
+	}
+#endif
+}
+

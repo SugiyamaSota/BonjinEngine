@@ -2,6 +2,7 @@
 #include "input/Input.h"
 #include "input/Gamepad.h"
 #include "SceneManager.h"
+#include "GpuParticleManager.h"
 #include <algorithm>
 
 using namespace Bonjin;
@@ -13,6 +14,9 @@ void TitleScene::Initialize(Camera* camera) {
 	camera_ = camera;
 	timer_ = 0.0f;
 	diveTimer_ = 0.0f;
+
+	// GPUパーティクルのクリア
+	GpuParticleManager::GetInstance()->Clear();
 
 	// 1. 3D電脳ワールドの初期化
 	world_ = std::make_unique<TitleWorld>();
@@ -44,6 +48,9 @@ void TitleScene::Unload() {
 		ui_.reset();
 	}
 
+	// GPUパーティクルのクリア
+	GpuParticleManager::GetInstance()->Clear();
+
 	// ポストエフェクトのクリーンアップ（次シーンへの影響を防止）
 	auto sceneManager = SceneManager::GetInstance();
 	sceneManager->ResetPostEffects();
@@ -63,12 +70,15 @@ void TitleScene::Update(float deltaTime) {
 		world_->Update(deltaTime, isDiving, diveProgress);
 	}
 
-	// 2. 2D UI / HUDの更新
+	// 2. GPUパーティクル（雷霆・スパーク）の更新
+	GpuParticleManager::GetInstance()->Update(deltaTime, camera_);
+
+	// 3. 2D UI / HUDの更新
 	if (ui_) {
 		ui_->Update(deltaTime, isDiving, diveProgress);
 	}
 
-	// 3. シーンフェーズ処理
+	// 4. シーンフェーズ処理
 	switch (phase_) {
 	case TitlePhase::kFadeIn:
 		ChangePhase(TitlePhase::kActive);
@@ -121,10 +131,24 @@ void TitleScene::Draw() {
 		world_->Draw();
 	}
 
-	// 2. 2D HUDテキストの描画
+	// 2. GPUパーティクル（雷霆・スパーク）の描画
+	if (camera_) {
+		GpuParticleManager::GetInstance()->Draw(camera_);
+	}
+
+	// 3. 2D HUDテキストの描画
 	if (ui_) {
 		ui_->Draw();
 	}
+}
+
+void TitleScene::DrawImGui() {
+#ifdef USE_IMGUI
+	if (world_) {
+		world_->DrawImGui();
+	}
+	GpuParticleManager::GetInstance()->DrawImGui();
+#endif
 }
 
 SceneType TitleScene::GetNextScene() const {

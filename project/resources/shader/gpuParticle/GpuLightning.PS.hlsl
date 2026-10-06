@@ -36,8 +36,8 @@ PixelShaderOutput main(VertexOutput input)
         coreWeight = 0.5f;
     }
 
-    // 白い芯 (Core) + 指定色 (Glow)
-    float32_t3 finalRgb = (float32_t3(1.0f, 1.0f, 1.0f) * core * coreWeight + input.color.rgb * aura) * input.intensity;
+    // 芯 (Core) + 外周オーラ (Glow)
+    float32_t3 finalRgb = (input.color.rgb * core * coreWeight + input.color.rgb * aura) * input.intensity;
     float32_t finalAlpha = (core + aura * 0.8f) * input.color.a;
 
     output.color = float32_t4(finalRgb, saturate(finalAlpha));

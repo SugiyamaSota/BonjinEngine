@@ -26,6 +26,7 @@ namespace Bonjin
         void Update(float deltaTime) override;
 
         void Draw() override;
+        void DrawImGui() override;
 
         SceneType GetNextScene() const override;
 
