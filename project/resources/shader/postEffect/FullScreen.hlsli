@@ -20,7 +20,10 @@ struct Material
     float32_t hsvHueShift;
     float32_t hsvSaturationMultiplier;
     float32_t hsvValueMultiplier;
-    float32_t3 padding3;
+    float32_t3 vignetteColor;
+    float32_t vignetteScale;
+    float32_t vignettePower;
+    float32_t2 padding4;
 };
 
 ConstantBuffer<Material> gMaterial : register(b0);

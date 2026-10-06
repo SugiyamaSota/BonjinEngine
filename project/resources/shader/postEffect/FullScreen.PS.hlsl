@@ -26,11 +26,11 @@ PixelShaderOutPut main(VertexShaderOutPut input)
     // 中心になるほど明るくなるようにする
         float32_t2 correct = input.texcoord * (1.f - input.texcoord.yx);
     // scaleで調整
-        float vignette = correct.x * correct.y * 16.f;
-    // とりあえず0.8乗
-        vignette = saturate(pow(vignette, 0.8f));
-    // 出力に乗算
-        output.color.rgb *= vignette;
+        float vignette = correct.x * correct.y * gMaterial.vignetteScale;
+    // とりあえず指定乗
+        vignette = saturate(pow(vignette, gMaterial.vignettePower));
+    // 出力に指定された色をLerpで適用
+        output.color.rgb = lerp(gMaterial.vignetteColor, output.color.rgb, vignette);
     }
     
     return output;

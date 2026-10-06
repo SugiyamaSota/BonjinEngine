@@ -99,6 +99,9 @@ void DirectXCommon::Initialize() {
 	fullScreenMaterial_.hsvHueShift = 0.0f;
 	fullScreenMaterial_.hsvSaturationMultiplier = 1.0f;
 	fullScreenMaterial_.hsvValueMultiplier = 1.0f;
+	fullScreenMaterial_.vignetteColor = { 0.0f, 0.0f, 0.0f };
+	fullScreenMaterial_.vignetteScale = 16.0f;
+	fullScreenMaterial_.vignettePower = 0.8f;
 	fullScreenCB_ = CreateBufferResource(device_.Get(), sizeof(FullScreenMaterial));
 	fullScreenCB_->Map(0, nullptr, reinterpret_cast<void**>(&fullScreenData_));
 	*fullScreenData_ = fullScreenMaterial_;
@@ -366,6 +369,18 @@ void DirectXCommon::SetFullScreenGray(bool isGray) {
 
 void DirectXCommon::SetFullScreenVignette(bool isVignette) {
 	fullScreenMaterial_.isVignette = isVignette;
+}
+
+void DirectXCommon::SetFullScreenVignetteColor(const Vector3& color) {
+	fullScreenMaterial_.vignetteColor = color;
+}
+
+void DirectXCommon::SetFullScreenVignetteScale(float scale) {
+	fullScreenMaterial_.vignetteScale = scale;
+}
+
+void DirectXCommon::SetFullScreenVignettePower(float power) {
+	fullScreenMaterial_.vignettePower = power;
 }
 
 void DirectXCommon::SetRadialBlurCenter(const Vector2& center) {

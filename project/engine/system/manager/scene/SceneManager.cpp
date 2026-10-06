@@ -191,6 +191,30 @@ bool SceneManager::IsFullScreenVignette() const {
 	return DirectXCommon::GetInstance()->IsFullScreenVignette();
 }
 
+void SceneManager::SetFullScreenVignetteColor(const Vector3& color) {
+	DirectXCommon::GetInstance()->SetFullScreenVignetteColor(color);
+}
+
+Vector3 SceneManager::GetFullScreenVignetteColor() const {
+	return DirectXCommon::GetInstance()->GetFullScreenVignetteColor();
+}
+
+void SceneManager::SetFullScreenVignetteScale(float scale) {
+	DirectXCommon::GetInstance()->SetFullScreenVignetteScale(scale);
+}
+
+float SceneManager::GetFullScreenVignetteScale() const {
+	return DirectXCommon::GetInstance()->GetFullScreenVignetteScale();
+}
+
+void SceneManager::SetFullScreenVignettePower(float power) {
+	DirectXCommon::GetInstance()->SetFullScreenVignettePower(power);
+}
+
+float SceneManager::GetFullScreenVignettePower() const {
+	return DirectXCommon::GetInstance()->GetFullScreenVignettePower();
+}
+
 void SceneManager::SetRadialBlurCenter(const Vector2& center) {
 	DirectXCommon::GetInstance()->SetRadialBlurCenter(center);
 }

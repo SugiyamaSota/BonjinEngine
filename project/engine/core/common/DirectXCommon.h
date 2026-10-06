@@ -48,6 +48,12 @@ public:
 	bool IsFullScreenGray() const { return fullScreenMaterial_.isGray != 0; }
 	void SetFullScreenVignette(bool isVignette);
 	bool IsFullScreenVignette() const { return fullScreenMaterial_.isVignette != 0; }
+	void SetFullScreenVignetteColor(const Vector3& color);
+	Vector3 GetFullScreenVignetteColor() const { return fullScreenMaterial_.vignetteColor; }
+	void SetFullScreenVignetteScale(float scale);
+	float GetFullScreenVignetteScale() const { return fullScreenMaterial_.vignetteScale; }
+	void SetFullScreenVignettePower(float power);
+	float GetFullScreenVignettePower() const { return fullScreenMaterial_.vignettePower; }
 	void SetRadialBlurCenter(const Vector2& center);
 	Vector2 GetRadialBlurCenter() const { return fullScreenMaterial_.radialBlurCenter; }
 	void SetRadialBlurWidth(float blurWidth);
@@ -212,7 +218,10 @@ private:
 		float hsvHueShift;
 		float hsvSaturationMultiplier;
 		float hsvValueMultiplier;
-		float padding3[3];
+		Vector3 vignetteColor;
+		float vignetteScale;
+		float vignettePower;
+		float padding4[2];
 	};
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> fullScreenCB_ = nullptr;

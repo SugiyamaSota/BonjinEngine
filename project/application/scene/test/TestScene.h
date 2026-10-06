@@ -9,6 +9,7 @@
 #include "Sprite.h"
 #include"ParticleManager.h"
 #include "TextSprite.h"
+#include "GpuParticleManager.h"
 
 namespace Bonjin
 {

@@ -20,6 +20,8 @@
 #include"TextureManager.h"
 #include"ModelManager.h"
 #include"LightManager.h"
+#include"GpuParticleManager.h"
+#include"GpuParticleStructs.h"
 
 /// <summary>
 /// リソースリークチェッカーの構造体
