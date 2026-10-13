@@ -90,6 +90,10 @@ void TextureManager::Initialize() {
 
 }
 
+bool TextureManager::IsLoaded(const std::string& filePath) const {
+	return loadedTextures_.find(filePath) != loadedTextures_.end();
+}
+
 int TextureManager::LoadTexture(const std::string& filePath) {
 	auto it = loadedTextures_.find(filePath);
 	if (it != loadedTextures_.end()) {

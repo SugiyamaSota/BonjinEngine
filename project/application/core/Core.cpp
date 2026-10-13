@@ -8,6 +8,8 @@
 #include "../scene/game/gameObject/player/PlayerStatusRepository.h"
 #include "TestScene.h"
 
+#include "ParticleManager.h"
+
 using namespace Bonjin;
 
 Core::Core() {}
@@ -15,6 +17,33 @@ Core::~Core() {}
 
 void Core::Initialize() {
 	Bonjin::Initialize(); // エンジン本体の初期化
+
+	// モデルの事前ロード（起動時にロードしてキャッシュ）
+	auto modelManager = ModelManager::GetInstance();
+	modelManager->LoadModel("human", "resources/models/human", "walk.gltf");
+
+	// 共通テクスチャの事前ロード（起動時にGPU転送を完了させ、シーン遷移時の待機をゼロにする）
+	auto textureManager = TextureManager::GetInstance();
+	textureManager->LoadTexture("resources/textures/cube.jpg");
+	textureManager->LoadTexture("resources/textures/default.png");
+	textureManager->LoadTexture("resources/textures/SkyBox_Dark.dds");
+	textureManager->LoadTexture("resources/textures/skyBox.dds");
+	textureManager->LoadTexture("resources/textures/gradationLine.png");
+	textureManager->LoadTexture("resources/textures/circle.png");
+	textureManager->LoadTexture("resources/textures/noise0.png");
+
+	// 共通パーティクルグループの事前作成（シーン遷移時のバッファ確保をゼロにする）
+	auto particleManager = ParticleManager::GetInstance();
+	particleManager->Initialize();
+	particleManager->CreateParticleGroup("anchorHitRay", ModelBuilder::ModelType::kPlane, "resources/textures/gradationLine.png");
+	particleManager->CreateParticleGroup("anchorHitFlash", ModelBuilder::ModelType::kPlane, "resources/textures/circle.png");
+	particleManager->CreateParticleGroup("enemyDefeatSpark", ModelBuilder::ModelType::kPlane, "resources/textures/circle.png");
+	particleManager->CreateParticleGroup("enemyDefeatRing", ModelBuilder::ModelType::kRing, "resources/textures/gradationLine.png");
+	particleManager->CreateParticleGroup("enemyChargeRing", ModelBuilder::ModelType::kRing, "resources/textures/gradationLine.png");
+	particleManager->CreateParticleGroup("landingDust", ModelBuilder::ModelType::kPlane, "resources/textures/circle.png");
+
+	DirectXCommon::GetInstance()->WaitAndResetCommandList();
+	textureManager->ReleaseIntermediateResources();
 
 	// マスターデータ・プレイヤーステータスの読み込み
 	PlayerStatusRepository::GetInstance()->Load("resources/data/player_status.json");

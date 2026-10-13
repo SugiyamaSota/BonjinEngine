@@ -28,7 +28,7 @@ void TestScene::Initialize(Camera* camera)
 	testSkyBox_->SetName("SkyBox (testSkyBox_)");
 
 	testCube_ = std::make_unique<Object3D>();
-	testCube_->LoadModel("human", "walk.gltf");
+	testCube_->SetModel("human");
 	testCube_->SetName("Human (testCube_)");
 	testCube_->SetEnableEnableEnvironmentMap(false);
 	testCube_->SetCullMode(D3D12_CULL_MODE_FRONT);

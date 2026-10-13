@@ -36,7 +36,11 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 	frayLineEffect_->Initialize();
 
 	retractAnchorModel_ = std::make_unique<Object3D>();
-	retractAnchorModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+	if (model) {
+		retractAnchorModel_->CopyModelResourceFrom(*model, false);
+	} else {
+		retractAnchorModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+	}
 	retractAnchorModel_->SetBlendMode(BlendMode::kNormal);
 	retractAnchorModel_->SetEnableEnableEnvironmentMap(false);
 }

@@ -103,15 +103,23 @@ void SceneManager::DrawImGui() {
 #endif
 }
 
+#include <chrono>
+#include <sstream>
+
 void SceneManager::ChangeScene(SceneType nextSceneType) {
 	if (nextSceneType == "Exit") {
 		// 終了処理
 		return;
 	}
 
+	auto tStart = std::chrono::high_resolution_clock::now();
+	std::string prevSceneType = currentScene_ ? currentScene_->GetCurrentSceneType() : "None";
+
 	if (currentScene_ != nullptr) {
 		currentScene_->Unload();
 	}
+
+	auto tUnload = std::chrono::high_resolution_clock::now();
 
 	auto it = scenes_.find(nextSceneType);
 	if (it == scenes_.end()) return;
@@ -122,6 +130,17 @@ void SceneManager::ChangeScene(SceneType nextSceneType) {
 	// unique_ptr が管理する実体のアドレスをセット
 	currentScene_ = it->second.get();
 	currentScene_->Initialize(camera_.get());
+
+	auto tEnd = std::chrono::high_resolution_clock::now();
+
+	float unloadMs = std::chrono::duration<float, std::milli>(tUnload - tStart).count();
+	float initMs = std::chrono::duration<float, std::milli>(tEnd - tUnload).count();
+	float totalMs = std::chrono::duration<float, std::milli>(tEnd - tStart).count();
+
+	std::stringstream ss;
+	ss << "[SceneTransition] " << prevSceneType << " -> " << nextSceneType 
+	   << " | Unload: " << unloadMs << " ms | Initialize: " << initMs << " ms | Total: " << totalMs << " ms\n";
+	OutputDebugStringA(ss.str().c_str());
 }
 
 void SceneManager::RequestSceneChange(SceneType nextSceneType) {

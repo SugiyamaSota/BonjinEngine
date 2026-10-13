@@ -27,11 +27,15 @@ namespace Bonjin {
 
         // テクスチャリソース
         Microsoft::WRL::ComPtr<ID3D12Resource> textureResource_ = nullptr;
+        Microsoft::WRL::ComPtr<ID3D12Resource> uploadBuffer_ = nullptr;
         uint32_t srvIndex_ = 0;
         bool hasSrv_ = false;
 
         uint32_t texWidth_ = 0;
         uint32_t texHeight_ = 0;
-    };
 
+        std::wstring cachedText_;
+        int cachedFontSize_ = 0;
+        COLORREF cachedTextColor_ = 0;
+    };
 }

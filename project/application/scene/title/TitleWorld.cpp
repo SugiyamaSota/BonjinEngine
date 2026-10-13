@@ -58,10 +58,16 @@ void TitleWorld::Initialize(Camera* camera) {
 
 	const int kNumNodes = 14;
 	dataNodes_.reserve(kNumNodes);
+	Object3D* cubeTemplate = nullptr;
 	for (int i = 0; i < kNumNodes; ++i) {
 		FloatingDataNode node;
 		node.model = std::make_unique<Object3D>();
-		node.model->CreateModel(ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
+		if (!cubeTemplate) {
+			node.model->CreateModel(ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
+			cubeTemplate = node.model.get();
+		} else {
+			node.model->CopyModelResourceFrom(*cubeTemplate, false);
+		}
 		node.model->SetEnableEnableEnvironmentMap(false);
 
 		Vector3 basePos = { posXDist(randEngine), posYDist(randEngine), posZDist(randEngine) };

@@ -61,6 +61,9 @@ void PSOManager::Initialize(ID3D12Device* device, DXGI_FORMAT rtvFormat, DXGI_FO
 	/// --- Format ---
 	rtvFormat_ = rtvFormat;
 	dsvFormat_ = dsvFormat;
+
+	/// --- PSOの事前ウォームアップ ---
+	WarmUpPSOs(device);
 }
 
 void PSOManager::CreateRootSignature(ID3D12Device* device)
@@ -183,4 +186,21 @@ Microsoft::WRL::ComPtr<ID3D12PipelineState> PSOManager::CreatePSOInternal(
 	}
 
 	return psoBuilder.Build(device);
+}
+
+void PSOManager::WarmUpPSOs(ID3D12Device* device) {
+	// 主要な描画タイプの標準設定PSOを起動時に事前生成
+	GetPipelineState(device, PrimitiveType::kObject3D, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_BACK);
+	GetPipelineState(device, PrimitiveType::kObject3D, BlendMode::kNormal, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_BACK);
+	GetPipelineState(device, PrimitiveType::kSkyBox, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_BACK);
+	GetPipelineState(device, PrimitiveType::kSprite, BlendMode::kNormal, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE);
+	GetPipelineState(device, PrimitiveType::kParticle, BlendMode::kAdd, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE);
+	GetPipelineState(device, PrimitiveType::kParticle, BlendMode::kNormal, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE);
+	GetPipelineState(device, PrimitiveType::kLine, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE);
+	GetPipelineState(device, PrimitiveType::kGpuLightning, BlendMode::kAdd, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE);
+
+	// ポストエフェクトPSO
+	GetPipelineState(device, PrimitiveType::kPostEffectFullScreen, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE);
+	GetPipelineState(device, PrimitiveType::kPostEffectRadialBlur, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE);
+	GetPipelineState(device, PrimitiveType::kPostEffectRandomNoise, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE);
 }

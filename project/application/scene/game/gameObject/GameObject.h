@@ -91,6 +91,7 @@ public:
 	void SetHeight(float h) { height_ = h; }
 
 	Collider* GetCollider() const { return collider_.get(); }
+	Object3D* GetModel() const { return model_; }
 	AABB GetAABB() const;
 
 protected:

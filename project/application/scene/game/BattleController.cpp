@@ -10,10 +10,13 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <chrono>
+#include <sstream>
 
 using namespace Bonjin;
 
 void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
+	auto tStart = std::chrono::high_resolution_clock::now();
 	CollisionManager::GetInstance()->Clear();
 
 	camera_ = camera;
@@ -32,13 +35,6 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	for (uint32_t i = 0; i < vertical; ++i) {
 		blockModels_[i].resize(horizontal);
 		blockWorldTransforms_[i].resize(horizontal);
-		for (uint32_t j = 0; j < horizontal; ++j) {
-			blockModels_[i][j] = std::make_unique<Object3D>();
-			blockModels_[i][j]->CreateModel(
-				ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
-			blockModels_[i][j]->SetEnableEnableEnvironmentMap(false);
-			blockWorldTransforms_[i][j] = InitializeWorldTransform();
-		}
 	}
 
 	isGoalReached_ = false;
@@ -63,8 +59,7 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	const auto& enemySpawns = mapChipField_->GetEnemySpawns();
 	for (const auto& spawn : enemySpawns) {
 		enemyModels_.push_back(std::make_unique<Object3D>());
-		enemyModels_.back()->CreateModel(
-			ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+		enemyModels_.back()->CopyModelResourceFrom(*playerModel_, false);
 		enemyModels_.back()->SetEnableEnableEnvironmentMap(false);
 
 		const Vector3 enemyPosition = mapChipField_->GetMapChipPosition(spawn.x, spawn.y);
@@ -121,6 +116,12 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	hud_->Initialize();
 
 	GpuParticleManager::GetInstance()->Clear();
+
+	auto tEnd = std::chrono::high_resolution_clock::now();
+	float initMs = std::chrono::duration<float, std::milli>(tEnd - tStart).count();
+	std::stringstream ss;
+	ss << "[BattleController::Initialize] Total took: " << initMs << " ms\n";
+	OutputDebugStringA(ss.str().c_str());
 }
 
 void BattleController::Unload() {
@@ -212,7 +213,7 @@ void BattleController::Update(float deltaTime) {
 	const uint32_t horizontal = mapChipField_->GetNumBlockHorizontal();
 	for (uint32_t i = 0; i < vertical; ++i) {
 		for (uint32_t j = 0; j < horizontal; ++j) {
-			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
+			if (blockModels_[i][j]) {
 				blockModels_[i][j]->Update(blockWorldTransforms_[i][j], camera_);
 			}
 		}
@@ -233,7 +234,7 @@ void BattleController::Draw() {
 	const uint32_t horizontal = mapChipField_->GetNumBlockHorizontal();
 	for (uint32_t i = 0; i < vertical; ++i) {
 		for (uint32_t j = 0; j < horizontal; ++j) {
-			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
+			if (blockModels_[i][j]) {
 				blockModels_[i][j]->Draw();
 			}
 		}
@@ -315,10 +316,21 @@ void BattleController::GenerateBlocksAndGoal() {
 	const uint32_t vertical = mapChipField_->GetNumBlockVirtical();
 	const uint32_t horizontal = mapChipField_->GetNumBlockHorizontal();
 
+	Object3D* blockTemplate = nullptr;
+
 	for (uint32_t i = 0; i < vertical; ++i) {
 		for (uint32_t j = 0; j < horizontal; ++j) {
 			const MapChipType type = mapChipField_->GetMapChipTypeByIndex(j, i);
 			if (type == MapChipType::kBlock) {
+				blockModels_[i][j] = std::make_unique<Object3D>();
+				if (!blockTemplate) {
+					blockModels_[i][j]->CreateModel(
+						ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
+					blockTemplate = blockModels_[i][j].get();
+				} else {
+					blockModels_[i][j]->CopyModelResourceFrom(*blockTemplate);
+				}
+				blockModels_[i][j]->SetEnableEnableEnvironmentMap(false);
 				blockWorldTransforms_[i][j] = InitializeWorldTransform();
 				blockWorldTransforms_[i][j].translate =
 					mapChipField_->GetMapChipPositionByIndex(j, i);

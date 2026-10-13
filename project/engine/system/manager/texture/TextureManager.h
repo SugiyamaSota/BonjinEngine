@@ -53,6 +53,11 @@ public:
     int LoadTexture(const std::string& filePath);
 
     /// <summary>
+    /// テクスチャがロード済みか確認
+    /// </summary>
+    bool IsLoaded(const std::string& filePath) const;
+
+    /// <summary>
     /// GPUディスクリプタハンドルを取得
     /// </summary>
     /// <param name="textureIndex">取得したいインデックス</param>

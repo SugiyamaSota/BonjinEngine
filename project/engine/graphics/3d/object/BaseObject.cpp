@@ -24,24 +24,22 @@ BaseObject::BaseObject() {
 }
 
 void BaseObject::ReleaseResources() {
-    // 頂点リソースの解放
-    if (vertexResource_) {
-        vertexResource_->Unmap(0, nullptr);
-        vertexResource_.Reset();
-    }
-    // インデックスリソースの解放
-    if (indexResource_) {
-        indexResource_->Unmap(0, nullptr);
-        indexResource_.Reset();
-    }
-    // マテリアルリソースの解放
+    // 頂点・インデックスリソースの解放
+    // 作成時にUnmap済みのため、Reset()で安全に参照カウントを減らす
+    vertexResource_.Reset();
+    indexResource_.Reset();
+    vertexData_ = nullptr;
+
+    // マテリアルリソースの解放（所有者のみUnmap）
     if (materialResource_) {
-        materialResource_->Unmap(0, nullptr);
+        if (isMaterialOwner_) {
+            materialResource_->Unmap(0, nullptr);
+        }
         materialResource_.Reset();
     }
-
-    vertexData_ = nullptr;
     materialData_ = nullptr;
+    isMaterialOwner_ = false;
+    isResourceOwner_ = false;
 }
 
 void BaseObject::LoadModel(const std::string& directoryName, const std::string& fileName) {
@@ -59,9 +57,36 @@ void BaseObject::LoadModel(const std::string& directoryName, const std::string& 
 	SetupResources();
 
     // テクスチャのロード (ファイルモデル特有)
-    textureHandle_ = TextureManager::GetInstance()->LoadTexture(modelData_.material.textureFilepath);
-    common_->WaitAndResetCommandList();
-    TextureManager::GetInstance()->ReleaseIntermediateResources();
+    if (!modelData_.material.textureFilepath.empty()) {
+        bool isNew = !TextureManager::GetInstance()->IsLoaded(modelData_.material.textureFilepath);
+        textureHandle_ = TextureManager::GetInstance()->LoadTexture(modelData_.material.textureFilepath);
+        if (isNew) {
+            common_->WaitAndResetCommandList();
+            TextureManager::GetInstance()->ReleaseIntermediateResources();
+        }
+    }
+}
+
+void BaseObject::SetModel(const std::string& modelKey) {
+    // ModelManagerからキー指定で取得
+    modelData_ = ModelManager::GetInstance()->GetModel(modelKey);
+
+    // リソースのセットアップ
+    CreateVertexResource(modelData_.vertices);
+    CreateIndexResource(modelData_.indices);
+    CreateMaterialResource();
+
+    SetupResources();
+
+    // テクスチャのロード (ファイルモデル特有)
+    if (!modelData_.material.textureFilepath.empty()) {
+        bool isNew = !TextureManager::GetInstance()->IsLoaded(modelData_.material.textureFilepath);
+        textureHandle_ = TextureManager::GetInstance()->LoadTexture(modelData_.material.textureFilepath);
+        if (isNew) {
+            common_->WaitAndResetCommandList();
+            TextureManager::GetInstance()->ReleaseIntermediateResources();
+        }
+    }
 }
 
 
@@ -76,9 +101,38 @@ void BaseObject::CreateModel(ModelBuilder::ModelType type, const std::string& te
     // Object3D特有のリソース作成
     SetupResources();
 
-    textureHandle_ = TextureManager::GetInstance()->LoadTexture(textureFilepath);
-    common_->WaitAndResetCommandList();
-    TextureManager::GetInstance()->ReleaseIntermediateResources();
+    if (!textureFilepath.empty()) {
+        bool isNew = !TextureManager::GetInstance()->IsLoaded(textureFilepath);
+        textureHandle_ = TextureManager::GetInstance()->LoadTexture(textureFilepath);
+        if (isNew) {
+            common_->WaitAndResetCommandList();
+            TextureManager::GetInstance()->ReleaseIntermediateResources();
+        }
+    }
+}
+
+void BaseObject::CopyModelResourceFrom(const BaseObject& other, bool shareMaterial) {
+    primitiveType_ = other.primitiveType_;
+    modelData_ = other.modelData_;
+    vertexResource_ = other.vertexResource_;
+    vertexData_ = other.vertexData_;
+    vertexBufferView_ = other.vertexBufferView_;
+    indexResource_ = other.indexResource_;
+    indexBufferView_ = other.indexBufferView_;
+    textureHandle_ = other.textureHandle_;
+    envTextureHandle_ = other.envTextureHandle_;
+    isResourceOwner_ = false;
+
+    if (shareMaterial) {
+        materialResource_ = other.materialResource_;
+        materialData_ = other.materialData_;
+        isMaterialOwner_ = false;
+    } else {
+        CreateMaterialResource();
+    }
+
+    // 固有リソース（WVP・カメラバッファ）のみ生成
+    SetupResources();
 }
 
 
@@ -91,9 +145,13 @@ void BaseObject::CreateVertexResource(const std::vector<VertexData>& vertices) {
     vertexBufferView_.SizeInBytes = static_cast<UINT>(sizeof(VertexData) * vertices.size());
     vertexBufferView_.StrideInBytes = sizeof(VertexData);
 
-    // データのマッピングとコピー
-    vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
-    std::memcpy(vertexData_, vertices.data(), sizeof(VertexData) * vertices.size());
+    // データのマッピングとコピー、即時アンマップ（初期化後はCPUから書き換えない）
+    void* mappedData = nullptr;
+    vertexResource_->Map(0, nullptr, &mappedData);
+    std::memcpy(mappedData, vertices.data(), sizeof(VertexData) * vertices.size());
+    vertexResource_->Unmap(0, nullptr);
+    vertexData_ = nullptr;
+    isResourceOwner_ = true;
 }
 
 void BaseObject::CreateIndexResource(const std::vector<uint32_t>& indices) {
@@ -109,10 +167,11 @@ void BaseObject::CreateIndexResource(const std::vector<uint32_t>& indices) {
     indexBufferView_.SizeInBytes = static_cast<UINT>(sizeof(uint32_t) * indices.size());
     indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
 
-    // データのマッピングとコピー
-    uint32_t* indexData = nullptr;
-    indexResource_->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
+    // データのマッピングとコピー、即時アンマップ
+    void* indexData = nullptr;
+    indexResource_->Map(0, nullptr, &indexData);
     std::memcpy(indexData, indices.data(), sizeof(uint32_t) * indices.size());
+    indexResource_->Unmap(0, nullptr);
 }
 
 void BaseObject::CreateMaterialResource() {
@@ -126,6 +185,7 @@ void BaseObject::CreateMaterialResource() {
     materialData_->uvTransform = MakeIdentity4x4();
     materialData_->enableEnvironmentMap = 1;       // デフォルトON
     materialData_->environmentCoefficient = 0.5f;
+    isMaterialOwner_ = true;
 }
 
 void BaseObject::DrawImGui(const std::string& label) {
