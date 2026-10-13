@@ -1,8 +1,10 @@
 #pragma once
 #include <memory>
 #include <string>
+#include <vector>
 #include "Sprite.h"
 #include "TextSprite.h"
+#include "Vector.h"
 
 namespace Bonjin {
 
@@ -23,6 +25,36 @@ enum class TutorialStep {
 };
 
 /// <summary>
+/// チュートリアルの各ステップ情報
+/// </summary>
+struct TutorialStepData {
+	std::string id;
+	std::wstring titleText;
+	std::wstring detailKeyboard;
+	std::wstring detailGamepad;
+	int titleFontSize = 32;
+	int detailFontSize = 16;
+	COLORREF titleColor = RGB(255, 255, 255);
+	COLORREF detailColor = RGB(255, 255, 255);
+	std::string conditionType = "none"; // timer, move, jump, anchor, lock_on, teleport_kill, goal, none
+	float conditionDuration = 0.0f;
+};
+
+/// <summary>
+/// バナーUIの設定データ
+/// </summary>
+struct TutorialBannerData {
+	Vector2 position = { 340.0f, 20.0f };
+	Vector2 size = { 600.0f, 95.0f };
+	Vector4 color = { 0.04f, 0.07f, 0.12f, 0.85f };
+	float transitionDuration = 0.16f;
+	std::wstring skipGuideText = L"[TAB]: チュートリアルをスキップ";
+	Vector2 skipGuidePosition = { 1020.0f, 25.0f };
+	int skipGuideFontSize = 32;
+	COLORREF skipGuideColor = RGB(160, 170, 190);
+};
+
+/// <summary>
 /// チュートリアルの進行・ミッションUI・条件判定を管理するクラス
 /// </summary>
 class TutorialManager {
@@ -31,9 +63,47 @@ public:
 	~TutorialManager();
 
 	/// <summary>
-	/// 初期化
+	/// 初期化（JSONファイルを読み込み）
 	/// </summary>
-	void Initialize();
+	void Initialize(const std::string& jsonFilePath = "resources/data/tutorial.json");
+
+	/// <summary>
+	/// JSONから設定とステップデータを読み込み
+	/// </summary>
+	bool LoadJson(const std::string& jsonFilePath);
+
+	/// <summary>
+	/// 現在の設定とステップデータをJSONファイルに書き出し
+	/// </summary>
+	bool SaveJson(const std::string& jsonFilePath = "");
+
+	/// <summary>
+	/// デフォルト設定・ステップにリセット
+	/// </summary>
+	void SetupDefaultSteps();
+
+	/// <summary>
+	/// スプライト・テキスト表示を最新データで再構成
+	/// </summary>
+	void RefreshSprites();
+
+	/// <summary>
+	/// JSONファイルパスの取得・設定
+	/// </summary>
+	const std::string& GetJsonFilePath() const { return jsonFilePath_; }
+	void SetJsonFilePath(const std::string& path) { jsonFilePath_ = path; }
+
+	/// <summary>
+	/// ステップデータリストの参照取得
+	/// </summary>
+	std::vector<TutorialStepData>& GetSteps() { return steps_; }
+	const std::vector<TutorialStepData>& GetSteps() const { return steps_; }
+
+	/// <summary>
+	/// バナー設定データの参照取得
+	/// </summary>
+	TutorialBannerData& GetBannerData() { return bannerData_; }
+	const TutorialBannerData& GetBannerData() const { return bannerData_; }
 
 	/// <summary>
 	/// 更新処理
@@ -48,24 +118,39 @@ public:
 	void Draw();
 
 	/// <summary>
-	/// デバッグ用ImGui描画
+	/// デバッグ用簡易ImGui描画
 	/// </summary>
 	void DrawImGui();
 
 	/// <summary>
-	/// ステップの変更
+	/// ステップの変更 (インデックス指定)
+	/// </summary>
+	void ChangeStep(size_t nextStepIndex);
+
+	/// <summary>
+	/// ステップの変更 (Enum指定: 互換性維持)
 	/// </summary>
 	void ChangeStep(TutorialStep nextStep);
 
 	/// <summary>
 	/// チュートリアルが完了したかどうか
 	/// </summary>
-	bool IsCompleted() const { return currentStep_ == TutorialStep::kCompleted; }
+	bool IsCompleted() const;
 
 	/// <summary>
 	/// 現在のステップ取得
 	/// </summary>
-	TutorialStep GetCurrentStep() const { return currentStep_; }
+	TutorialStep GetCurrentStep() const;
+
+	/// <summary>
+	/// 現在のステップインデックス取得
+	/// </summary>
+	size_t GetCurrentStepIndex() const { return currentStepIndex_; }
+
+	/// <summary>
+	/// ステップ総数取得
+	/// </summary>
+	size_t GetStepCount() const { return steps_.size(); }
 
 private:
 	// トランジション状態
@@ -75,11 +160,14 @@ private:
 		kOpening,   // 高さを元に戻している最中 (0.0 -> 1.0)
 	};
 
-	TutorialStep currentStep_ = TutorialStep::kWelcome;
-	TutorialStep nextStep_ = TutorialStep::kWelcome;
+	std::string jsonFilePath_ = "resources/data/tutorial.json";
+	TutorialBannerData bannerData_;
+	std::vector<TutorialStepData> steps_;
+	size_t currentStepIndex_ = 0;
+	size_t nextStepIndex_ = 0;
+
 	TransitionState transitionState_ = TransitionState::kNone;
 	float transitionTimer_ = 0.0f;
-	float transitionDuration_ = 0.16f; // 潰れる/戻る時間(秒)
 	float currentScaleY_ = 1.0f;       // 現在の縦スケール (0.0f ~ 1.0f)
 
 	float stepTimer_ = 0.0f;
@@ -95,11 +183,8 @@ private:
 	std::unique_ptr<TextSprite> detailTextSprite_;
 	std::unique_ptr<TextSprite> skipGuideTextSprite_;
 
-	// 配置パラメータ
-	Vector2 bannerPosition_ = { 340.0f, 20.0f };
-	Vector2 bannerSize_ = { 600.0f, 95.0f };
-
 	void UpdateBannerTexts();
+	bool CheckCondition(BattleController* battleController, float deltaTime);
 };
 
 }

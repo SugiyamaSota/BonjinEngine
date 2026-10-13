@@ -1,0 +1,126 @@
+{
+  "banner": {
+    "position": [340.0, 20.0],
+    "size": [600.0, 95.0],
+    "color": [0.04, 0.07, 0.12, 0.85],
+    "transition_duration": 0.16,
+    "skip_guide_text": "[TAB]: チュートリアルをスキップ",
+    "skip_guide_position": [1020.0, 25.0],
+    "skip_guide_font_size": 32,
+    "skip_guide_color": [160, 170, 190]
+  },
+  "steps": [
+    {
+      "id": "welcome",
+      "title": "【TUTORIAL】基本操作をマスターしよう",
+      "detail_keyboard": "",
+      "detail_gamepad": "",
+      "title_font_size": 32,
+      "detail_font_size": 16,
+      "title_color": [255, 220, 80],
+      "detail_color": [220, 230, 245],
+      "condition": {
+        "type": "timer",
+        "duration": 2.0
+      }
+    },
+    {
+      "id": "move",
+      "title": "【STEP 1】左右に移動してみよう",
+      "detail_keyboard": "[A] [D] キー で移動",
+      "detail_gamepad": "左スティック で移動",
+      "title_font_size": 48,
+      "detail_font_size": 32,
+      "title_color": [100, 220, 255],
+      "detail_color": [240, 245, 255],
+      "condition": {
+        "type": "move",
+        "duration": 1.2
+      }
+    },
+    {
+      "id": "jump",
+      "title": "【STEP 2】ジャンプしてみよう",
+      "detail_keyboard": "[SPACE] キー でジャンプ！",
+      "detail_gamepad": "[A] ボタン でジャンプ！",
+      "title_font_size": 48,
+      "detail_font_size": 32,
+      "title_color": [100, 220, 255],
+      "detail_color": [240, 245, 255],
+      "condition": {
+        "type": "jump",
+        "duration": 0.8
+      }
+    },
+    {
+      "id": "anchor",
+      "title": "【STEP 3】アンカーを壁や足場に放とう",
+      "detail_keyboard": "[J] キー で発射！[K] キー で 即座に移動できます",
+      "detail_gamepad": "[X] ボタン で発射！[B] ボタン で 即座に移動できます",
+      "title_font_size": 48,
+      "detail_font_size": 32,
+      "title_color": [100, 220, 255],
+      "detail_color": [240, 245, 255],
+      "condition": {
+        "type": "anchor",
+        "duration": 2.0
+      }
+    },
+    {
+      "id": "lock_on",
+      "title": "【STEP 4】敵にアンカーを当ててロックオン！",
+      "detail_keyboard": "敵にアンカーを刺すとロックオンされます",
+      "detail_gamepad": "敵にアンカーを刺すとロックオンされます",
+      "title_font_size": 48,
+      "detail_font_size": 32,
+      "title_color": [255, 130, 80],
+      "detail_color": [255, 235, 220],
+      "condition": {
+        "type": "lock_on",
+        "duration": 0.5
+      }
+    },
+    {
+      "id": "teleport_kill",
+      "title": "【STEP 5】雷撃テレポートで一括撃破！",
+      "detail_keyboard": "[L] キー でロックオンした敵へ急襲！",
+      "detail_gamepad": "[Y] ボタン でロックオンした敵へ急襲！",
+      "title_font_size": 48,
+      "detail_font_size": 32,
+      "title_color": [255, 230, 50],
+      "detail_color": [255, 255, 200],
+      "condition": {
+        "type": "teleport_kill",
+        "duration": 1.2
+      }
+    },
+    {
+      "id": "go_to_goal",
+      "title": "【MISSION CLEAR!】ゴールへ向かおう",
+      "detail_keyboard": "マップ奥にあるゴールに到達して次へ進もう！",
+      "detail_gamepad": "マップ奥にあるゴールに到達して次へ進もう！",
+      "title_font_size": 48,
+      "detail_font_size": 32,
+      "title_color": [80, 255, 140],
+      "detail_color": [220, 255, 230],
+      "condition": {
+        "type": "goal",
+        "duration": 0.0
+      }
+    },
+    {
+      "id": "completed",
+      "title": "【COMPLETE】本編へ遷移します...",
+      "detail_keyboard": "",
+      "detail_gamepad": "",
+      "title_font_size": 48,
+      "detail_font_size": 32,
+      "title_color": [255, 255, 255],
+      "detail_color": [255, 255, 255],
+      "condition": {
+        "type": "none",
+        "duration": 0.0
+      }
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 #define NOMINMAX
 #include "Player.h"
 #include "input/Gamepad.h"
-#include "Lightning3D.h"
+#include "GpuParticleManager.h"
 #include "../enemy/BaseEnemy.h"
 #include "SceneManager.h"
 #include "ImGuiManager.h"
@@ -31,9 +31,6 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 	anchorLine_->Initialize();
 
 	isGoalReached_ = false;
-
-	lightningEffect_ = std::make_unique<Bonjin::Lightning3D>();
-	lightningEffect_->Initialize();
 
 	frayLineEffect_ = std::make_unique<Bonjin::FrayLine3D>();
 	frayLineEffect_->Initialize();
@@ -192,9 +189,9 @@ void Player::Update() {
 			if (std::find(activeEffects.begin(), activeEffects.end(), DirectXCommon::PostEffect::kRadialBlur) == activeEffects.end()) {
 				sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRadialBlur);
 			}
-			float t = teleportBlurTimer_ / kTeleportBlurMaxTime; // 1.0 -> 0.0
+			float t = teleportBlurTimer_ / (std::max)(0.001f, teleportBlurMaxTime_); // 1.0 -> 0.0
 			float easedT = t * t;
-			sceneManager->SetRadialBlurWidth(easedT * 0.025f);
+			sceneManager->SetRadialBlurWidth(easedT * teleportBlurWidth_);
 		}
 	}
 
@@ -211,22 +208,20 @@ void Player::Update() {
 			teleportQueue_.pop_front();
 			teleportTimer_ = teleportInterval_;
 
-			lightningActiveTimer_ = lightningShowDuration_; // 雷を発生させる
-			teleportBlurTimer_ = kTeleportBlurMaxTime;      // テレポートブラーを開始
+			// GPU雷霆エフェクトの発生
+			EmitTeleportLightning(lastTeleportStartPos_, worldTransform_.translate);
+			if (enableTeleportBlur_) {
+				teleportBlurTimer_ = teleportBlurMaxTime_; // テレポートブラーを開始
+			}
 
 			velocity_ = { 0.0f, 0.0f, 0.0f }; // 速度のリセット
 
 			// カメラシェイクとヒットストップ
-			if (camera_) {
-				camera_->StartShake(2.f,1.f);
+			if (enableTeleportShake_ && camera_) {
+				camera_->StartShake(lockonTeleportShakeIntensity_, lockonTeleportShakeDuration_);
 			}
 			hitStopRequested_ = true;
 		}
-	}
-
-	// 雷タイマーの更新
-	if (lightningActiveTimer_ > 0.0f) {
-		lightningActiveTimer_ -= 1.0f / 60.0f;
 	}
 
 	// 1.移動処理
@@ -405,8 +400,18 @@ void Player::Update() {
 					teleportPosition.y += kHeight / 2.0f;
 				}
 
+				Vector3 startPos = worldTransform_.translate;
 				// プレイヤーを計算された座標にテレポート
 				worldTransform_.translate = teleportPosition;
+
+				// GPU雷霆テレポートエフェクトとブラーの発生
+				EmitTeleportLightning(startPos, teleportPosition);
+				if (enableTeleportBlur_) {
+					teleportBlurTimer_ = teleportBlurMaxTime_;
+				}
+				if (enableTeleportShake_ && camera_) {
+					camera_->StartShake(teleportShakeIntensity_, teleportShakeDuration_);
+				}
 
 				// アンカーを消去
 				anchor_ = nullptr;
@@ -438,12 +443,6 @@ void Player::Draw() {
 	{
 		// 回収中のアンカー本体フェードアウト描画
 		retractAnchorModel_->Draw();
-	}
-
-	// 雷霆エフェクトの描画
-	if (lightningActiveTimer_ > 0.0f && lightningEffect_) {
-		lightningEffect_->Update(lastTeleportStartPos_, GetWorldPosition(), camera_, lightningColor_, lightningOffsetRatio_, lightningMinOffset_, lightningMaxOffsetLimit_);
-		lightningEffect_->Draw();
 	}
 }
 
@@ -579,14 +578,17 @@ void Player::RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies) {
 		teleportQueue_.pop_front();
 		teleportTimer_ = teleportInterval_;
 
-		lightningActiveTimer_ = lightningShowDuration_; // 雷を発生させる
-		teleportBlurTimer_ = kTeleportBlurMaxTime;      // テレポートブラーを開始
+		// GPU雷霆エフェクトの発生
+		EmitTeleportLightning(lastTeleportStartPos_, worldTransform_.translate);
+		if (enableTeleportBlur_) {
+			teleportBlurTimer_ = teleportBlurMaxTime_; // テレポートブラーを開始
+		}
 
 		velocity_ = { 0.0f, 0.0f, 0.0f };
 
 		// カメラシェイクとヒットストップ
-		if (camera_) {
-			camera_->StartShake(0.5f, 0.1f);
+		if (enableTeleportShake_ && camera_) {
+			camera_->StartShake(lockonTeleportShakeIntensity_, lockonTeleportShakeDuration_);
 		}
 		hitStopRequested_ = true;
 
@@ -674,14 +676,56 @@ void Player::DrawImGui() {
 			ImGui::TreePop();
 		}
 
-		// 雷霆テレポートエフェクトの調整UI
-		if (ImGui::TreeNode("Teleport & Lightning Effect")) {
+		// テレポート演出・GPU雷霆エフェクトの総合調整UI
+		if (ImGui::TreeNode("Teleport & Effect Settings")) {
+			// テスト用トリガーボタン
+			if (ImGui::Button("Trigger Test Teleport Effect")) {
+				Vector3 startPos = worldTransform_.translate;
+				Vector3 testTargetPos = { startPos.x + 3.0f, startPos.y + 1.5f, startPos.z };
+				EmitTeleportLightning(startPos, testTargetPos);
+				if (enableTeleportBlur_) {
+					teleportBlurTimer_ = teleportBlurMaxTime_;
+				}
+				if (enableTeleportShake_ && camera_) {
+					camera_->StartShake(teleportShakeIntensity_, teleportShakeDuration_);
+				}
+			}
+
 			ImGui::DragFloat("Teleport Interval", &teleportInterval_, 0.01f, 0.01f, 1.0f, "%.2fs");
-			ImGui::DragFloat("Lightning Duration", &lightningShowDuration_, 0.01f, 0.01f, 1.0f, "%.2fs");
-			ImGui::ColorEdit4("Lightning Color", &lightningColor_.x);
-			ImGui::DragFloat("Lightning Offset Ratio", &lightningOffsetRatio_, 0.005f, 0.0f, 0.5f, "%.3f");
-			ImGui::DragFloat("Lightning Min Offset", &lightningMinOffset_, 0.01f, 0.0f, 5.0f, "%.2f");
-			ImGui::DragFloat("Lightning Max Offset", &lightningMaxOffsetLimit_, 0.01f, 0.0f, 10.0f, "%.2f");
+
+			if (ImGui::TreeNode("1. GPU Lightning (雷霆エフェクト)")) {
+				ImGui::Checkbox("Enable Lightning", &enableTeleportLightning_);
+				ImGui::ColorEdit4("Core Color (Center)", &lightningCoreColor_.x);
+				ImGui::ColorEdit4("Glow Color (Outer)", &lightningColor_.x);
+				ImGui::DragFloat("Duration (s)", &lightningShowDuration_, 0.01f, 0.01f, 1.0f, "%.2fs");
+				ImGui::DragFloat("Intensity (Bloom)", &lightningIntensity_, 0.1f, 0.5f, 15.0f, "%.1f");
+				ImGui::DragFloat("Bolt Scale (Thickness)", &lightningBoltScale_, 0.01f, 0.01f, 1.0f, "%.2f");
+				ImGui::DragFloat("Bolt Radius (Zigzag)", &lightningBoltRadius_, 0.01f, 0.0f, 2.0f, "%.2f");
+				ImGui::SliderInt("Subdivisions", &lightningSubdivisions_, 2, 9);
+				ImGui::SliderInt("Main Branches", &lightningMainBranches_, 0, 10);
+				ImGui::SliderInt("Sparks Per Segment", &lightningSparksPerSegment_, 0, 10);
+				ImGui::SliderInt("Impact Sparks", &lightningImpactSparks_, 0, 300);
+				ImGui::SliderInt("Start Sparks", &lightningStartSparks_, 0, 150);
+				ImGui::DragFloat("Spark Speed", &lightningSparkSpeed_, 0.2f, 1.0f, 40.0f, "%.1f");
+				ImGui::TreePop();
+			}
+
+			if (ImGui::TreeNode("2. Radial Blur (ラジアルブラー)")) {
+				ImGui::Checkbox("Enable Blur", &enableTeleportBlur_);
+				ImGui::DragFloat("Blur Duration (s)", &teleportBlurMaxTime_, 0.01f, 0.01f, 1.0f, "%.2fs");
+				ImGui::DragFloat("Max Blur Width", &teleportBlurWidth_, 0.001f, 0.001f, 0.1f, "%.4f");
+				ImGui::TreePop();
+			}
+
+			if (ImGui::TreeNode("3. Camera Shake (カメラシェイク)")) {
+				ImGui::Checkbox("Enable Camera Shake", &enableTeleportShake_);
+				ImGui::DragFloat("Anchor Shake Intensity", &teleportShakeIntensity_, 0.05f, 0.0f, 3.0f, "%.2f");
+				ImGui::DragFloat("Anchor Shake Duration", &teleportShakeDuration_, 0.01f, 0.01f, 1.0f, "%.2fs");
+				ImGui::DragFloat("Chain Lock-on Shake Intensity", &lockonTeleportShakeIntensity_, 0.05f, 0.0f, 3.0f, "%.2f");
+				ImGui::DragFloat("Chain Lock-on Shake Duration", &lockonTeleportShakeDuration_, 0.01f, 0.01f, 1.0f, "%.2fs");
+				ImGui::TreePop();
+			}
+
 			ImGui::TreePop();
 		}
 
@@ -748,3 +792,39 @@ void Player::ApplyDamage(int damage) {
 	sceneManager->SetFullScreenVignetteColor({ 1.0f, 0.0f, 0.0f });
 	sceneManager->SetFullScreenVignetteScale(3.0f);
 }
+
+void Player::EmitTeleportLightning(const Vector3& start, const Vector3& end) {
+	if (!enableTeleportLightning_) {
+		return;
+	}
+
+	GpuLightningConfig config{};
+	config.start = start;
+	config.end = end;
+	config.coreColor = lightningCoreColor_;
+	config.glowColor = lightningColor_;
+	config.boltRadius = lightningBoltRadius_;
+	config.boltScale = lightningBoltScale_;
+	config.subdivisions = lightningSubdivisions_;
+	config.mainBranches = lightningMainBranches_;
+	config.sparksPerSegment = lightningSparksPerSegment_;
+	config.impactSparks = lightningImpactSparks_;
+	config.duration = lightningShowDuration_;
+	config.intensity = lightningIntensity_;
+	config.sparkSpeed = lightningSparkSpeed_;
+
+	GpuParticleManager::GetInstance()->EmitLightning(config);
+
+	// テレポート開始位置にも残留スパークを発生させて瞬間移動感を強化
+	if (lightningStartSparks_ > 0) {
+		GpuParticleManager::GetInstance()->EmitSparks(
+			start,
+			lightningStartSparks_,
+			lightningColor_,
+			lightningSparkSpeed_ * 0.8f,
+			lightningShowDuration_ * 1.5f,
+			lightningBoltScale_ * 0.5f
+		);
+	}
+}
+

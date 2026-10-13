@@ -16,10 +16,16 @@ void TutorialScene::Initialize(Camera* camera) {
 	battleController_->Initialize(camera_, "resources/maps/tutorial.csv");
 
 	tutorialManager_ = std::make_unique<TutorialManager>();
-	tutorialManager_->Initialize();
+	tutorialManager_->Initialize("resources/data/tutorial.json");
+
+	tutorialEditor_ = std::make_unique<TutorialEditor>();
+	tutorialEditor_->Initialize(tutorialManager_.get());
 }
 
 void TutorialScene::Unload() {
+	if (tutorialEditor_) {
+		tutorialEditor_.reset();
+	}
 	if (tutorialManager_) {
 		tutorialManager_.reset();
 	}
@@ -31,6 +37,10 @@ void TutorialScene::Unload() {
 
 void TutorialScene::Update(float deltaTime) {
 	battleController_->Update(deltaTime);
+
+	if (tutorialEditor_) {
+		tutorialEditor_->Update(deltaTime);
+	}
 
 	if (tutorialManager_) {
 		tutorialManager_->Update(battleController_.get(), deltaTime);
@@ -67,9 +77,10 @@ void TutorialScene::DrawSceneImGui() {
 	if (battleController_) {
 		battleController_->DrawImGui();
 	}
-	if (tutorialManager_) {
+	if (tutorialEditor_) {
+		tutorialEditor_->DrawImGui();
+	} else if (tutorialManager_) {
 		tutorialManager_->DrawImGui();
 	}
 #endif
 }
-

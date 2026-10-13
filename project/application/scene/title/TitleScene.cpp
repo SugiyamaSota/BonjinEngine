@@ -1,6 +1,9 @@
 #include "TitleScene.h"
 #include "input/Input.h"
-#include <cmath>
+#include "input/Gamepad.h"
+#include "SceneManager.h"
+#include "GpuParticleManager.h"
+#include <algorithm>
 
 using namespace Bonjin;
 
@@ -10,67 +13,142 @@ void TitleScene::Initialize(Camera* camera) {
 	phase_ = TitlePhase::kFadeIn;
 	camera_ = camera;
 	timer_ = 0.0f;
+	diveTimer_ = 0.0f;
 
-	// タイトルテキスト「Anchor」の生成と配置
-	titleText_ = std::make_unique<TextSprite>();
-	titleText_->Initialize();
-	titleText_->SetAnchor({ 0.5f, 0.5f, 0.0f });
-	titleText_->SetText(L"Anchor", 80, RGB(255, 255, 255));
-	titleText_->SetTranslate({ 640.0f, 260.0f });
+	// GPUパーティクルのクリア
+	GpuParticleManager::GetInstance()->Clear();
 
-	// スタート案内テキスト「SpaceToStart」の生成と配置
-	startText_ = std::make_unique<TextSprite>();
-	startText_->Initialize();
-	startText_->SetAnchor({ 0.5f, 0.5f, 0.0f });
-	startText_->SetText(L"SpaceToStart", 36, RGB(220, 220, 220));
-	startText_->SetTranslate({ 640.0f, 480.0f });
+	// 1. 3D電脳ワールドの初期化
+	world_ = std::make_unique<TitleWorld>();
+	world_->Initialize(camera_);
+
+	// 2. 2D UI / HUDの初期化
+	ui_ = std::make_unique<TitleUI>();
+	ui_->Initialize();
+
+	// 3. ポストプロセスの初期設定（サイバーヴィネット＆微細ノイズ）
+	auto sceneManager = SceneManager::GetInstance();
+	sceneManager->ResetPostEffects();
+	sceneManager->SetFullScreenVignette(true);
+	sceneManager->SetFullScreenVignetteColor({ 0.0f, 0.04f, 0.16f }); // サイバーブルー調
+	sceneManager->SetFullScreenVignetteScale(18.0f);
+	sceneManager->SetFullScreenVignettePower(0.85f);
+	sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
+	sceneManager->SetNoiseAlpha(0.015f); // 走査線・ホログラム風の微細ノイズ
 }
 
 void TitleScene::Unload() {
-	titleText_.reset();
-	startText_.reset();
+	if (world_) {
+		world_->Unload();
+		world_.reset();
+	}
+
+	if (ui_) {
+		ui_->Unload();
+		ui_.reset();
+	}
+
+	// GPUパーティクルのクリア
+	GpuParticleManager::GetInstance()->Clear();
+
+	// ポストエフェクトのクリーンアップ（次シーンへの影響を防止）
+	auto sceneManager = SceneManager::GetInstance();
+	sceneManager->ResetPostEffects();
+	sceneManager->SetFullScreenVignette(false);
+	sceneManager->SetRadialBlurWidth(0.0f);
+	sceneManager->SetNoiseAlpha(0.0f);
 }
 
 void TitleScene::Update(float deltaTime) {
 	timer_ += deltaTime;
 
-	if (titleText_) {
-		titleText_->Update();
+	bool isDiving = (phase_ == TitlePhase::kFadeOut);
+	float diveProgress = isDiving ? std::clamp(diveTimer_ / kDiveDuration, 0.0f, 1.0f) : 0.0f;
+
+	// 1. 3D空間ワールドの更新
+	if (world_) {
+		world_->Update(deltaTime, isDiving, diveProgress);
 	}
 
-	if (startText_) {
-		// スタート案内テキストの点滅演出
-		float alpha = 0.5f + 0.5f * std::sin(timer_ * 4.0f);
-		startText_->SetColor({ 1.0f, 1.0f, 1.0f, alpha });
-		startText_->Update();
+	// 2. GPUパーティクル（雷霆・スパーク）の更新
+	GpuParticleManager::GetInstance()->Update(deltaTime, camera_);
+
+	// 3. 2D UI / HUDの更新
+	if (ui_) {
+		ui_->Update(deltaTime, isDiving, diveProgress);
 	}
 
-	// フェーズに応じた処理
+	// 4. シーンフェーズ処理
 	switch (phase_) {
 	case TitlePhase::kFadeIn:
-		// フェード演出など
 		ChangePhase(TitlePhase::kActive);
 		break;
 
 	case TitlePhase::kActive:
-		if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
+		// スペースキーまたはゲームパッドAボタンでダイブ開始
+		if (Input::GetInstance()->IsTrigger(DIK_SPACE) || Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_A)) {
 			ChangePhase(TitlePhase::kFadeOut);
+			diveTimer_ = 0.0f;
+
+			// ラジアルブラーの追加
+			auto sceneManager = SceneManager::GetInstance();
+			auto activeEffects = sceneManager->GetActiveEffects();
+			if (std::find(activeEffects.begin(), activeEffects.end(), DirectXCommon::PostEffect::kRadialBlur) == activeEffects.end()) {
+				sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRadialBlur);
+			}
+
+			// スタート時のカメラシェイク
+			if (camera_) {
+				camera_->StartShake(3.5f, 1.2f);
+			}
 		}
 		break;
 
 	case TitlePhase::kFadeOut:
-		nextSceneType_ = "GameScene";
+		UpdateDiveTransition(deltaTime);
 		break;
 	}
 }
 
+void TitleScene::UpdateDiveTransition(float deltaTime) {
+	diveTimer_ += deltaTime;
+	float progress = std::clamp(diveTimer_ / kDiveDuration, 0.0f, 1.0f);
+	float eased = progress * progress * progress;
+
+	// ラジアルブラーの強化（光速突入感）
+	auto sceneManager = SceneManager::GetInstance();
+	sceneManager->SetRadialBlurWidth(eased * 0.09f);
+
+	// ダイブ完了時にゲーム本編シーンへ遷移
+	if (progress >= 1.0f) {
+		nextSceneType_ = "GameScene";
+	}
+}
+
 void TitleScene::Draw() {
-	if (titleText_) {
-		titleText_->Draw();
+	// 1. 3D空間ワールドの描画
+	if (world_) {
+		world_->Draw();
 	}
-	if (startText_) {
-		startText_->Draw();
+
+	// 2. GPUパーティクル（雷霆・スパーク）の描画
+	if (camera_) {
+		GpuParticleManager::GetInstance()->Draw(camera_);
 	}
+
+	// 3. 2D HUDテキストの描画
+	if (ui_) {
+		ui_->Draw();
+	}
+}
+
+void TitleScene::DrawImGui() {
+#ifdef USE_IMGUI
+	if (world_) {
+		world_->DrawImGui();
+	}
+	GpuParticleManager::GetInstance()->DrawImGui();
+#endif
 }
 
 SceneType TitleScene::GetNextScene() const {

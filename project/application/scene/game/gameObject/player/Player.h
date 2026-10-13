@@ -223,15 +223,22 @@ private:
 	float teleportTimer_ = 0.0f;
 	float teleportInterval_ = 0.15f;
 
-	// 雷霆エフェクト用
-	std::unique_ptr<Bonjin::Lightning3D> lightningEffect_;
-	Vector3 lastTeleportStartPos_;
-	float lightningActiveTimer_ = 0.0f;
-	float lightningShowDuration_ = 0.12f;
+	// GPU雷霆テレポートエフェクト用
+	void EmitTeleportLightning(const Vector3& start, const Vector3& end);
+	Vector3 lastTeleportStartPos_{};
+	bool enableTeleportLightning_ = true;
+	Vector4 lightningCoreColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };
 	Vector4 lightningColor_ = { 0.3f, 0.7f, 1.0f, 1.0f };
-	float lightningOffsetRatio_ = 0.08f;
-	float lightningMinOffset_ = 0.2f;
-	float lightningMaxOffsetLimit_ = 1.5f;
+	float lightningShowDuration_ = 0.16f;
+	float lightningBoltRadius_ = 0.35f;
+	float lightningBoltScale_ = 0.22f;
+	int lightningSubdivisions_ = 7;
+	int lightningMainBranches_ = 3;
+	int lightningSparksPerSegment_ = 2;
+	int lightningImpactSparks_ = 80;
+	int lightningStartSparks_ = 25;
+	float lightningIntensity_ = 3.5f;
+	float lightningSparkSpeed_ = 7.0f;
 
 	bool hitStopRequested_ = false;
 
@@ -244,7 +251,16 @@ private:
 	float origVignettePower_ = 0.8f;
 
 	// テレポートラジアルブラー演出用
+	bool enableTeleportBlur_ = true;
 	float teleportBlurTimer_ = 0.0f;
-	static inline const float kTeleportBlurMaxTime = 0.2f;
+	float teleportBlurMaxTime_ = 0.2f;
+	float teleportBlurWidth_ = 0.025f;
+
+	// テレポートカメラシェイク演出用
+	bool enableTeleportShake_ = true;
+	float teleportShakeIntensity_ = 0.3f;
+	float teleportShakeDuration_ = 0.08f;
+	float lockonTeleportShakeIntensity_ = 0.5f;
+	float lockonTeleportShakeDuration_ = 0.1f;
 
 };

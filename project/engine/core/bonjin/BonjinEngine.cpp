@@ -37,12 +37,14 @@ void Bonjin::Initialize() {
 	ModelManager::GetInstance();
 	TextureManager::GetInstance();
 	ImGuiManager::GetInstance()->Initialize();
+	GpuParticleManager::GetInstance()->Initialize();
 	Time::GetInstance();
 }
 
 void Bonjin::Finalize() {
 	Time::DestroyInstance();
 	ImGuiManager::GetInstance()->Finalize();
+	GpuParticleManager::GetInstance()->Finalize();
 	ParticleManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
 	ModelManager::GetInstance()->Finalize();

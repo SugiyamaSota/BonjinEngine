@@ -1,7 +1,8 @@
 #pragma once
 #include "../interface/BaseScene.h"
 #include "../bonjin/BonjinEngine.h"
-#include "TextSprite.h"
+#include "TitleWorld.h"
+#include "TitleUI.h"
 #include <memory>
 
 namespace Bonjin
@@ -16,7 +17,6 @@ namespace Bonjin
     class TitleScene : public BaseScene<TitlePhase>
     {
     public:
-        // --- オーバーライド関数 ---
         virtual ~TitleScene() = default;
 
         void Initialize(Camera* camera) override;
@@ -26,6 +26,7 @@ namespace Bonjin
         void Update(float deltaTime) override;
 
         void Draw() override;
+        void DrawImGui() override;
 
         SceneType GetNextScene() const override;
 
@@ -35,13 +36,19 @@ namespace Bonjin
         }
 
     private:
-        // --- ゲーム固有の変数 ---
-        std::unique_ptr<TextSprite> titleText_ = nullptr;
-        std::unique_ptr<TextSprite> startText_ = nullptr;
+        // --- 3D背景ワールド ---
+        std::unique_ptr<TitleWorld> world_ = nullptr;
+
+        // --- 2D UI / HUD ---
+        std::unique_ptr<TitleUI> ui_ = nullptr;
+
+        // --- タイマー・演出制御 ---
         float timer_ = 0.0f;
+        float diveTimer_ = 0.0f;
+        const float kDiveDuration = 1.3f; // ダイブ遷移にかける時間（秒）
 
     private:
-        // --- ゲーム固有の関数 ---
-
+        void UpdateDiveTransition(float deltaTime);
     };
+
 }

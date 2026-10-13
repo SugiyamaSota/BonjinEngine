@@ -189,10 +189,19 @@
     <ClCompile Include="application\scene\tutorial\TutorialManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="application\scene\tutorial\TutorialEditor.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="engine\system\utility\time\Time.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="application\scene\title\TitleScene.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\scene\title\TitleWorld.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\scene\title\TitleUI.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="application\scene\result\ResultScene.cpp">
@@ -305,6 +314,12 @@
     </ClCompile>
     <ClCompile Include="engine\graphics\3d\line\Line3D.cpp">
       <Filter>engine\draw\line</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\graphics\core\pso\config\gpuParticle\GpuLightningPSOConfig.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\system\manager\gpuParticle\GpuParticleManager.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="engine\graphics\3d\line\DebugCircle3D.cpp">
       <Filter>engine\draw\line</Filter>
@@ -452,6 +467,12 @@
     <ClInclude Include="application\scene\title\TitleScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="application\scene\title\TitleWorld.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\scene\title\TitleUI.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="application\scene\result\ResultScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -581,6 +602,15 @@
     <ClInclude Include="engine\graphics\3d\line\Lightning3D.h">
       <Filter>engine\draw\line</Filter>
     </ClInclude>
+    <ClInclude Include="engine\graphics\core\pso\config\gpuParticle\GpuLightningPSOConfig.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\graphics\3d\gpuParticle\GpuParticleStructs.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\system\manager\gpuParticle\GpuParticleManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="engine\graphics\3d\line\FrayLine3D.h">
       <Filter>engine\draw\line</Filter>
     </ClInclude>
@@ -591,6 +621,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\tutorial\TutorialManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\scene\tutorial\TutorialEditor.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\game\gameObject\enemy\EnemyBullet.h">
