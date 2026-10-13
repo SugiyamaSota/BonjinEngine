@@ -221,7 +221,7 @@ void BaseObject::DrawImGui(const std::string& label) {
             ImGui::TreePop();
         }
 
-        // ラベル用のTreeNodeをポップする（派生クラス側でさらに追加できるように、ここではまだ親ノードを閉じないアプローチにするため、この関数の末尾ではなく、Object3D側で最後に一括 Pop させます）
+        ImGui::TreePop();
     }
 #endif
 }

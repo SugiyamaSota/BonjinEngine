@@ -36,6 +36,8 @@ PSOManager::PSOManager() {
 	configs_[static_cast<size_t>(PrimitiveType::kPostEffectRandomNoise)] = std::make_unique<CopyImageConfig>(L"resources/shader/postEffect/RandomNoise.PS.hlsl");
 	configs_[static_cast<size_t>(PrimitiveType::kSkinningObject3D)] = std::make_unique<SkinningObject3DConfig>();
 	configs_[static_cast<size_t>(PrimitiveType::kPostEffectHSVFilter)] = std::make_unique<CopyImageConfig>(L"resources/shader/postEffect/HSVFilter.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectCRTShutDown)] = std::make_unique<CopyImageConfig>(L"resources/shader/postEffect/CRTShutDown.PS.hlsl");
+	configs_[static_cast<size_t>(PrimitiveType::kPostEffectDigitalDissolve)] = std::make_unique<CopyImageConfig>(L"resources/shader/postEffect/DigitalDissolve.PS.hlsl");
 
 }
 
@@ -203,4 +205,6 @@ void PSOManager::WarmUpPSOs(ID3D12Device* device) {
 	GetPipelineState(device, PrimitiveType::kPostEffectFullScreen, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE);
 	GetPipelineState(device, PrimitiveType::kPostEffectRadialBlur, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE);
 	GetPipelineState(device, PrimitiveType::kPostEffectRandomNoise, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE);
+	GetPipelineState(device, PrimitiveType::kPostEffectCRTShutDown, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE);
+	GetPipelineState(device, PrimitiveType::kPostEffectDigitalDissolve, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE);
 }

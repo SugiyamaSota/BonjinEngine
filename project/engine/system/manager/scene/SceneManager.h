@@ -73,6 +73,8 @@ namespace Bonjin
         float GetHSVSaturationMultiplier() const;
         void SetHSVValueMultiplier(float valMult);
         float GetHSVValueMultiplier() const;
+        void SetCRTShutDownProgress(float progress);
+        float GetCRTShutDownProgress() const;
 
         IScene* GetCurrentScene() const { return currentScene_; }
         const std::map<SceneType, std::unique_ptr<IScene>>& GetScenes() const { return scenes_; }

@@ -190,6 +190,7 @@ void SceneManager::ResetPostEffects() {
 	SetFullScreenVignetteColor({ 0.0f, 0.0f, 0.0f });
 	SetFullScreenVignetteScale(16.0f);
 	SetFullScreenVignettePower(0.8f);
+	SetCRTShutDownProgress(0.0f);
 }
 
 void SceneManager::AddPostEffect(DirectXCommon::PostEffect effect) {
@@ -318,4 +319,12 @@ void SceneManager::SetHSVValueMultiplier(float valMult) {
 
 float SceneManager::GetHSVValueMultiplier() const {
 	return DirectXCommon::GetInstance()->GetHSVValueMultiplier();
+}
+
+void SceneManager::SetCRTShutDownProgress(float progress) {
+	DirectXCommon::GetInstance()->SetCRTShutDownProgress(progress);
+}
+
+float SceneManager::GetCRTShutDownProgress() const {
+	return DirectXCommon::GetInstance()->GetCRTShutDownProgress();
 }

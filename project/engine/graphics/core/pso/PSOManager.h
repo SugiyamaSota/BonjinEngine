@@ -28,6 +28,8 @@ enum class PrimitiveType {
 	kSkinningObject3D,
 	kPostEffectHSVFilter,
 	kGpuLightning,
+	kPostEffectCRTShutDown,
+	kPostEffectDigitalDissolve,
 	kCount,
 };
 

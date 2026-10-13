@@ -1,5 +1,7 @@
 #include "TutorialScene.h"
 #include "../game/gameObject/player/PlayerStatusRepository.h"
+#include "SceneManager.h"
+#include <algorithm>
 
 using namespace Bonjin;
 
@@ -8,6 +10,15 @@ void TutorialScene::Initialize(Camera* camera) {
 	nextSceneType_ = currentSceneType_;
 	phase_ = TutorialPhase::kStart;
 	camera_ = camera;
+	startTransitionTimer_ = 0.0f;
+
+	// 開幕デジタルディゾルブ（完全な真っ黒から電子ブロック実体化）の初期設定
+	auto sceneManager = SceneManager::GetInstance();
+	sceneManager->ResetPostEffects();
+	sceneManager->AddPostEffect(DirectXCommon::PostEffect::kDigitalDissolve);
+	sceneManager->SetDissolveThreshold(0.0f); // 真っ黒からスタート
+	sceneManager->SetDissolveEdgeWidth(0.06f);
+	sceneManager->SetDissolveEdgeColor({ 0.0f, 1.5f, 2.0f }); // サイバーシアン
 
 	// プレイヤーステータスの読み込み
 	PlayerStatusRepository::GetInstance()->Load("resources/data/player_status.json");
@@ -33,6 +44,10 @@ void TutorialScene::Unload() {
 		battleController_->Unload();
 		battleController_.reset();
 	}
+
+	auto sceneManager = SceneManager::GetInstance();
+	sceneManager->ResetPostEffects();
+	sceneManager->RemovePostEffect(DirectXCommon::PostEffect::kDigitalDissolve);
 }
 
 void TutorialScene::Update(float deltaTime) {
@@ -50,9 +65,19 @@ void TutorialScene::Update(float deltaTime) {
 	}
 
 	switch (phase_) {
-	case TutorialPhase::kStart:
-		ChangePhase(TutorialPhase::kPlay);
+	case TutorialPhase::kStart: {
+		// 開幕のデジタルディゾルブ（真っ黒から電子ブロック実体化）
+		startTransitionTimer_ += deltaTime;
+		float progress = std::clamp(startTransitionTimer_ / kStartTransitionDuration, 0.0f, 1.0f);
+		auto sceneManager = SceneManager::GetInstance();
+		sceneManager->SetDissolveThreshold(progress);
+
+		if (progress >= 1.0f) {
+			sceneManager->RemovePostEffect(DirectXCommon::PostEffect::kDigitalDissolve);
+			ChangePhase(TutorialPhase::kPlay);
+		}
 		break;
+	}
 	case TutorialPhase::kPlay:
 		break;
 	case TutorialPhase::kComplete:

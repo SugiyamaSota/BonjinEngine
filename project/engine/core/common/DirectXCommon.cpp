@@ -304,6 +304,12 @@ void DirectXCommon::PostDraw()
 		case PostEffect::kHSVFilter:
 			postEffectType = PrimitiveType::kPostEffectHSVFilter;
 			break;
+		case PostEffect::kCRTShutDown:
+			postEffectType = PrimitiveType::kPostEffectCRTShutDown;
+			break;
+		case PostEffect::kDigitalDissolve:
+			postEffectType = PrimitiveType::kPostEffectDigitalDissolve;
+			break;
 		default:
 			break;
 		}
@@ -314,7 +320,7 @@ void DirectXCommon::PostDraw()
 			device_.Get(), postEffectType, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE
 		));
 		commandList_->SetGraphicsRootDescriptorTable(0, SrvManager::GetInstance()->GetGPUHandle(currentInput->GetSrvIndex()));
-		if (effect == PostEffect::kDissolve && dissolveMaskTextureHandle_ >= 0) {
+		if ((effect == PostEffect::kDissolve || effect == PostEffect::kDigitalDissolve) && dissolveMaskTextureHandle_ >= 0) {
 			commandList_->SetGraphicsRootDescriptorTable(1, TextureManager::GetInstance()->GetGPUHandle(dissolveMaskTextureHandle_));
 		} else {
 			commandList_->SetGraphicsRootDescriptorTable(1, SrvManager::GetInstance()->GetGPUHandle(depthStencil_->GetSrvIndex()));
@@ -421,6 +427,10 @@ void DirectXCommon::SetHSVSaturationMultiplier(float satMult) {
 
 void DirectXCommon::SetHSVValueMultiplier(float valMult) {
 	fullScreenMaterial_.hsvValueMultiplier = valMult < 0.0f ? 0.0f : valMult;
+}
+
+void DirectXCommon::SetCRTShutDownProgress(float progress) {
+	fullScreenMaterial_.crtShutDownProgress = std::clamp(progress, 0.0f, 1.0f);
 }
 
 void DirectXCommon::EndFrame() 

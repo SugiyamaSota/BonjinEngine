@@ -23,7 +23,9 @@ public:
 		kRadialBlur,
 		kDissolve,
 		kRandomNoise,
-		kHSVFilter
+		kHSVFilter,
+		kCRTShutDown,
+		kDigitalDissolve
 	};
 
 	/// --- インスタンス関連 ---
@@ -72,6 +74,8 @@ public:
 	float GetHSVSaturationMultiplier() const { return fullScreenMaterial_.hsvSaturationMultiplier; }
 	void SetHSVValueMultiplier(float valMult);
 	float GetHSVValueMultiplier() const { return fullScreenMaterial_.hsvValueMultiplier; }
+	void SetCRTShutDownProgress(float progress);
+	float GetCRTShutDownProgress() const { return fullScreenMaterial_.crtShutDownProgress; }
 
 	/// --- 汎用関数 ---
 	// デストラクタ
@@ -221,7 +225,8 @@ private:
 		Vector3 vignetteColor;
 		float vignetteScale;
 		float vignettePower;
-		float padding4[2];
+		float crtShutDownProgress;
+		float padding4;
 	};
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> fullScreenCB_ = nullptr;

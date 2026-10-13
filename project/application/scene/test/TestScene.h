@@ -73,6 +73,14 @@ namespace Bonjin
 		bool isPaused_ = false;
 		bool isManualPostEffect_ = false;
 
+		// デジタルディゾルブ検証用
+		bool isDigitalDissolveActive_ = false;
+		bool isDigitalDissolveAuto_ = false;
+		float digitalTransitionTimer_ = -1.0f; // ワンショット遷移タイマー
+		float digitalDissolveThreshold_ = 0.5f;
+		float digitalDissolveEdgeWidth_ = 0.06f;
+		Vector3 digitalDissolveEdgeColor_ = { 0.0f, 1.5f, 2.0f }; // 電子ネオンシアン
+
 	private:
 		// --- ゲーム固有の関数 ---
 	};

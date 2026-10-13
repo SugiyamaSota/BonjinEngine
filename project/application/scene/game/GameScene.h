@@ -39,6 +39,10 @@ enum class GamePhase {
 
 private:
 	std::unique_ptr<BattleController> battleController_;
+
+	// 開幕デジタルディゾルブ（黒からの実体化）用タイマー
+	float startTransitionTimer_ = 0.0f;
+	const float kStartTransitionDuration = 1.4f;
 };
 
 }

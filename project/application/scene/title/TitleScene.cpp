@@ -4,6 +4,7 @@
 #include "SceneManager.h"
 #include "GpuParticleManager.h"
 #include <algorithm>
+#include <cmath>
 
 using namespace Bonjin;
 
@@ -14,6 +15,8 @@ void TitleScene::Initialize(Camera* camera) {
 	camera_ = camera;
 	timer_ = 0.0f;
 	diveTimer_ = 0.0f;
+	shutDownTimer_ = 0.0f;
+	blackoutTimer_ = 0.0f;
 
 	// GPUパーティクルのクリア
 	GpuParticleManager::GetInstance()->Clear();
@@ -29,6 +32,7 @@ void TitleScene::Initialize(Camera* camera) {
 	// 3. ポストプロセスの初期設定（サイバーヴィネット＆微細ノイズ）
 	auto sceneManager = SceneManager::GetInstance();
 	sceneManager->ResetPostEffects();
+	sceneManager->SetCRTShutDownProgress(0.0f);
 	sceneManager->SetFullScreenVignette(true);
 	sceneManager->SetFullScreenVignetteColor({ 0.0f, 0.04f, 0.16f }); // サイバーブルー調
 	sceneManager->SetFullScreenVignetteScale(18.0f);
@@ -54,6 +58,9 @@ void TitleScene::Unload() {
 	// ポストエフェクトのクリーンアップ（次シーンへの影響を防止）
 	auto sceneManager = SceneManager::GetInstance();
 	sceneManager->ResetPostEffects();
+	sceneManager->SetCRTShutDownProgress(0.0f);
+	sceneManager->RemovePostEffect(DirectXCommon::PostEffect::kCRTShutDown);
+	sceneManager->RemovePostEffect(DirectXCommon::PostEffect::kRadialBlur);
 	sceneManager->SetFullScreenVignette(false);
 	sceneManager->SetRadialBlurWidth(0.0f);
 	sceneManager->SetNoiseAlpha(0.0f);
@@ -62,8 +69,14 @@ void TitleScene::Unload() {
 void TitleScene::Update(float deltaTime) {
 	timer_ += deltaTime;
 
-	bool isDiving = (phase_ == TitlePhase::kFadeOut);
-	float diveProgress = isDiving ? std::clamp(diveTimer_ / kDiveDuration, 0.0f, 1.0f) : 0.0f;
+	// ブラックアウトフェーズ中は3D空間・パーティクル・UIの更新を全停止して完全な静寂を演出
+	if (phase_ == TitlePhase::kBlackout) {
+		UpdateBlackout(deltaTime);
+		return;
+	}
+
+	bool isDiving = (phase_ == TitlePhase::kDive || phase_ == TitlePhase::kShutDown);
+	float diveProgress = (phase_ == TitlePhase::kDive) ? std::clamp(diveTimer_ / kDiveDuration, 0.0f, 1.0f) : 1.0f;
 
 	// 1. 3D空間ワールドの更新
 	if (world_) {
@@ -85,27 +98,42 @@ void TitleScene::Update(float deltaTime) {
 		break;
 
 	case TitlePhase::kActive:
-		// スペースキーまたはゲームパッドAボタンでダイブ開始
+		// スペースキーまたはゲームパッドAボタンでダイブ突入開始
 		if (Input::GetInstance()->IsTrigger(DIK_SPACE) || Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_A)) {
-			ChangePhase(TitlePhase::kFadeOut);
+			// 選択中のメニューに応じて遷移先を決定（GameScene または TutorialScene）
+			if (ui_ && ui_->GetSelectedMenuItem() == TitleUI::TitleMenuItem::kTutorial) {
+				targetSceneType_ = "TutorialScene";
+			} else {
+				targetSceneType_ = "GameScene";
+			}
+
+			ChangePhase(TitlePhase::kDive);
 			diveTimer_ = 0.0f;
 
-			// ラジアルブラーの追加
+			// ラジアルブラーの追加（光速突入演出）
 			auto sceneManager = SceneManager::GetInstance();
 			auto activeEffects = sceneManager->GetActiveEffects();
 			if (std::find(activeEffects.begin(), activeEffects.end(), DirectXCommon::PostEffect::kRadialBlur) == activeEffects.end()) {
 				sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRadialBlur);
 			}
 
-			// スタート時のカメラシェイク
+			// スタート時のカメラ激震シェイク
 			if (camera_) {
-				camera_->StartShake(3.5f, 1.2f);
+				camera_->StartShake(4.5f, 1.0f);
 			}
 		}
 		break;
 
-	case TitlePhase::kFadeOut:
+	case TitlePhase::kDive:
 		UpdateDiveTransition(deltaTime);
+		break;
+
+	case TitlePhase::kShutDown:
+		UpdateShutDownTransition(deltaTime);
+		break;
+
+	case TitlePhase::kBlackout:
+		// 上部で処理済み
 		break;
 	}
 }
@@ -115,17 +143,58 @@ void TitleScene::UpdateDiveTransition(float deltaTime) {
 	float progress = std::clamp(diveTimer_ / kDiveDuration, 0.0f, 1.0f);
 	float eased = progress * progress * progress;
 
-	// ラジアルブラーの強化（光速突入感）
+	// ラジアルブラーを加速強化（光速の吸引感）
 	auto sceneManager = SceneManager::GetInstance();
-	sceneManager->SetRadialBlurWidth(eased * 0.09f);
+	sceneManager->SetRadialBlurWidth(eased * 0.11f);
 
-	// ダイブ完了時にゲーム本編シーンへ遷移
+	// ズーム最高潮に達した瞬間、ポストエフェクトによる「プツン」電源断演出へ突入！
 	if (progress >= 1.0f) {
-		nextSceneType_ = "GameScene";
+		ChangePhase(TitlePhase::kShutDown);
+		shutDownTimer_ = 0.0f;
+
+		// ラジアルブラーを解除し、CRTシャットダウンポストエフェクトを追加！
+		sceneManager->SetRadialBlurWidth(0.0f);
+		sceneManager->RemovePostEffect(DirectXCommon::PostEffect::kRadialBlur);
+
+		auto activeEffects = sceneManager->GetActiveEffects();
+		if (std::find(activeEffects.begin(), activeEffects.end(), DirectXCommon::PostEffect::kCRTShutDown) == activeEffects.end()) {
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kCRTShutDown);
+		}
+		sceneManager->SetCRTShutDownProgress(0.0f);
+	}
+}
+
+void TitleScene::UpdateShutDownTransition(float deltaTime) {
+	shutDownTimer_ += deltaTime;
+	float progress = std::clamp(shutDownTimer_ / kShutDownDuration, 0.0f, 1.0f);
+
+	// シェーダーに進行度を渡す（画面の映像が上下から中央へ押し潰され、ホワイトラインを経て点収束消失）
+	auto sceneManager = SceneManager::GetInstance();
+	sceneManager->SetCRTShutDownProgress(progress);
+
+	// プツン演出完了 → 完全ブラックアウトへ移行！
+	if (progress >= 1.0f) {
+		sceneManager->SetCRTShutDownProgress(1.0f); // 完全ブラックアウト
+		ChangePhase(TitlePhase::kBlackout);
+		blackoutTimer_ = 0.0f;
+	}
+}
+
+void TitleScene::UpdateBlackout(float deltaTime) {
+	blackoutTimer_ += deltaTime;
+
+	// パチンコ特有の「息を呑む静寂のタメ（ブラックアウト）」の後に選択された次シーンへ突入！
+	if (blackoutTimer_ >= kBlackoutDuration) {
+		nextSceneType_ = targetSceneType_;
 	}
 }
 
 void TitleScene::Draw() {
+	// ブラックアウトフェーズ中は画面全体が完全な漆黒になるため3D描画等は省略
+	if (phase_ == TitlePhase::kBlackout) {
+		return;
+	}
+
 	// 1. 3D空間ワールドの描画
 	if (world_) {
 		world_->Draw();
@@ -144,10 +213,12 @@ void TitleScene::Draw() {
 
 void TitleScene::DrawImGui() {
 #ifdef USE_IMGUI
-	if (world_) {
-		world_->DrawImGui();
+	if (phase_ != TitlePhase::kBlackout) {
+		if (world_) {
+			world_->DrawImGui();
+		}
+		GpuParticleManager::GetInstance()->DrawImGui();
 	}
-	GpuParticleManager::GetInstance()->DrawImGui();
 #endif
 }
 
