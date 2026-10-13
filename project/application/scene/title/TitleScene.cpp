@@ -14,6 +14,7 @@ void TitleScene::Initialize(Camera* camera) {
 	phase_ = TitlePhase::kFadeIn;
 	camera_ = camera;
 	timer_ = 0.0f;
+	fadeInTimer_ = 0.0f;
 	diveTimer_ = 0.0f;
 	shutDownTimer_ = 0.0f;
 	blackoutTimer_ = 0.0f;
@@ -39,6 +40,12 @@ void TitleScene::Initialize(Camera* camera) {
 	sceneManager->SetFullScreenVignettePower(0.85f);
 	sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
 	sceneManager->SetNoiseAlpha(0.015f); // 走査線・ホログラム風の微細ノイズ
+
+	// 開幕デジタルディゾルブ（完全な真っ黒から電子ブロック実体化）
+	sceneManager->AddPostEffect(DirectXCommon::PostEffect::kDigitalDissolve);
+	sceneManager->SetDissolveThreshold(0.0f); // 真っ黒からスタート
+	sceneManager->SetDissolveEdgeWidth(0.06f);
+	sceneManager->SetDissolveEdgeColor({ 0.0f, 1.5f, 2.0f }); // サイバーシアン
 }
 
 void TitleScene::Unload() {
@@ -59,6 +66,7 @@ void TitleScene::Unload() {
 	auto sceneManager = SceneManager::GetInstance();
 	sceneManager->ResetPostEffects();
 	sceneManager->SetCRTShutDownProgress(0.0f);
+	sceneManager->RemovePostEffect(DirectXCommon::PostEffect::kDigitalDissolve);
 	sceneManager->RemovePostEffect(DirectXCommon::PostEffect::kCRTShutDown);
 	sceneManager->RemovePostEffect(DirectXCommon::PostEffect::kRadialBlur);
 	sceneManager->SetFullScreenVignette(false);
@@ -93,9 +101,19 @@ void TitleScene::Update(float deltaTime) {
 
 	// 4. シーンフェーズ処理
 	switch (phase_) {
-	case TitlePhase::kFadeIn:
-		ChangePhase(TitlePhase::kActive);
+	case TitlePhase::kFadeIn: {
+		// 開幕のデジタルディゾルブ（真っ黒から電子ブロック実体化）
+		fadeInTimer_ += deltaTime;
+		float progress = std::clamp(fadeInTimer_ / kFadeInDuration, 0.0f, 1.0f);
+		auto sceneManager = SceneManager::GetInstance();
+		sceneManager->SetDissolveThreshold(progress);
+
+		if (progress >= 1.0f) {
+			sceneManager->RemovePostEffect(DirectXCommon::PostEffect::kDigitalDissolve);
+			ChangePhase(TitlePhase::kActive);
+		}
 		break;
+	}
 
 	case TitlePhase::kActive:
 		// スペースキーまたはゲームパッドAボタンでダイブ突入開始

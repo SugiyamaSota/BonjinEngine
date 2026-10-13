@@ -46,6 +46,8 @@ namespace Bonjin
 
         // --- タイマー・演出制御 ---
         float timer_ = 0.0f;
+        float fadeInTimer_ = 0.0f;
+        const float kFadeInDuration = 1.4f; // 開幕デジタルディゾルブ実体化の時間
         float diveTimer_ = 0.0f;
         const float kDiveDuration = 1.0f; // ダイブ（ズーム＆シェイク）にかける時間
 
