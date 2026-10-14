@@ -18,11 +18,12 @@ Core::~Core() {}
 void Core::Initialize() {
 	Bonjin::Initialize(); // エンジン本体の初期化
 
-	// 事前にリソースのロード
+	// 起動時にリソースのロード
+	// モデル
 	auto modelManager = ModelManager::GetInstance();
 	modelManager->LoadModel("human", "resources/models/human", "walk.gltf");
 
-	// 共通テクスチャの事前ロード（起動時にGPU転送を完了させ、シーン遷移時の待機をゼロにする）
+	// 共通テクスチャ
 	auto textureManager = TextureManager::GetInstance();
 	textureManager->LoadTexture("resources/textures/cube.jpg");
 	textureManager->LoadTexture("resources/textures/default.png");
@@ -32,7 +33,7 @@ void Core::Initialize() {
 	textureManager->LoadTexture("resources/textures/circle.png");
 	textureManager->LoadTexture("resources/textures/noise0.png");
 
-	// 共通パーティクルグループの事前作成（シーン遷移時のバッファ確保をゼロにする）
+	// 共通パーティクルグループ
 	auto particleManager = ParticleManager::GetInstance();
 	particleManager->Initialize();
 	particleManager->CreateParticleGroup("anchorHitRay", ModelBuilder::ModelType::kPlane, "resources/textures/gradationLine.png");
@@ -43,19 +44,18 @@ void Core::Initialize() {
 	particleManager->CreateParticleGroup("landingDust", ModelBuilder::ModelType::kPlane, "resources/textures/circle.png");
 
 	DirectXCommon::GetInstance()->WaitAndResetCommandList();
-	textureManager->ReleaseIntermediateResources();
 
-	// マスターデータ・プレイヤーステータスの読み込み
+	// プレイヤーレベルテーブル読み込み
 	PlayerStatusRepository::GetInstance()->Load("resources/data/player_status.json");
 
 	// シーンマネージャーのセットアップ
 	auto sceneManager = SceneManager::GetInstance();
 	sceneManager->Initialize();
-	sceneManager->AddScene("TestScene", std::make_unique<TestScene>());
-	sceneManager->AddScene("GameScene", std::make_unique<GameScene>());
-	sceneManager->AddScene("TutorialScene", std::make_unique<TutorialScene>());
-	sceneManager->AddScene("ResultScene", std::make_unique<ResultScene>());
 	sceneManager->AddScene("TitleScene", std::make_unique<TitleScene>());
+	sceneManager->AddScene("TutorialScene", std::make_unique<TutorialScene>());
+	sceneManager->AddScene("GameScene", std::make_unique<GameScene>());
+	sceneManager->AddScene("ResultScene", std::make_unique<ResultScene>());
+	sceneManager->AddScene("TestScene", std::make_unique<TestScene>());
 
 	sceneManager->ChangeScene("TitleScene");
 
@@ -70,9 +70,7 @@ void Core::Run() {
 		NewFrame();
 
 		// 更新処理
-		float deltaTime = Time::GetInstance()->GetDeltaTime();
-		SceneManager::GetInstance()->Update(deltaTime);
-
+		SceneManager::GetInstance()->Update(Time::GetInstance()->GetDeltaTime());
 
 		PreDraw();
 
