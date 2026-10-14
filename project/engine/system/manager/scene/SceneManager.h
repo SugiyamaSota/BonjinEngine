@@ -5,6 +5,7 @@
 #include <vector>
 
 #include"../interface/IScene.h"
+#include "SceneTransition.h"
 
 namespace Bonjin
 {
@@ -32,8 +33,14 @@ namespace Bonjin
         // 💡 シーン切り替えロジック
         void ChangeScene(SceneType nextSceneType);
         void RequestSceneChange(SceneType nextSceneType);
+        void RequestSceneChange(SceneType nextSceneType, const TransitionDesc& desc);
+        void StartTransition(const TransitionDesc& desc);
         void RestartCurrentScene();
         void RequestSceneRestart();
+
+        // トランジション状態
+        bool IsTransitionActive() const;
+        SceneTransition* GetTransition() const { return transition_.get(); }
 
         Camera* GetCamera() const { return camera_.get(); }
 
@@ -93,9 +100,10 @@ namespace Bonjin
         bool hasPendingSceneChange_ = false;
         bool hasPendingSceneRestart_ = false;
         SceneType pendingSceneType_ = "TitleScene";
-
         std::unique_ptr<Camera> camera_ = nullptr;
+        std::unique_ptr<SceneTransition> transition_ = nullptr;
 
+        void ExecuteSceneChange(SceneType nextSceneType);
     };
 
 }

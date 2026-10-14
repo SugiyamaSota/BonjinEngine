@@ -8,7 +8,6 @@
 namespace Bonjin {
 
 enum class TutorialPhase {
-	kStart,
 	kPlay,
 	kComplete,
 };
@@ -27,10 +26,6 @@ private:
 	std::unique_ptr<BattleController> battleController_;
 	std::unique_ptr<TutorialManager> tutorialManager_;
 	std::unique_ptr<TutorialEditor> tutorialEditor_;
-
-	// 開幕デジタルディゾルブ（黒からの実体化）用タイマー
-	float startTransitionTimer_ = 0.0f;
-	const float kStartTransitionDuration = 1.4f;
 };
 
 }

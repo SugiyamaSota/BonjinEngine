@@ -1,5 +1,7 @@
 #include "ResultScene.h"
 #include "input/Input.h"
+#include "input/Gamepad.h"
+#include "SceneManager.h"
 #include <cmath>
 
 using namespace Bonjin;
@@ -65,12 +67,12 @@ void ResultScene::Update(float deltaTime) {
 		ChangePhase(ResultPhase::kActive);
 		break;
 	case ResultPhase::kActive:
-		if (Input::GetInstance()->IsTrigger(DIK_SPACE)) {
+		if (Input::GetInstance()->IsTrigger(DIK_SPACE) || Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_A)) {
 			ChangePhase(ResultPhase::kFadeOut);
+			SceneManager::GetInstance()->RequestSceneChange("TitleScene");
 		}
 		break;
 	case ResultPhase::kFadeOut:
-		nextSceneType_ = "TitleScene";
 		break;
 	}
 }

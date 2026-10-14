@@ -22,11 +22,18 @@ void SceneManager::Finalize() {
 
 	// 3. カメラも明示的に破棄
 	camera_.reset();
+
+	if (transition_) {
+		transition_->Reset();
+		transition_.reset();
+	}
 }
 
 void SceneManager::Initialize() {
 	camera_ = std::make_unique<Camera>();
 	camera_->Initialize(1280, 720);
+	transition_ = std::make_unique<SceneTransition>();
+	transition_->Initialize();
 }
 
 // 💡 4. シーンの登録
@@ -47,18 +54,27 @@ void SceneManager::AddScene(SceneType type, std::unique_ptr<IScene> scene) {
 
 // 💡 5. シーンの更新処理
 void SceneManager::Update(float deltaTime) {
-	if (hasPendingSceneChange_) {
-		hasPendingSceneChange_ = false;
-		hasPendingSceneRestart_ = false;
-		ChangeScene(pendingSceneType_);
+	// 1. トランジションの更新
+	if (transition_) {
+		transition_->Update(deltaTime);
+
+		// シーン切り替え（Unload & Initialize）を実行すべき瞬間
+		if (transition_->ShouldSwitchScene()) {
+			ExecuteSceneChange(pendingSceneType_);
+			transition_->NotifySceneSwitched();
+			hasPendingSceneChange_ = false;
+		}
 	}
 
 	if (currentScene_ == nullptr) {
 		return;
 	}
 
-	if (Input::GetInstance()->IsTrigger(DIK_F5)) {
-		RequestSceneRestart();
+	// トランジション中でない場合のみリスタート入力を受付
+	if (!IsTransitionActive()) {
+		if (Input::GetInstance()->IsTrigger(DIK_F5)) {
+			RequestSceneRestart();
+		}
 	}
 
 	if (hasPendingSceneRestart_) {
@@ -68,21 +84,33 @@ void SceneManager::Update(float deltaTime) {
 
 	camera_->Update(Camera::CameraType::kDebug);
 
-	// 現在のシーンの更新処理を呼び出し
-	currentScene_->Update(deltaTime);
+	// 現在のシーンの更新処理を呼び出し（暗転ウェイト中はシーン更新を停止）
+	bool shouldUpdateScene = true;
+	if (transition_ && transition_->GetPhase() == TransitionPhase::kWait) {
+		shouldUpdateScene = false;
+	}
 
-	// 遷移先のシーンタイプを取得
-	SceneType nextType = currentScene_->GetNextScene();
+	if (shouldUpdateScene) {
+		currentScene_->Update(deltaTime);
+	}
 
-	// 現在のシーンと次のシーンが異なる場合、シーンを切り替える
-	if (nextType != currentScene_->GetCurrentSceneType()) {
-		ChangeScene(nextType);
+	// 遷移先のシーンタイプを取得（従来の GetNextScene 方式との互換性）
+	if (!IsTransitionActive()) {
+		SceneType nextType = currentScene_->GetNextScene();
+		if (nextType != currentScene_->GetCurrentSceneType()) {
+			RequestSceneChange(nextType);
+		}
 	}
 }
 
 // 💡 6. シーンの描画処理
 void SceneManager::Draw() {
 	if (currentScene_ == nullptr) {
+		return;
+	}
+
+	// 暗転ウェイト中（完全ブラックアウト時）は描画をスキップして効率化
+	if (transition_ && transition_->GetPhase() == TransitionPhase::kWait) {
 		return;
 	}
 
@@ -107,6 +135,14 @@ void SceneManager::DrawImGui() {
 #include <sstream>
 
 void SceneManager::ChangeScene(SceneType nextSceneType) {
+	if (transition_) {
+		transition_->Reset();
+	}
+	hasPendingSceneChange_ = false;
+	ExecuteSceneChange(nextSceneType);
+}
+
+void SceneManager::ExecuteSceneChange(SceneType nextSceneType) {
 	if (nextSceneType == "Exit") {
 		// 終了処理
 		return;
@@ -144,12 +180,37 @@ void SceneManager::ChangeScene(SceneType nextSceneType) {
 }
 
 void SceneManager::RequestSceneChange(SceneType nextSceneType) {
+	TransitionDesc defaultDesc;
+	RequestSceneChange(nextSceneType, defaultDesc);
+}
+
+void SceneManager::RequestSceneChange(SceneType nextSceneType, const TransitionDesc& desc) {
 	if (currentScene_ != nullptr && nextSceneType == currentScene_->GetCurrentSceneType()) {
 		return;
+	}
+	if (IsTransitionActive()) {
+		return; // 既に遷移中
 	}
 
 	pendingSceneType_ = nextSceneType;
 	hasPendingSceneChange_ = true;
+
+	if (transition_) {
+		transition_->Start(desc);
+	} else {
+		ExecuteSceneChange(pendingSceneType_);
+		hasPendingSceneChange_ = false;
+	}
+}
+
+void SceneManager::StartTransition(const TransitionDesc& desc) {
+	if (transition_) {
+		transition_->Start(desc);
+	}
+}
+
+bool SceneManager::IsTransitionActive() const {
+	return transition_ && transition_->IsActive();
 }
 
 void SceneManager::RestartCurrentScene() {
@@ -166,7 +227,7 @@ void SceneManager::RestartCurrentScene() {
 }
 
 void SceneManager::RequestSceneRestart() {
-	if (currentScene_ == nullptr || hasPendingSceneChange_) {
+	if (currentScene_ == nullptr || hasPendingSceneChange_ || IsTransitionActive()) {
 		return;
 	}
 

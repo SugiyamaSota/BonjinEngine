@@ -18,7 +18,7 @@ Core::~Core() {}
 void Core::Initialize() {
 	Bonjin::Initialize(); // エンジン本体の初期化
 
-	// モデルの事前ロード（起動時にロードしてキャッシュ）
+	// 事前にリソースのロード
 	auto modelManager = ModelManager::GetInstance();
 	modelManager->LoadModel("human", "resources/models/human", "walk.gltf");
 

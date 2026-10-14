@@ -206,6 +206,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="engine\audio\AudioPlayer.cpp" />
     <ClCompile Include="engine\interface\IScene.cpp" />
     <ClCompile Include="engine\system\manager\scene\SceneManager.cpp" />
+    <ClCompile Include="engine\system\manager\scene\SceneTransition.cpp" />
     <ClCompile Include="engine\system\manager\texture\TextureManager.cpp" />
     <ClCompile Include="engine\core\common\DirectXCommon.cpp" />
     <ClCompile Include="engine\system\utility\function\function.cpp" />
@@ -347,6 +348,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\graphics\2d\sprite\TextSprite.h" />
     <ClInclude Include="engine\system\platform\windows\WinApp.h" />
     <ClInclude Include="engine\system\utility\time\Time.h" />
+    <ClInclude Include="engine\system\manager\scene\SceneTransition.h" />
     <ClInclude Include="application\scene\title\TitleScene.h" />
     <ClInclude Include="application\scene\title\TitleWorld.h" />
     <ClInclude Include="application\scene\title\TitleUI.h" />
