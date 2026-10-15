@@ -25,7 +25,8 @@ public:
 		kRandomNoise,
 		kHSVFilter,
 		kCRTShutDown,
-		kDigitalDissolve
+		kDigitalDissolve,
+		kSimpleFade
 	};
 
 	/// --- インスタンス関連 ---
@@ -62,6 +63,8 @@ public:
 	float GetRadialBlurWidth() const { return fullScreenMaterial_.radialBlurWidth; }
 	void SetDissolveThreshold(float threshold);
 	float GetDissolveThreshold() const { return fullScreenMaterial_.dissolveThreshold; }
+	void SetFadeAmount(float amount) { SetDissolveThreshold(amount); }
+	float GetFadeAmount() const { return GetDissolveThreshold(); }
 	void SetDissolveEdgeColor(const Vector3& color);
 	Vector3 GetDissolveEdgeColor() const { return fullScreenMaterial_.dissolveEdgeColor; }
 	void SetDissolveEdgeWidth(float width);

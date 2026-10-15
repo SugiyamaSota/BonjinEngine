@@ -1,5 +1,6 @@
 #pragma once
 #include "../bonjin/BonjinEngine.h"
+#include "../system/manager/scene/SceneTransition.h"
 
 #include <string>
 #include <memory>
@@ -72,6 +73,32 @@ namespace Bonjin
 		/// </summary>
 		/// <returns></returns>
 		virtual const char* GetScenename()const = 0;
+
+		/// <summary>
+		/// シーン退場（Out）時の演出タイプ（デフォルトは DigitalDissolve）
+		/// </summary>
+		virtual TransitionType GetTransitionOutType() const { return TransitionType::kDigitalDissolve; }
+		virtual float GetTransitionOutDuration() const { return 0.8f; }
+		virtual float GetTransitionWaitDuration() const { return 0.2f; }
+		virtual Vector3 GetTransitionEdgeColor() const { return { 0.0f, 1.5f, 2.0f }; }
+
+		/// <summary>
+		/// シーン入場（In）時の演出タイプ（デフォルトは DigitalDissolve）
+		/// </summary>
+		virtual TransitionType GetTransitionInType() const { return TransitionType::kDigitalDissolve; }
+		virtual float GetTransitionInDuration() const { return 1.0f; }
+
+		/// <summary>
+		/// シーン独自のカスタムアウト演出を行うか
+		/// </summary>
+		virtual bool HasCustomTransitionOut() const { return false; }
+		virtual void OnCustomTransitionOut(float progress) { (void)progress; }
+
+		/// <summary>
+		/// シーン独自のカスタムイン演出を行うか
+		/// </summary>
+		virtual bool HasCustomTransitionIn() const { return false; }
+		virtual void OnCustomTransitionIn(float progress) { (void)progress; }
 
 	protected:
 		// カメラ

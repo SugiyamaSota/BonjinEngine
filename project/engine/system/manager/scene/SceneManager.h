@@ -68,6 +68,8 @@ namespace Bonjin
         float GetRadialBlurWidth() const;
         void SetDissolveThreshold(float threshold);
         float GetDissolveThreshold() const;
+        void SetFadeAmount(float amount);
+        float GetFadeAmount() const;
         void SetDissolveEdgeColor(const Vector3& color);
         Vector3 GetDissolveEdgeColor() const;
         void SetDissolveEdgeWidth(float width);

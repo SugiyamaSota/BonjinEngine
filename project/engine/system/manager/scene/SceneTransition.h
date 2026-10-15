@@ -11,7 +11,9 @@ namespace Bonjin {
         kNone,              // 即座に切り替え
         kDigitalDissolve,   // 電子ブロック・デジタルディゾルブ
         kCRTShutDown,       // CRTモニター電源断（プツン）
-        kFadeBlack,         // 単純な暗転（エッジなしディゾルブ）
+        kFadeBlack,         // 単純な暗転（SimpleFade）
+        kSimpleFade = kFadeBlack, // SimpleFade エイリアス
+        kCustom,            // シーン固有のカスタム演出に委任
     };
 
     /// <summary>

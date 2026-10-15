@@ -312,6 +312,9 @@ void DirectXCommon::PostDraw()
 		case PostEffect::kDigitalDissolve:
 			postEffectType = PrimitiveType::kPostEffectDigitalDissolve;
 			break;
+		case PostEffect::kSimpleFade:
+			postEffectType = PrimitiveType::kPostEffectSimpleFade;
+			break;
 		default:
 			break;
 		}

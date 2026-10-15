@@ -22,13 +22,13 @@ void GameScene::Initialize(Camera* camera)
 	PlayerStatusRepository::GetInstance()->Load("resources/data/player_status.json");
 
 	battleController_ = std::make_unique<BattleController>();
-	battleController_->Initialize(camera_, "resources/maps/tutorial.json");
+	battleController_->Initialize(camera_, "resources/maps/stage1.json");
 
 	// ハイライトデータが存在する場合は kHighlight フェーズを開始
 	const auto& highlights = battleController_->GetMapChipField()->GetHighlights();
 	if (!highlights.empty()) {
 		phase_ = GamePhase::kHighlight;
-		highlightState_ = HighlightState::kDissolveIn;
+		highlightState_ = HighlightState::kFadeIn;
 		currentHighlightIndex_ = 0;
 		highlightTimer_ = 0.0f;
 
@@ -41,12 +41,11 @@ void GameScene::Initialize(Camera* camera)
 		// 最初のカメラ位置に合わせて描画用モデルを初期更新
 		battleController_->UpdateVisuals(0.0f);
 
-		// DigitalDissolve ポストエフェクトを有効化（真っ黒スタート）
+		// ポストエフェクトを一旦クリアし、SimpleFade（真っ黒スタート: 0.0f）だけを有効化
 		auto sm = SceneManager::GetInstance();
-		sm->AddPostEffect(DirectXCommon::PostEffect::kDigitalDissolve);
-		sm->SetDissolveThreshold(0.0f);
-		sm->SetDissolveEdgeWidth(0.06f);
-		sm->SetDissolveEdgeColor({ 0.0f, 1.5f, 2.0f });
+		sm->ClearPostEffects();
+		sm->AddPostEffect(DirectXCommon::PostEffect::kSimpleFade);
+		sm->SetFadeAmount(0.0f);
 	} else {
 		phase_ = GamePhase::kPlay;
 		battleController_->SetHudVisible(true);
@@ -93,9 +92,15 @@ void GameScene::UpdateHighlightPhase(float deltaTime) {
 	highlightTimer_ += deltaTime;
 
 	switch (highlightState_) {
-	case HighlightState::kDissolveIn: {
-		highlightState_ = HighlightState::kCameraPan;
-		highlightTimer_ = 0.0f;
+	case HighlightState::kFadeIn: {
+		float t = std::clamp(highlightTimer_ / kFadeDuration, 0.0f, 1.0f);
+		sm->SetFadeAmount(t); // 徐々に明るくなる
+
+		if (highlightTimer_ >= kFadeDuration) {
+			sm->SetFadeAmount(1.0f);
+			highlightState_ = HighlightState::kCameraPan;
+			highlightTimer_ = 0.0f;
+		}
 		break;
 	}
 	case HighlightState::kCameraPan: {
@@ -110,7 +115,7 @@ void GameScene::UpdateHighlightPhase(float deltaTime) {
 			battleController_->GetCameraController()->Update(targetPos, deltaTime);
 
 			if (highlightTimer_ >= duration) {
-				highlightState_ = HighlightState::kDissolveOut;
+				highlightState_ = HighlightState::kFadeOut;
 				highlightTimer_ = 0.0f;
 			}
 		} else {
@@ -119,37 +124,49 @@ void GameScene::UpdateHighlightPhase(float deltaTime) {
 		}
 		break;
 	}
-	case HighlightState::kDissolveOut: {
-		float t = 1.0f - std::clamp(highlightTimer_ / kDissolveDuration, 0.0f, 1.0f);
-		sm->SetDissolveThreshold(t);
+	case HighlightState::kFadeOut: {
+		float t = 1.0f - std::clamp(highlightTimer_ / kFadeDuration, 0.0f, 1.0f);
+		sm->SetFadeAmount(t); // 徐々に暗くなる
 
-		if (highlightTimer_ >= kDissolveDuration) {
+		if (highlightTimer_ >= kFadeDuration) {
 			currentHighlightIndex_++;
 			highlightTimer_ = 0.0f;
 
 			if (currentHighlightIndex_ < highlights.size()) {
-				// 次のハイライトへカメラを瞬時に移動させて Dissolve In
+				// 次のハイライトへカメラを瞬時に移動させて Fade In
 				battleController_->GetCameraController()->SetTargetInstant(highlights[currentHighlightIndex_].startWorldPos);
-				highlightState_ = HighlightState::kDissolveIn;
+				battleController_->UpdateVisuals(0.0f);
+				sm->SetFadeAmount(0.0f);
+				highlightState_ = HighlightState::kFadeIn;
 			} else {
-				// 全ハイライト完了 -> プレイヤーへカメラを瞬時に移動させて最終 Dissolve In
+				// 全ハイライト完了 -> プレイヤーへカメラを瞬時に移動させて DigitalDissolve で実体化スタート！
 				if (battleController_->GetPlayer()) {
 					battleController_->GetCameraController()->SetTargetInstant(battleController_->GetPlayer()->GetWorldPosition());
 				}
+				battleController_->UpdateVisuals(0.0f);
+
+				// SimpleFade を終了し、DigitalDissolve を開始
+				sm->ClearPostEffects();
+				sm->AddPostEffect(DirectXCommon::PostEffect::kDigitalDissolve);
+				sm->SetDissolveThreshold(0.0f); // 真っ黒から実体化スタート
+				sm->SetDissolveEdgeWidth(0.06f); // サイバー発光エッジ
+				sm->SetDissolveEdgeColor({ 0.0f, 1.5f, 2.0f }); // サイバーブルー
+
 				highlightState_ = HighlightState::kPlayerFocusIn;
 			}
 		}
 		break;
 	}
 	case HighlightState::kPlayerFocusIn: {
-		float t = std::clamp(highlightTimer_ / kDissolveDuration, 0.0f, 1.0f);
+		// プレイヤー出現は DigitalDissolve（電子ブロック・実体化演出）
+		float t = std::clamp(highlightTimer_ / kPlayerFocusDuration, 0.0f, 1.0f);
 		sm->SetDissolveThreshold(t);
 
 		if (battleController_->GetPlayer()) {
 			battleController_->GetCameraController()->Update(battleController_->GetPlayer()->GetWorldPosition(), deltaTime);
 		}
 
-		if (highlightTimer_ >= kDissolveDuration) {
+		if (highlightTimer_ >= kPlayerFocusDuration) {
 			FinishHighlight();
 		}
 		break;
@@ -164,8 +181,9 @@ void GameScene::UpdateHighlightPhase(float deltaTime) {
 
 void GameScene::FinishHighlight() {
 	auto sm = SceneManager::GetInstance();
+	sm->ClearPostEffects();
+	sm->SetFadeAmount(1.0f);
 	sm->SetDissolveThreshold(1.0f);
-	sm->RemovePostEffect(DirectXCommon::PostEffect::kDigitalDissolve);
 
 	if (battleController_ && battleController_->GetPlayer()) {
 		battleController_->GetCameraController()->SetTargetInstant(battleController_->GetPlayer()->GetWorldPosition());

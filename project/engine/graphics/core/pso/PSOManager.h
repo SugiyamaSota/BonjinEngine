@@ -30,6 +30,7 @@ enum class PrimitiveType {
 	kGpuLightning,
 	kPostEffectCRTShutDown,
 	kPostEffectDigitalDissolve,
+	kPostEffectSimpleFade,
 	kCount,
 };
 

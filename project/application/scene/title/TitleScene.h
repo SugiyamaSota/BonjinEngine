@@ -34,6 +34,10 @@ namespace Bonjin
             return "TitleScene";
         }
 
+        TransitionType GetTransitionOutType() const override { return TransitionType::kCRTShutDown; }
+        float GetTransitionOutDuration() const override { return 0.24f; }
+        float GetTransitionWaitDuration() const override { return 0.50f; } // パチンコ風の息を呑む静寂のタメ（ブラックアウト）
+
     private:
         // --- 3D背景ワールド ---
         std::unique_ptr<TitleWorld> world_ = nullptr;

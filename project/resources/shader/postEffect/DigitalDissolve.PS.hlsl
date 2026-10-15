@@ -52,7 +52,7 @@ PixelShaderOutPut main(VertexShaderOutPut input)
     float timeStep = floor(gMaterial.time * 24.0f);
     float timeFlicker = Hash21(blockCoord + float2(timeStep * 0.07f, timeStep * 0.13f));
 
-    // 上から下へのスキャン進行波
+    // スキャンの進行をMaterialから取得し分岐
     float scanPos = 1.0f-blockUV.y;
     float blockThreshold = scanPos * 0.65f + blockRand * 0.25f + subRand * 0.10f;
     //float blockThreshold = blockRand * 0.9f + subRand * 0.1f;

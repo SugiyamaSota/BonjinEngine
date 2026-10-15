@@ -138,14 +138,8 @@ void TitleScene::UpdateDiveTransition(float deltaTime) {
 		sceneManager->SetRadialBlurWidth(0.0f);
 		sceneManager->RemovePostEffect(DirectXCommon::PostEffect::kRadialBlur);
 
-		TransitionDesc desc;
-		desc.outType = TransitionType::kCRTShutDown;
-		desc.outDuration = 0.24f;
-		desc.waitDuration = 0.50f; // パチンコ風の息を呑む静寂のタメ（ブラックアウト）
-		desc.inType = TransitionType::kDigitalDissolve;
-		desc.inDuration = 1.4f;
-
-		sceneManager->RequestSceneChange(targetSceneType_, desc);
+		// ハイブリッド方式：シーン名だけ渡せば、TitleSceneのOut設定と次シーンのIn設定が自動適用される！
+		sceneManager->RequestSceneChange(targetSceneType_);
 	}
 }
 

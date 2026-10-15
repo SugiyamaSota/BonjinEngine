@@ -180,8 +180,32 @@ void SceneManager::ExecuteSceneChange(SceneType nextSceneType) {
 }
 
 void SceneManager::RequestSceneChange(SceneType nextSceneType) {
-	TransitionDesc defaultDesc;
-	RequestSceneChange(nextSceneType, defaultDesc);
+	TransitionDesc desc;
+
+	// 1. 遷移元シーンのアウト演出設定を反映
+	if (currentScene_) {
+		if (currentScene_->HasCustomTransitionOut()) {
+			desc.outType = TransitionType::kCustom;
+		} else {
+			desc.outType = currentScene_->GetTransitionOutType();
+		}
+		desc.outDuration = currentScene_->GetTransitionOutDuration();
+		desc.waitDuration = currentScene_->GetTransitionWaitDuration();
+		desc.edgeColor = currentScene_->GetTransitionEdgeColor();
+	}
+
+	// 2. 遷移先シーンのイン演出設定を反映
+	auto it = scenes_.find(nextSceneType);
+	if (it != scenes_.end() && it->second) {
+		if (it->second->HasCustomTransitionIn()) {
+			desc.inType = TransitionType::kCustom;
+		} else {
+			desc.inType = it->second->GetTransitionInType();
+		}
+		desc.inDuration = it->second->GetTransitionInDuration();
+	}
+
+	RequestSceneChange(nextSceneType, desc);
 }
 
 void SceneManager::RequestSceneChange(SceneType nextSceneType, const TransitionDesc& desc) {
@@ -332,6 +356,14 @@ void SceneManager::SetDissolveThreshold(float threshold) {
 
 float SceneManager::GetDissolveThreshold() const {
 	return DirectXCommon::GetInstance()->GetDissolveThreshold();
+}
+
+void SceneManager::SetFadeAmount(float amount) {
+	DirectXCommon::GetInstance()->SetFadeAmount(amount);
+}
+
+float SceneManager::GetFadeAmount() const {
+	return DirectXCommon::GetInstance()->GetFadeAmount();
 }
 
 void SceneManager::SetDissolveEdgeColor(const Vector3& color) {
