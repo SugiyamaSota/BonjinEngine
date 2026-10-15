@@ -6,19 +6,12 @@ class Player;
 
 class Anchor : public Bonjin::GameObject {
 public:
-	/// <summary>
-	/// コンストラクタ
-	/// </summary>
+    // コンストラクタ
 	Anchor(const Vector3& position, const Vector3& velocity, MapChipField* mapChipField, Player* player, Camera* camera);
-
-	/// <summary>
-	/// デストラクタ
-	/// </summary>
+	// デストラクタ
 	~Anchor() = default;
 
-	/// <summary>
-	/// 更新処理
-	/// </summary>
+	// 更新処理
 	void Update() override;
 
 	// 当たり判定メソッドを追加

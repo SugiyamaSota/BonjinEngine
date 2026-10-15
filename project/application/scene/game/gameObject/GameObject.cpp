@@ -31,6 +31,9 @@ void GameObject::Initialize(Object3D* model, Camera* camera, const Vector3& posi
 			OnCollision(other);
 		});
 	}
+
+	// 初期化時点で一度モデル更新を行い、正常なWVP行列を転送しておく
+	UpdateModel();
 }
 
 void GameObject::Update() {
@@ -40,6 +43,10 @@ void GameObject::Update() {
 		collider_->SetAABB(GetAABB());
 	}
 
+	UpdateModel();
+}
+
+void GameObject::UpdateModel() {
 	if (model_) {
 		model_->Update(worldTransform_, camera_);
 	}

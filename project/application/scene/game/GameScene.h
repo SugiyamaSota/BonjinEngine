@@ -6,6 +6,7 @@
 namespace Bonjin {
 
 enum class GamePhase {
+	kHighlight,
 	kPlay,
 	kGoal,
 };
@@ -35,6 +36,23 @@ enum class GamePhase {
 	private:
 		// --- ゲーム固有の変数 ---
 		std::unique_ptr<BattleController> battleController_;
+
+		// --- ハイライト演出用 ---
+		enum class HighlightState {
+			kDissolveIn,
+			kCameraPan,
+			kDissolveOut,
+			kPlayerFocusIn
+		};
+
+		HighlightState highlightState_ = HighlightState::kDissolveIn;
+		size_t currentHighlightIndex_ = 0;
+		float highlightTimer_ = 0.0f;
+		static constexpr float kDissolveDuration = 0.5f;
+
+		void UpdateHighlightPhase(float deltaTime);
+		void FinishHighlight();
+		void UpdatePlayPhase(float deltaTime);
 	};
 
 }

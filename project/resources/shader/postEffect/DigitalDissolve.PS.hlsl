@@ -21,7 +21,7 @@ PixelShaderOutPut main(VertexShaderOutPut input)
 {
     PixelShaderOutPut output;
 
-    // 進行度（0.0 = 完全な漆黒、1.0 = 完全な実体化）
+    // 進行度を外部から取得
     float progress = saturate(gMaterial.dissolveThreshold);
 
     // 0.0なら完全な真っ黒
@@ -37,26 +37,25 @@ PixelShaderOutPut main(VertexShaderOutPut input)
         return output;
     }
 
-    // 1. デジタルブロック分割（128x72の電子ブロックグリッド）
+    // デジタルブロック分割
     float2 blockSize = float2(128.0f, 72.0f);
     float2 blockCoord = floor(input.texcoord * blockSize);
     float2 blockUV = blockCoord / blockSize;
 
-    // 2. ブロックごとの動的ハッシュ（固定ノイズテクスチャに依存しない動的ランダム値）
+    // ブロックごとのランダム値
     float blockRand = Hash21(blockCoord);
     
-    // サブブロック（細かな粒度）のノイズ
+    // サブブロックのノイズ
     float subRand = Hash21(floor(input.texcoord * blockSize * 2.0f));
 
-    // 時間変動による高速デジタルフリッカー（毎フレーム激しく明滅する電脳スパーク）
+    // 時間によるちらつき
     float timeStep = floor(gMaterial.time * 24.0f);
     float timeFlicker = Hash21(blockCoord + float2(timeStep * 0.07f, timeStep * 0.13f));
 
-    // 3. 上から下へのスキャン進行波 + ランダムブロック遅延
-    // 大局的には上部(Y=0)から下部(Y=1)へ走査線が下りてくるが、
-    // 各ブロックがランダムに先行・後発してバラバラと実体化する
-    float scanPos = blockUV.y;
+    // 上から下へのスキャン進行波
+    float scanPos = 1.0f-blockUV.y;
     float blockThreshold = scanPos * 0.65f + blockRand * 0.25f + subRand * 0.10f;
+    //float blockThreshold = blockRand * 0.9f + subRand * 0.1f;
 
     // 進行度との差分（正なら出現済み、負なら未出現）
     float edgeWidth = max(gMaterial.dissolveEdgeWidth, 0.02f);

@@ -24,6 +24,16 @@ public:
 	void Update(const Vector3& destinationTarget, float deltaTime);
 
 	/// <summary>
+	/// 補間なしで瞬時にターゲット座標を設定
+	/// </summary>
+	/// <param name="target">ターゲット座標</param>
+	void SetTargetInstant(const Vector3& target);
+
+	void SetLerpFactor(float factor) { lerpFactor_ = factor; }
+	float GetLerpFactor() const { return lerpFactor_; }
+	const Vector3& GetCurrentTarget() const { return currentTarget_; }
+
+	/// <summary>
 	/// ImGuiでの編集用描画
 	/// </summary>
 	void DrawImGui();

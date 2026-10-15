@@ -7,6 +7,10 @@
 #include "gameObject/enemy/Enemy.h"
 #include "gameObject/enemy/NoGravityEnemy.h"
 #include "GpuParticleManager.h"
+#include "SceneManager.h"
+#include "input/Input.h"
+#include "input/Gamepad.h"
+#include "vector.h"
 #include <algorithm>
 #include <cmath>
 #include <numbers>
@@ -25,7 +29,7 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	lockedOnEnemies_.clear();
 
 	mapChipField_ = std::make_unique<MapChipField>();
-	mapChipField_->LoadmapChipCsv(mapFilePath);
+	mapChipField_->LoadStage(mapFilePath);
 
 	const uint32_t vertical = mapChipField_->GetNumBlockVirtical();
 	const uint32_t horizontal = mapChipField_->GetNumBlockHorizontal();
@@ -47,10 +51,12 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	playerModel_->SetEnableEnableEnvironmentMap(false);
 
 	player_ = std::make_unique<Player>();
-	const Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(2, 1);
+	const Vector2 pSpawn = mapChipField_->GetPlayerSpawn();
+	const Vector3 playerPosition = mapChipField_->GetMapChipPosition(pSpawn.x, pSpawn.y);
 	player_->Initialize(playerModel_.get(), camera_, playerPosition);
 	player_->SetMapChipField(mapChipField_.get());
 	player_->SetLockedOnEnemiesList(&lockedOnEnemies_);
+	player_->Update();
 
 	cameraController_ = std::make_unique<CameraController>();
 	cameraController_->Initialize(camera_, playerPosition);
@@ -75,6 +81,7 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 			enemy->Initialize(enemyModels_.back().get(), camera_, spawnPos);
 			enemy->SetMapChipField(mapChipField_.get());
 			enemy->SetPlayer(player_.get());
+			enemy->Update();
 			enemies_.push_back(std::move(enemy));
 		} else {
 			// 地上敵はグレーがかった赤色にする
@@ -84,6 +91,7 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 			enemy->Initialize(enemyModels_.back().get(), camera_, enemyPosition);
 			enemy->SetMapChipField(mapChipField_.get());
 			enemy->SetPlayer(player_.get());
+			enemy->Update();
 			enemies_.push_back(std::move(enemy));
 		}
 	}
@@ -116,6 +124,10 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	hud_->Initialize();
 
 	GpuParticleManager::GetInstance()->Clear();
+
+	if (player_) {
+		player_->UpdateModel();
+	}
 
 	auto tEnd = std::chrono::high_resolution_clock::now();
 	float initMs = std::chrono::duration<float, std::milli>(tEnd - tStart).count();
@@ -259,8 +271,8 @@ void BattleController::Draw() {
 	// GPUパーティクル（雷霆エフェクト・スパーク）の描画
 	GpuParticleManager::GetInstance()->Draw(camera_);
 
-	// 2D HUD / UIの描画 (最前面)
-	if (hud_) {
+	// 2D HUD / UIの描画
+	if (isHudVisible_ && hud_) {
 		hud_->Draw();
 	}
 }
@@ -550,4 +562,36 @@ void BattleController::ResolveAnchorInstantLanding(Anchor& anchor) {
 	}
 
 	anchor.SetInstantResolved(true);
+}
+
+void BattleController::UpdateVisuals(float deltaTime) {
+	if (skyBox_) {
+		skyBox_->Update(InitializeWorldTransform(), camera_);
+	}
+	if (goal_) {
+		goal_->Update();
+	}
+	const uint32_t vertical = mapChipField_->GetNumBlockVirtical();
+	const uint32_t horizontal = mapChipField_->GetNumBlockHorizontal();
+	for (uint32_t i = 0; i < vertical; ++i) {
+		for (uint32_t j = 0; j < horizontal; ++j) {
+			if (blockModels_[i][j]) {
+				blockModels_[i][j]->Update(blockWorldTransforms_[i][j], camera_);
+			}
+		}
+	}
+	if (particleManager_) {
+		particleManager_->Update(camera_);
+	}
+	GpuParticleManager::GetInstance()->Update(deltaTime, camera_);
+
+	// 敵やプレイヤーの描画用モデル（カメラ追従WVP行列）を更新
+	for (const auto& enemy : enemies_) {
+		if (!enemy->GetIsDead()) {
+			enemy->UpdateModel();
+		}
+	}
+	if (player_) {
+		player_->UpdateModel();
+	}
 }
