@@ -36,7 +36,12 @@ public:
 	bool IsEnemyRespawnEnabled() const { return isEnemyRespawnEnabled_; }
 	bool IsGoalReached() const { return isGoalReached_; }
 
+	CameraController* GetCameraController() const { return cameraController_.get(); }
+	void UpdateVisuals(float deltaTime);
+	void SetHudVisible(bool visible) { isHudVisible_ = visible; }
+
 private:
+	bool isHudVisible_ = true;
 	Camera* camera_ = nullptr;
 	std::unique_ptr<CameraController> cameraController_;
 

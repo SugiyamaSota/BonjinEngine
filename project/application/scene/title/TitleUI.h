@@ -14,6 +14,12 @@ namespace Bonjin
         TitleUI() = default;
         ~TitleUI() = default;
 
+        enum class TitleMenuItem {
+            kGameStart = 0,
+            kTutorial = 1,
+            kCount
+        };
+
         /// <summary>
         /// 初期化
         /// </summary>
@@ -42,10 +48,20 @@ namespace Bonjin
         /// </summary>
         void SetAlpha(float alpha);
 
+        /// <summary>
+        /// 現在選択されているメニュー項目を取得
+        /// </summary>
+        TitleMenuItem GetSelectedMenuItem() const { return selectedItem_; }
+
     private:
         // 2Dテキストスプライト
         std::unique_ptr<TextSprite> titleText_ = nullptr;
-        std::unique_ptr<TextSprite> startText_ = nullptr;
+        std::unique_ptr<TextSprite> gameStartText_ = nullptr;
+        std::unique_ptr<TextSprite> tutorialText_ = nullptr;
+        std::unique_ptr<TextSprite> guideText_ = nullptr;
+
+        // メニュー選択状態
+        TitleMenuItem selectedItem_ = TitleMenuItem::kGameStart;
 
         // タイマー・演出パラメータ
         float timer_ = 0.0f;
@@ -54,6 +70,7 @@ namespace Bonjin
 
     private:
         void UpdateGlitch(float deltaTime);
+        void UpdateMenuSelection();
     };
 
 }

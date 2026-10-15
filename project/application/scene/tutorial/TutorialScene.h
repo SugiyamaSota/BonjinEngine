@@ -8,7 +8,6 @@
 namespace Bonjin {
 
 enum class TutorialPhase {
-	kStart,
 	kPlay,
 	kComplete,
 };

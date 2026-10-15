@@ -13,7 +13,11 @@ Anchor::Anchor(const Vector3& position, const Vector3& velocity, MapChipField* m
 	height_ = kHeight;
 
 	anchorModel_ = std::make_unique<Object3D>();
-	anchorModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+	if (player_ && player_->GetModel()) {
+		anchorModel_->CopyModelResourceFrom(*player_->GetModel(), false);
+	} else {
+		anchorModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+	}
 	anchorModel_->SetColor({ 0, 0, 1, 1 });
 	anchorModel_->SetEnableEnableEnvironmentMap(false);
 

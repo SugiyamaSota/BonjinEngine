@@ -228,6 +228,9 @@
     <ClCompile Include="engine\system\manager\scene\SceneManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="engine\system\manager\scene\SceneTransition.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="engine\system\manager\texture\TextureManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -459,6 +462,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\interface\IScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\system\manager\scene\SceneTransition.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\system\utility\time\Time.h">

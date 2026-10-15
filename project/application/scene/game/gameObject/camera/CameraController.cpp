@@ -33,6 +33,13 @@ void CameraController::Update(const Vector3& destinationTarget, float deltaTime)
 	camera_->SetTarget(currentTarget_);
 }
 
+void CameraController::SetTargetInstant(const Vector3& target) {
+	currentTarget_ = target;
+	if (camera_) {
+		camera_->SetTarget(currentTarget_);
+	}
+}
+
 void CameraController::DrawImGui() {
 #ifdef USE_IMGUI
 	if (ImGui::TreeNode("Camera Controller")) {

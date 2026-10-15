@@ -12,9 +12,9 @@ class Camera;
 namespace Bonjin {
 
 enum class PhysicsType {
-	None,     // 物理更新なし
-	Linear,   // 直線運動（重力なし）
-	Gravity,  // 重力あり
+    None,     // 物理更新なし
+    Linear,   // 直線運動（重力なし）
+    Gravity,  // 重力あり
 };
 
 struct GameObjectInitConfig {
@@ -74,6 +74,9 @@ public:
 	// 共通の更新処理
 	virtual void Update();
 
+	// 描画用モデル（カメラ追従WVP行列）の更新処理
+	virtual void UpdateModel();
+
 	// 共通の描画
 	virtual void Draw() const;
 
@@ -91,6 +94,7 @@ public:
 	void SetHeight(float h) { height_ = h; }
 
 	Collider* GetCollider() const { return collider_.get(); }
+	Object3D* GetModel() const { return model_; }
 	AABB GetAABB() const;
 
 protected:

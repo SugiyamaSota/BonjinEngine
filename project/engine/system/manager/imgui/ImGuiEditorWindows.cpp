@@ -20,7 +20,9 @@ void ImGuiEditorWindows::DrawSystemSettings(SceneManager* sceneManager) {
 			"RadialBlur",
 			"Dissolve",
 			"RandomNoise",
-			"HSVFilter"
+			"HSVFilter",
+			"CRTShutDown",
+			"DigitalDissolve"
 		};
 
 		if (ImGui::Button("Restart Scene (F5)")) {
@@ -39,7 +41,11 @@ void ImGuiEditorWindows::DrawSystemSettings(SceneManager* sceneManager) {
 		ImGui::BeginChild("EffectsList", ImVec2(0, 150), true);
 		for (size_t i = 0; i < nextEffects.size(); ++i) {
 			ImGui::PushID(static_cast<int>(i));
-			ImGui::Text("[%d] %s", static_cast<int>(i), postEffectNames[static_cast<int>(nextEffects[i])]);
+			int effectIndex = static_cast<int>(nextEffects[i]);
+			const char* effectName = (effectIndex >= 0 && effectIndex < static_cast<int>(sizeof(postEffectNames) / sizeof(postEffectNames[0])))
+				? postEffectNames[effectIndex]
+				: "Unknown";
+			ImGui::Text("[%d] %s", static_cast<int>(i), effectName);
 			ImGui::SameLine();
 			if (ImGui::Button("Up") && i > 0) {
 				moveUpIndex = static_cast<int>(i);
@@ -161,6 +167,13 @@ void ImGuiEditorWindows::DrawSystemSettings(SceneManager* sceneManager) {
 				sceneManager->SetHSVValueMultiplier(hsvValueMultiplier);
 			}
 		}
+
+		if (ImGui::CollapsingHeader("CRTShutDown Settings")) {
+			float shutDownProgress = sceneManager->GetCRTShutDownProgress();
+			if (ImGui::SliderFloat("Progress", &shutDownProgress, 0.0f, 1.0f)) {
+				sceneManager->SetCRTShutDownProgress(shutDownProgress);
+			}
+		}
 	}
 	ImGui::End();
 #endif
@@ -209,8 +222,11 @@ void ImGuiEditorWindows::DrawGameView(SceneManager* sceneManager) {
 
 void ImGuiEditorWindows::DrawHierarchy(IScene* currentScene) {
 #ifdef USE_IMGUI
+	if (!currentScene) return;
+
 	if (ImGui::Begin("Hierarchy")) {
 		for (BaseObject* obj : currentScene->GetSceneObjects()) {
+			if (!obj) continue;
 			if (ImGui::TreeNode(obj, "%s", obj->GetName().c_str())) {
 				obj->DrawImGui(obj->GetName());
 				ImGui::TreePop();

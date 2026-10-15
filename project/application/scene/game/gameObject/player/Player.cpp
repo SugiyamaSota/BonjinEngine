@@ -36,7 +36,11 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 	frayLineEffect_->Initialize();
 
 	retractAnchorModel_ = std::make_unique<Object3D>();
-	retractAnchorModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+	if (model) {
+		retractAnchorModel_->CopyModelResourceFrom(*model, false);
+	} else {
+		retractAnchorModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+	}
 	retractAnchorModel_->SetBlendMode(BlendMode::kNormal);
 	retractAnchorModel_->SetEnableEnableEnvironmentMap(false);
 }
@@ -563,11 +567,9 @@ void Player::RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies) {
 	}
 	enemies.clear();
 
-	// 撃破ボーナス: 2体以上の連続撃破で即座に1個回復、1体撃破でリチャージゲージ短縮
-	if (defeatedCount >= 2) {
-		RestoreAnchorStock(1);
-	} else if (defeatedCount == 1) {
-		AddAnchorRechargeProgress(1.0f);
+	// 撃破ボーナス: 敵を倒したらアンカーを回復（倒した敵1体につき1個回復）
+	if (defeatedCount > 0) {
+		RestoreAnchorStock(static_cast<int>(defeatedCount));
 	}
 
 	// 最初のテレポートを開始
