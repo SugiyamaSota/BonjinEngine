@@ -1,5 +1,5 @@
 #include "TutorialScene.h"
-#include "../game/gameObject/player/PlayerStatusRepository.h"
+#include "gameObject/player/PlayerStatusRepository.h"
 #include "SceneManager.h"
 #include <algorithm>
 

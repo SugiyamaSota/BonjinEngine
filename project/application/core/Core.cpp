@@ -5,7 +5,7 @@
 #include "GameScene.h"
 #include "../scene/tutorial/TutorialScene.h"
 #include "../scene/result/ResultScene.h"
-#include "../scene/game/gameObject/player/PlayerStatusRepository.h"
+#include "gameObject/player/PlayerStatusRepository.h"
 #include "TestScene.h"
 
 #include "ParticleManager.h"

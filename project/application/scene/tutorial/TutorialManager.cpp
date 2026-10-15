@@ -1,8 +1,8 @@
 #define NOMINMAX
 #include "TutorialManager.h"
-#include "../game/BattleController.h"
-#include "../game/gameObject/player/Player.h"
-#include "../game/gameObject/enemy/BaseEnemy.h"
+#include "battle/BattleController.h"
+#include "gameObject/player/Player.h"
+#include "gameObject/enemy/BaseEnemy.h"
 #include "input/Input.h"
 #include "input/Gamepad.h"
 #include "function/function.h"

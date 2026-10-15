@@ -180,9 +180,6 @@
     <ClCompile Include="application\scene\game\GameScene.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="application\scene\game\BattleController.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="application\scene\tutorial\TutorialScene.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -333,18 +330,7 @@
     <ClCompile Include="engine\graphics\3d\line\FrayLine3D.cpp">
       <Filter>engine\draw\line</Filter>
     </ClCompile>
-    <ClCompile Include="application\scene\game\gameObject\enemy\Enemy.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\scene\game\gameObject\enemy\EnemyBullet.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\scene\game\gameObject\enemy\BaseEnemy.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\scene\game\gameObject\enemy\NoGravityEnemy.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
+
     <ClCompile Include="engine\graphics\3d\animation\Skeleton.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -354,10 +340,50 @@
     <ClCompile Include="engine\graphics\core\pso\config\line\LineConfig.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="application\scene\game\gameObject\player\PlayerStatusRepository.cpp">
+
+    <ClCompile Include="application\play\battle\BattleController.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="application\scene\game\gameObject\player\PlayerStatusComponent.cpp">
+    <ClCompile Include="application\play\gameObject\GameObject.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\play\gameObject\player\Player.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\play\gameObject\player\PlayerStatusComponent.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\play\gameObject\player\PlayerStatusRepository.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\play\gameObject\enemy\BaseEnemy.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\play\gameObject\enemy\Enemy.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\play\gameObject\enemy\EnemyBullet.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\play\gameObject\enemy\NoGravityEnemy.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\play\gameObject\camera\CameraController.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\play\gameObject\anchor\anchor.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\play\mapchip\MapChipField.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\play\logic\Collision.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\play\logic\CollisionManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="application\play\hud\HUD.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -453,9 +479,6 @@
       <Filter>engine\windows</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\game\GameScene.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\scene\game\BattleController.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\tutorial\TutorialScene.h">
@@ -620,27 +643,14 @@
     <ClInclude Include="engine\graphics\3d\line\FrayLine3D.h">
       <Filter>engine\draw\line</Filter>
     </ClInclude>
-    <ClInclude Include="application\scene\game\gameObject\enemy\Enemy.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\scene\game\hud\HUD.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
+
     <ClInclude Include="application\scene\tutorial\TutorialManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\tutorial\TutorialEditor.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="application\scene\game\gameObject\enemy\EnemyBullet.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\scene\game\gameObject\enemy\BaseEnemy.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\scene\game\gameObject\enemy\NoGravityEnemy.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
+
     <ClInclude Include="engine\graphics\3d\animation\Skeleton.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -650,10 +660,59 @@
     <ClInclude Include="engine\graphics\core\pso\config\line\LineConfig.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="application\scene\game\gameObject\player\PlayerStatusRepository.h">
+
+    <ClInclude Include="application\play\battle\BattleController.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="application\scene\game\gameObject\player\PlayerStatusComponent.h">
+    <ClInclude Include="application\play\gameObject\GameObject.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\gameObject\player\Player.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\gameObject\player\PlayerStatusComponent.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\gameObject\player\PlayerStatusRepository.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\gameObject\enemy\BaseEnemy.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\gameObject\enemy\Enemy.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\gameObject\enemy\EnemyBullet.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\gameObject\enemy\NoGravityEnemy.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\gameObject\camera\CameraController.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\gameObject\anchor\anchor.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\mapchip\MapChipField.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\logic\Collider.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\logic\Collision.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\logic\CollisionConfig.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\logic\CollisionManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\logic\Data.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\hud\HUD.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

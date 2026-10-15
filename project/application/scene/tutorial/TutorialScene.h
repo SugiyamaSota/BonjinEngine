@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../interface/BaseScene.h"
-#include "../game/BattleController.h"
+#include "battle/BattleController.h"
 #include "TutorialManager.h"
 #include "TutorialEditor.h"
 

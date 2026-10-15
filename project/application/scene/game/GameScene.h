@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../interface/BaseScene.h"
-#include "BattleController.h"
+#include "battle/BattleController.h"
 
 namespace Bonjin {
 
