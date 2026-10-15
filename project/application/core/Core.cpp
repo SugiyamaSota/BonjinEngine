@@ -18,18 +18,6 @@ Core::~Core() {}
 void Core::Initialize() {
 	Bonjin::Initialize(); // エンジン本体の初期化
 
-	///--- シーンのセットアップ ---
-	auto sceneManager = SceneManager::GetInstance();
-	sceneManager->Initialize();
-	// 各シーンの追加
-	sceneManager->AddScene("TitleScene", std::make_unique<TitleScene>());
-	sceneManager->AddScene("TutorialScene", std::make_unique<TutorialScene>());
-	sceneManager->AddScene("GameScene", std::make_unique<GameScene>());
-	sceneManager->AddScene("ResultScene", std::make_unique<ResultScene>());
-	sceneManager->AddScene("TestScene", std::make_unique<TestScene>());
-	// 最初のシーンを設定
-	sceneManager->ChangeScene("TitleScene");
-
 	///--- 起動時にリソースのロード ---
 	// モデル
 	auto modelManager = ModelManager::GetInstance();
@@ -59,6 +47,19 @@ void Core::Initialize() {
 	// プレイヤーのレベルごとのステータステーブル
 	PlayerStatusRepository::GetInstance()->Load("resources/data/player_status.json");
 
+	///--- シーンのセットアップ ---
+	auto sceneManager = SceneManager::GetInstance();
+	sceneManager->Initialize();
+	// 各シーンの追加
+	sceneManager->AddScene("TitleScene", std::make_unique<TitleScene>());
+	sceneManager->AddScene("TutorialScene", std::make_unique<TutorialScene>());
+	sceneManager->AddScene("GameScene", std::make_unique<GameScene>());
+	sceneManager->AddScene("ResultScene", std::make_unique<ResultScene>());
+	sceneManager->AddScene("TestScene", std::make_unique<TestScene>());
+	// 最初のシーンを設定
+	sceneManager->ChangeScene("TitleScene");
+
+	DirectXCommon::GetInstance()->WaitAndResetCommandList();
 }
 
 void Core::Run() {

@@ -45,11 +45,6 @@ void SceneManager::AddScene(SceneType type, std::unique_ptr<IScene> scene) {
 	}
 
 	scenes_[type] = std::move(scene);
-	// 最初のシーンであれば、カレントシーンとして設定
-	if (currentScene_ == nullptr) {
-		currentScene_ = scenes_[type].get();
-		currentScene_->Initialize(camera_.get());
-	}
 }
 
 // 💡 5. シーンの更新処理
@@ -60,9 +55,11 @@ void SceneManager::Update(float deltaTime) {
 
 		// シーン切り替え（Unload & Initialize）を実行すべき瞬間
 		if (transition_->ShouldSwitchScene()) {
-			ExecuteSceneChange(pendingSceneType_);
+			if (hasPendingSceneChange_) {
+				ExecuteSceneChange(pendingSceneType_);
+				hasPendingSceneChange_ = false;
+			}
 			transition_->NotifySceneSwitched();
-			hasPendingSceneChange_ = false;
 		}
 	}
 
