@@ -45,6 +45,12 @@ void TitleScene::Initialize(Camera* camera) {
 	startDesc.inType = TransitionType::kDigitalDissolve;
 	startDesc.inDuration = 1.4f;
 	sceneManager->StartTransition(startDesc);
+
+	// BGM再生（ループ）
+	BgmPlayer::GetInstance()->Play("resources/sounds/bgm/title.mp3", true);
+
+	// SE登録
+	shutdownSEId = SoundManager::GetInstance()->LoadSound("resources/sounds/se/test2.mp3");
 }
 
 void TitleScene::Unload() {
@@ -68,6 +74,8 @@ void TitleScene::Unload() {
 	sceneManager->SetRadialBlurWidth(0.0f);
 	sceneManager->SetFullScreenVignette(false);
 	sceneManager->SetNoiseAlpha(0.0f);
+
+	
 }
 
 void TitleScene::Update(float deltaTime) {
@@ -135,9 +143,14 @@ void TitleScene::UpdateDiveTransition(float deltaTime) {
 
 	// ズーム最高潮に達した瞬間、共通トランジション（CRT電源断 → 静寂ブラックアウト → 次シーンディゾルブ）を起動！
 	if (progress >= 1.0f) {
+
+		// bgm停止と、se
+		BgmPlayer::GetInstance()->Stop();
 		sceneManager->SetRadialBlurWidth(0.0f);
 		sceneManager->RemovePostEffect(DirectXCommon::PostEffect::kRadialBlur);
-
+		if (!SePlayer::GetInstance()->IsPlaying(shutdownSEId)) {
+			SePlayer::GetInstance()->Play(shutdownSEId, 1.0f);
+		}
 		// ハイブリッド方式：シーン名だけ渡せば、TitleSceneのOut設定と次シーンのIn設定が自動適用される！
 		sceneManager->RequestSceneChange(targetSceneType_);
 	}

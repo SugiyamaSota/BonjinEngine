@@ -84,7 +84,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/3d/animation;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/2d/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\imgui;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/utility;$(ProjectDir)engine\graphics/2d/line;$(ProjectDir)engine\graphics/3d/line;$(ProjectDir)engine\system\manager\gpuParticle;$(ProjectDir)engine\graphics\3d\gpuParticle;$(ProjectDir)engine\graphics\core\pso\config\gpuParticle;$(ProjectDir)application\play</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\sound;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/3d/animation;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/2d/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\imgui;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/utility;$(ProjectDir)engine\graphics/2d/line;$(ProjectDir)engine\graphics/3d/line;$(ProjectDir)engine\system\manager\gpuParticle;$(ProjectDir)engine\graphics\3d\gpuParticle;$(ProjectDir)engine\graphics\core\pso\config\gpuParticle;$(ProjectDir)application\play</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -112,7 +112,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/3d/animation;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/2d/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\imgui;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/utility;$(ProjectDir)engine\graphics/2d/line;$(ProjectDir)engine\graphics/3d/line;$(ProjectDir)engine\system\manager\gpuParticle;$(ProjectDir)engine\graphics\3d\gpuParticle;$(ProjectDir)engine\graphics\core\pso\config\gpuParticle;$(ProjectDir)application\play</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\sound;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/3d/animation;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/2d/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\imgui;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/utility;$(ProjectDir)engine\graphics/2d/line;$(ProjectDir)engine\graphics/3d/line;$(ProjectDir)engine\system\manager\gpuParticle;$(ProjectDir)engine\graphics\3d\gpuParticle;$(ProjectDir)engine\graphics\core\pso\config\gpuParticle;$(ProjectDir)application\play</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
@@ -144,7 +144,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\audio;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/3d/animation;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/2d/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\imgui;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/utility;$(ProjectDir)engine\graphics/2d/line;$(ProjectDir)engine\graphics/3d/line;$(ProjectDir)engine\system\manager\gpuParticle;$(ProjectDir)engine\graphics\3d\gpuParticle;$(ProjectDir)engine\graphics\core\pso\config\gpuParticle;$(ProjectDir)application\play</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\core\bonjin;$(ProjectDir)engine\sound;$(ProjectDir)engine\graphics/3d/builder;$(ProjectDir)engine\graphics/3d/animation;$(ProjectDir)engine\graphics/core/pso;$(ProjectDir)engine\system/utility;$(ProjectDir)engine\system/platform;$(ProjectDir)engine\graphics/2d/sprite;$(ProjectDir)application\core;$(ProjectDir)application\scene\game;$(ProjectDir)application\scene\title;$(ProjectDir)application\scene\test;$(ProjectDir)engine\system\manager\light;$(ProjectDir)engine\system\manager\imgui;$(ProjectDir)engine\system\manager\model;$(ProjectDir)engine\system\manager\texture;$(ProjectDir)engine\core\common;$(ProjectDir)engine\system\manager\particle;$(ProjectDir)engine\system\manager\scene;$(ProjectDir)externals\assimp\include;$(ProjectDir)externals\imgui;$(ProjectDir)engine/graphics/3d/camera;$(ProjectDir)engine/graphics/3d/object;$(ProjectDir)engine\system\manager\srv;$(ProjectDir)engine\system/utility/math;$(ProjectDir)engine\system/platform/windows;$(ProjectDir)engine\graphics/utility;$(ProjectDir)engine\graphics/2d/line;$(ProjectDir)engine\graphics/3d/line;$(ProjectDir)engine\system\manager\gpuParticle;$(ProjectDir)engine\graphics\3d\gpuParticle;$(ProjectDir)engine\graphics\core\pso\config\gpuParticle;$(ProjectDir)application\play</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -203,9 +203,9 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="engine\system\manager\model\ModelManager.cpp" />
     <ClCompile Include="engine\graphics\utility\color\Color.cpp" />
     <ClCompile Include="engine\core\bonjin\BonjinEngine.cpp" />
-    <ClCompile Include="engine\audio\SoundManager.cpp" />
-    <ClCompile Include="engine\audio\SePlayer.cpp" />
-    <ClCompile Include="engine\audio\BgmPlayer.cpp" />
+    <ClCompile Include="engine\sound\SoundManager.cpp" />
+    <ClCompile Include="engine\sound\SePlayer.cpp" />
+    <ClCompile Include="engine\sound\BgmPlayer.cpp" />
     <ClCompile Include="engine\interface\IScene.cpp" />
     <ClCompile Include="engine\system\manager\scene\SceneManager.cpp" />
     <ClCompile Include="engine\system\manager\scene\SceneTransition.cpp" />
@@ -319,10 +319,10 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\system\manager\model\ModelManager.h" />
     <ClInclude Include="engine\graphics\utility\color\Color.h" />
     <ClInclude Include="engine\core\bonjin\BonjinEngine.h" />
-    <ClInclude Include="engine\audio\SoundData.h" />
-    <ClInclude Include="engine\audio\SoundManager.h" />
-    <ClInclude Include="engine\audio\SePlayer.h" />
-    <ClInclude Include="engine\audio\BgmPlayer.h" />
+    <ClInclude Include="engine\sound\SoundData.h" />
+    <ClInclude Include="engine\sound\SoundManager.h" />
+    <ClInclude Include="engine\sound\SePlayer.h" />
+    <ClInclude Include="engine\sound\BgmPlayer.h" />
     <ClInclude Include="engine\system\manager\scene\SceneManager.h" />
     <ClInclude Include="engine\system\manager\texture\TextureManager.h" />
     <ClInclude Include="engine\core\common\DirectXCommon.h" />

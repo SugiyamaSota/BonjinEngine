@@ -132,13 +132,13 @@
     <ClCompile Include="engine\system\platform\input\Gamepad.cpp">
       <Filter>engine\input</Filter>
     </ClCompile>
-    <ClCompile Include="engine\audio\SoundManager.cpp">
+    <ClCompile Include="engine\sound\SoundManager.cpp">
       <Filter>engine\audio</Filter>
     </ClCompile>
-    <ClCompile Include="engine\audio\SePlayer.cpp">
+    <ClCompile Include="engine\sound\SePlayer.cpp">
       <Filter>engine\audio</Filter>
     </ClCompile>
-    <ClCompile Include="engine\audio\BgmPlayer.cpp">
+    <ClCompile Include="engine\sound\BgmPlayer.cpp">
       <Filter>engine\audio</Filter>
     </ClCompile>
     <ClCompile Include="engine\system\utility\math\Convert.cpp">
@@ -410,16 +410,16 @@
     <ClInclude Include="engine\system\platform\input\Gamepad.h">
       <Filter>engine\input</Filter>
     </ClInclude>
-    <ClInclude Include="engine\audio\SoundData.h">
+    <ClInclude Include="engine\sound\SoundData.h">
       <Filter>engine\audio</Filter>
     </ClInclude>
-    <ClInclude Include="engine\audio\SoundManager.h">
+    <ClInclude Include="engine\sound\SoundManager.h">
       <Filter>engine\audio</Filter>
     </ClInclude>
-    <ClInclude Include="engine\audio\SePlayer.h">
+    <ClInclude Include="engine\sound\SePlayer.h">
       <Filter>engine\audio</Filter>
     </ClInclude>
-    <ClInclude Include="engine\audio\BgmPlayer.h">
+    <ClInclude Include="engine\sound\BgmPlayer.h">
       <Filter>engine\audio</Filter>
     </ClInclude>
     <ClInclude Include="engine\system\utility\math\vector.h">

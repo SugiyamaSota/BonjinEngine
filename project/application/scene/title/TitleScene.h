@@ -1,7 +1,6 @@
 #pragma once
 #include "../interface/BaseScene.h"
 #include "../bonjin/BonjinEngine.h"
-#include "SoundManager.h"
 
 #include "TitleWorld.h"
 #include "TitleUI.h"
@@ -52,6 +51,8 @@ namespace Bonjin
         float timer_ = 0.0f;
         float diveTimer_ = 0.0f;
         const float kDiveDuration = 1.0f; // ダイブ（ズーム＆シェイク）にかける時間
+
+        uint32_t shutdownSEId;
 
         SceneType targetSceneType_ = "GameScene"; // 遷移先シーン（GameScene または TutorialScene）
 
