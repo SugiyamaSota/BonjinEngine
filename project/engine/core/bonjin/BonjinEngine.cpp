@@ -39,9 +39,15 @@ void Bonjin::Initialize() {
 	ImGuiManager::GetInstance()->Initialize();
 	GpuParticleManager::GetInstance()->Initialize();
 	Time::GetInstance();
+	SoundManager::GetInstance()->Initialize();
+	SePlayer::GetInstance()->Initialize();
+	BgmPlayer::GetInstance()->Initialize();
 }
 
 void Bonjin::Finalize() {
+	BgmPlayer::GetInstance()->Finalize();
+	SePlayer::GetInstance()->Finalize();
+	SoundManager::GetInstance()->Finalize();
 	Time::DestroyInstance();
 	ImGuiManager::GetInstance()->Finalize();
 	GpuParticleManager::GetInstance()->Finalize();
@@ -57,6 +63,7 @@ void Bonjin::NewFrame() {
 	Time::GetInstance()->Update();
 	Input::GetInstance()->Update();
 	Gamepad::GetInstance()->Update();
+	SePlayer::GetInstance()->Update();
 	ImGuiManager::GetInstance()->NewFrame();
 }
 

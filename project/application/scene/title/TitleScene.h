@@ -1,8 +1,11 @@
 #pragma once
 #include "../interface/BaseScene.h"
 #include "../bonjin/BonjinEngine.h"
+#include "SoundManager.h"
+
 #include "TitleWorld.h"
 #include "TitleUI.h"
+
 #include <memory>
 
 namespace Bonjin

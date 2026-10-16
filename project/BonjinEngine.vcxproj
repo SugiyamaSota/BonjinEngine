@@ -203,7 +203,9 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="engine\system\manager\model\ModelManager.cpp" />
     <ClCompile Include="engine\graphics\utility\color\Color.cpp" />
     <ClCompile Include="engine\core\bonjin\BonjinEngine.cpp" />
-    <ClCompile Include="engine\audio\AudioPlayer.cpp" />
+    <ClCompile Include="engine\audio\SoundManager.cpp" />
+    <ClCompile Include="engine\audio\SePlayer.cpp" />
+    <ClCompile Include="engine\audio\BgmPlayer.cpp" />
     <ClCompile Include="engine\interface\IScene.cpp" />
     <ClCompile Include="engine\system\manager\scene\SceneManager.cpp" />
     <ClCompile Include="engine\system\manager\scene\SceneTransition.cpp" />
@@ -317,7 +319,10 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\system\manager\model\ModelManager.h" />
     <ClInclude Include="engine\graphics\utility\color\Color.h" />
     <ClInclude Include="engine\core\bonjin\BonjinEngine.h" />
-    <ClInclude Include="engine\audio\AudioPlayer.h" />
+    <ClInclude Include="engine\audio\SoundData.h" />
+    <ClInclude Include="engine\audio\SoundManager.h" />
+    <ClInclude Include="engine\audio\SePlayer.h" />
+    <ClInclude Include="engine\audio\BgmPlayer.h" />
     <ClInclude Include="engine\system\manager\scene\SceneManager.h" />
     <ClInclude Include="engine\system\manager\texture\TextureManager.h" />
     <ClInclude Include="engine\core\common\DirectXCommon.h" />

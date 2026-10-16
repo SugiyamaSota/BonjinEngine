@@ -132,7 +132,13 @@
     <ClCompile Include="engine\system\platform\input\Gamepad.cpp">
       <Filter>engine\input</Filter>
     </ClCompile>
-    <ClCompile Include="engine\audio\AudioPlayer.cpp">
+    <ClCompile Include="engine\audio\SoundManager.cpp">
+      <Filter>engine\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\audio\SePlayer.cpp">
+      <Filter>engine\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\audio\BgmPlayer.cpp">
       <Filter>engine\audio</Filter>
     </ClCompile>
     <ClCompile Include="engine\system\utility\math\Convert.cpp">
@@ -173,9 +179,6 @@
     </ClCompile>
     <ClCompile Include="engine\system\platform\windows\WinApp.cpp">
       <Filter>engine\windows</Filter>
-    </ClCompile>
-    <ClCompile Include="application\scene\game\hud\HUD.cpp">
-      <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="application\scene\game\GameScene.cpp">
       <Filter>ソース ファイル</Filter>
@@ -238,27 +241,6 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="engine\system\manager\particle\ParticleManager.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\scene\game\mapchip\MapChipField.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\scene\game\logic\Collision.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\scene\game\logic\CollisionManager.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\scene\game\gameObject\player\Player.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\scene\game\gameObject\GameObject.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\scene\game\gameObject\camera\CameraController.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="application\scene\game\gameObject\anchor\anchor.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="engine\core\common\rendetTexture\RenderTexture.cpp">
@@ -330,7 +312,6 @@
     <ClCompile Include="engine\graphics\3d\line\FrayLine3D.cpp">
       <Filter>engine\draw\line</Filter>
     </ClCompile>
-
     <ClCompile Include="engine\graphics\3d\animation\Skeleton.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -340,7 +321,6 @@
     <ClCompile Include="engine\graphics\core\pso\config\line\LineConfig.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-
     <ClCompile Include="application\play\battle\BattleController.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -430,7 +410,16 @@
     <ClInclude Include="engine\system\platform\input\Gamepad.h">
       <Filter>engine\input</Filter>
     </ClInclude>
-    <ClInclude Include="engine\audio\AudioPlayer.h">
+    <ClInclude Include="engine\audio\SoundData.h">
+      <Filter>engine\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\audio\SoundManager.h">
+      <Filter>engine\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\audio\SePlayer.h">
+      <Filter>engine\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\audio\BgmPlayer.h">
       <Filter>engine\audio</Filter>
     </ClInclude>
     <ClInclude Include="engine\system\utility\math\vector.h">
@@ -538,36 +527,6 @@
     <ClInclude Include="engine\system\manager\particle\ParticleManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="application\scene\game\mapchip\MapChipField.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\scene\game\logic\Collision.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\scene\game\logic\CollisionConfig.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\scene\game\logic\Collider.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\scene\game\logic\CollisionManager.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\scene\game\logic\Data.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\scene\game\gameObject\player\Player.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\scene\game\gameObject\camera\CameraController.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\scene\game\gameObject\GameObject.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="application\scene\game\gameObject\anchor\anchor.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="engine\core\common\rendetTexture\RenderTexture.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -643,14 +602,12 @@
     <ClInclude Include="engine\graphics\3d\line\FrayLine3D.h">
       <Filter>engine\draw\line</Filter>
     </ClInclude>
-
     <ClInclude Include="application\scene\tutorial\TutorialManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\tutorial\TutorialEditor.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-
     <ClInclude Include="engine\graphics\3d\animation\Skeleton.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -660,7 +617,6 @@
     <ClInclude Include="engine\graphics\core\pso\config\line\LineConfig.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-
     <ClInclude Include="application\play\battle\BattleController.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>

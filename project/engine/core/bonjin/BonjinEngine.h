@@ -1,5 +1,8 @@
 #pragma once
 #include"../audio/AudioPlayer.h"
+#include"../audio/SoundManager.h"
+#include"../audio/SePlayer.h"
+#include"../audio/BgmPlayer.h"
 #include"Camera.h"
 #include"DirectXCommon.h"
 #include"function/function.h"
