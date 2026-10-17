@@ -1,0 +1,82 @@
+#pragma once
+
+#include <list>
+#include <memory>
+#include <random>
+#include <vector>
+
+#include "gameObject/enemy/BaseEnemy.h"
+#include "gameObject/player/Player.h"
+#include "mapchip/MapChipField.h"
+#include "Object3D.h"
+#include "ParticleManager.h"
+#include "SkyBox.h"
+#include "gameObject/GameObject.h"
+#include "gameObject/camera/CameraController.h"
+#include "hud/HUD.h"
+#include "hud/GoSignalBanner.h"
+
+namespace Bonjin {
+
+/// <summary>
+/// GameSceneとTutorialSceneがそれぞれ所有するバトル進行処理
+/// </summary>
+class BattleController {
+public:
+	void Initialize(Camera* camera, const char* mapFilePath);
+	void Unload();
+	void Update(float deltaTime);
+	void Draw();
+	void DrawImGui();
+
+	Player* GetPlayer() const { return player_.get(); }
+	MapChipField* GetMapChipField() const { return mapChipField_.get(); }
+	HUD* GetHUD() const { return hud_.get(); }
+	const std::list<std::unique_ptr<BaseEnemy>>& GetEnemies() const { return enemies_; }
+	void SetEnemyRespawnEnabled(bool enabled) { isEnemyRespawnEnabled_ = enabled; }
+	bool IsEnemyRespawnEnabled() const { return isEnemyRespawnEnabled_; }
+	bool IsGoalReached() const { return isGoalReached_; }
+
+	CameraController* GetCameraController() const { return cameraController_.get(); }
+	void UpdateVisuals(float deltaTime);
+	void SetHudVisible(bool visible) { isHudVisible_ = visible; }
+	void TriggerGoSignal();
+
+private:
+	bool isHudVisible_ = true;
+	Camera* camera_ = nullptr;
+	std::unique_ptr<CameraController> cameraController_;
+	std::unique_ptr<GoSignalBanner> goSignalBanner_;
+
+	std::unique_ptr<Player> player_;
+	std::unique_ptr<Object3D> playerModel_;
+
+	std::list<std::unique_ptr<BaseEnemy>> enemies_;
+	std::list<std::unique_ptr<Object3D>> enemyModels_;
+	std::list<BaseEnemy*> lockedOnEnemies_;
+
+	std::unique_ptr<MapChipField> mapChipField_;
+	std::vector<std::vector<std::unique_ptr<Object3D>>> blockModels_;
+	std::vector<std::vector<WorldTransform>> blockWorldTransforms_;
+	std::unique_ptr<GameObject> goal_;
+	std::unique_ptr<Object3D> goalModel_;
+	std::unique_ptr<SkyBox> skyBox_;
+
+	ParticleManager* particleManager_ = nullptr;
+	std::mt19937 randomEngine_{std::random_device{}()};
+
+	std::unique_ptr<HUD> hud_;
+
+	bool isEnemyRespawnEnabled_ = true;
+	float enemyRespawnTime_ = 3.0f;
+	bool isGoalReached_ = false;
+	float hitStopTimer_ = 0.0f;
+
+	void GenerateBlocksAndGoal();
+	void ResolveAnchorInstantLanding(class Anchor& anchor);
+	void EmitAnchorHitEffect(const Vector3& position);
+	void EmitEnemyDefeatEffect(const Vector3& position);
+	void EmitLandingDustEffect(const Vector3& position);
+};
+
+}

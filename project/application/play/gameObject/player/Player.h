@@ -1,0 +1,266 @@
+#pragma once
+#include <cassert>
+#include <list>
+#include <memory>
+
+#include "../anchor/anchor.h"
+#include "../../logic/Data.h"
+#include "../GameObject.h"
+
+#include "Object3D.h"
+#include "Line3D.h"
+#include "Lightning3D.h"
+#include "FrayLine3D.h"
+
+#include "PlayerStatusComponent.h"
+
+class MapChipField;
+namespace Bonjin {
+	class BaseEnemy;
+}
+class Camera;
+
+/// <summary>
+/// 自キャラ
+/// </summary>
+class Player : public Bonjin::GameObject {
+public:
+	/// <summary>
+	/// 初期化
+	/// </summary>
+	void Initialize(Object3D* model, Camera* camera, const Vector3& position);
+
+	/// <summary>
+	/// 更新処理
+	/// </summary>
+	void Update();
+
+
+	/// <summary>
+	/// 描画処理
+	/// </summary>
+	void Draw();
+
+	/// <summary>
+	/// アンカーラインの描画処理（描画順序を最後に調整するため個別化）
+	/// </summary>
+	void DrawAnchorLine();
+
+	/// <summary>
+	/// 移動処理
+	/// </summary>
+	void Move();
+
+protected:
+	void OnMapCollision(const CollisionMapInfo& collisionMapinfo) override;
+
+public:
+	Vector3 GetWorldPosition();
+	AABB GetAABB();
+	void OnCollision(Bonjin::BaseEnemy* enemy);
+	bool ConsumeLandingEffectRequest();
+	bool HasAnchor() const {
+		return anchor_ != nullptr;
+	}
+
+	Anchor& GetAnchor() {
+		assert(anchor_); // nullではないことを確認
+		return *anchor_;
+	}
+
+	/// <summary>
+	/// アンカーのゲッター (const版)
+	/// </summary>
+	const Anchor& GetAnchor() const {
+		assert(anchor_); // nullではないことを確認
+		return *anchor_;
+	}
+
+	void SetLockedOnEnemiesList(std::list<Bonjin::BaseEnemy*>* enemiesList) {
+		lockedOnEnemies_ = enemiesList;
+	}
+
+	void AddLockedOnEnemy(Bonjin::BaseEnemy* enemy) {
+		if (lockedOnEnemies_ && enemy) {
+			lockedOnEnemies_->push_back(enemy);
+		}
+	}
+
+	size_t GetLockedOnEnemiesCount() const {
+		return lockedOnEnemies_ ? lockedOnEnemies_->size() : 0;
+	}
+
+	bool ConsumeHitStopRequest() {
+		if (!hitStopRequested_) return false;
+		hitStopRequested_ = false;
+		return true;
+	}
+
+	// HP関連
+	void ApplyDamage(int damage);
+
+	// レベル・経験値関連
+	void GainExp(int amount);
+
+	bool GetIsInvincible() const { return isInvincible_; }
+
+	bool GetIsGoalReached() const { return isGoalReached_; }
+	void SetIsGoalReached(bool reached) { isGoalReached_ = reached; }
+
+	// ロックオン中の敵をすべて削除する処理（入力判定を含む)
+	void HandleLockOnRemovalInput();
+
+	// ロックオン中の敵をすべて倒す
+	void RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies);
+
+	void DrawImGui();
+
+	// 衝突コールバックのオーバーライド
+	void OnCollision(Bonjin::Collider* other) override;
+
+	void EmitAnchorHitEffect(const Vector3& position);
+
+	void UpdateWorldTransform() { model_->Update(worldTransform_, camera_); }
+
+	// ステータス関連
+	const PlayerStatusComponent& GetStatus() const { return statusComponent_; }
+	PlayerStatusComponent& GetStatus() { return statusComponent_; }
+
+	int GetHp() const { return statusComponent_.GetHp(); }
+	int GetMaxHp() const { return statusComponent_.GetMaxHp(); }
+	int GetAttackPower() const { return statusComponent_.GetAttackPower(); }
+	int GetLevel() const { return statusComponent_.GetLevel(); }
+	int GetExp() const { return statusComponent_.GetExp(); }
+	int GetRequiredExp() const { return statusComponent_.GetRequiredExp(); }
+	float GetAnchorRechargeDuration() const { return statusComponent_.GetAnchorRechargeTime(); }
+
+	// アンカーストック・リチャージ関連
+	int GetAnchorStock() const { return anchorStock_; }
+	int GetMaxAnchorStock() const { return kMaxAnchorStock; }
+	float GetAnchorRechargeTimer() const { return anchorRechargeTimer_; }
+	void AddAnchorRechargeProgress(float seconds);
+	void RestoreAnchorStock(int count = 1);
+
+private:
+
+	static inline const float kAcceleration = 0.010f;
+	static inline const float kAttenuation = 0.8f;
+	static inline const float kLimitRunSpeed = 0.15f;
+
+	static inline const float kAccelerationInAir = 0.010f;
+
+	//旋回関連
+	float turnFirstRotationY_ = 0.0f;
+	float turnTimer_ = 0.0f;
+	static inline const float kTimeTurn = 0.3f;
+
+	//ジャンプ初速
+	static inline const float kJumpAcceleration = 0.32f;
+
+	// --- 当たり判定 ---
+	// 衝突後処理の数値
+	static inline const float kAttenuationTop = 0.5f;
+	static inline const float kAttenuationWall = 0.5f;
+
+	static inline const float kKnockbackUpPower = 0.15f;
+	static inline const float kKnockbackPower = 0.15f;
+
+	bool landingEffectRequested_ = false;
+
+	bool isKnockedBack_ = false;
+	float knockbackTimer_ = 0.0f;
+	static inline const float kKnockbackTime = 1.0f;
+	static inline const float kKnockbackAttenuation = 0.95f;
+
+	bool isInvincible_ = false;
+	float invincibleTimer_ = 0.0f;
+	static inline const float kInvincibleTime = 1.5f;
+
+	static inline const float kWidth = 1.9f;
+	static inline const float kHeight = 1.9f;
+
+	// Padのデッドゾーン
+	long kPadDeadZone_ = 750;
+
+	// --- アンカー関連 ---
+	float kAnchorSpeed = 0.1f; // アンカーの初速の大きさ
+	static inline const long kAnchorDeadZone = 750; // アンカー発射時のスティック入力のデッドゾーン
+
+	// --- アンカー ---
+	std::unique_ptr<Anchor> anchor_;
+	std::unique_ptr<Bonjin::Line3D> anchorLine_;
+	Vector4 lineColor_ = { 0.5f, 0.85f, 1.f, 0.5f };
+	void shootAnchor();
+
+	// アンカーストック管理
+	static inline const int kMaxAnchorStock = 3;
+	int anchorStock_ = kMaxAnchorStock;
+	float anchorRechargeTimer_ = 0.0f;
+
+	// アンカー回収用（長押し判定・ほつれ演出）
+	float anchorHoldTimer_ = 0.0f;
+	static inline const float kAnchorHoldTime = 0.35f;
+
+	std::unique_ptr<Bonjin::FrayLine3D> frayLineEffect_;
+	float frayTimer_ = 0.0f;
+	static inline const float kFrayDuration = 0.45f;
+	Vector3 lastAnchorRetractPos_{};
+	bool isFrayActive_ = false;
+
+	// アンカー回収時のフェードアウト表示用モデル
+	std::unique_ptr<Object3D> retractAnchorModel_;
+	WorldTransform retractAnchorTransform_{};
+
+	// ロックオンされた敵のリストへのポインタ
+	std::list<Bonjin::BaseEnemy*>* lockedOnEnemies_ = nullptr;
+
+	PlayerStatusComponent statusComponent_;
+
+	bool isGoalReached_ = false;
+
+	// 順次テレポート用
+	std::list<Vector3> teleportQueue_;
+	float teleportTimer_ = 0.0f;
+	float teleportInterval_ = 0.15f;
+
+	// GPU雷霆テレポートエフェクト用
+	void EmitTeleportLightning(const Vector3& start, const Vector3& end);
+	Vector3 lastTeleportStartPos_{};
+	bool enableTeleportLightning_ = true;
+	Vector4 lightningCoreColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+	Vector4 lightningColor_ = { 0.3f, 0.7f, 1.0f, 1.0f };
+	float lightningShowDuration_ = 0.16f;
+	float lightningBoltRadius_ = 0.35f;
+	float lightningBoltScale_ = 0.22f;
+	int lightningSubdivisions_ = 7;
+	int lightningMainBranches_ = 3;
+	int lightningSparksPerSegment_ = 2;
+	int lightningImpactSparks_ = 80;
+	int lightningStartSparks_ = 25;
+	float lightningIntensity_ = 3.5f;
+	float lightningSparkSpeed_ = 7.0f;
+
+	bool hitStopRequested_ = false;
+
+	// ダメージVignette演出用
+	float damageEffectTimer_ = 0.0f;
+	static inline const float kDamageEffectMaxTime = 0.5f;
+	bool wasVignette_ = false;
+	Vector3 origVignetteColor_ = { 0.0f, 0.0f, 0.0f };
+	float origVignetteScale_ = 16.0f;
+	float origVignettePower_ = 0.8f;
+
+	// テレポートラジアルブラー演出用
+	bool enableTeleportBlur_ = true;
+	float teleportBlurTimer_ = 0.0f;
+	float teleportBlurMaxTime_ = 0.2f;
+	float teleportBlurWidth_ = 0.025f;
+
+	// テレポートカメラシェイク演出用
+	bool enableTeleportShake_ = true;
+	float teleportShakeIntensity_ = 0.3f;
+	float teleportShakeDuration_ = 0.08f;
+	float lockonTeleportShakeIntensity_ = 0.5f;
+	float lockonTeleportShakeDuration_ = 0.1f;
+
+};

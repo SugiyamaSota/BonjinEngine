@@ -63,6 +63,12 @@ void DirectXCommon::Initialize() {
 	tempRenderTexture_ = std::make_unique<RenderTexture>(device_.Get(), rtvHandles_[4]);
 	postEffectTexture_ = std::make_unique<RenderTexture>(device_.Get(), rtvHandles_[3]);
 
+#if defined(_DEBUG)
+	renderTexture_->GetResource()->SetName(L"renderTexture_");
+	tempRenderTexture_->GetResource()->SetName(L"tempRenderTexture_");
+	postEffectTexture_->GetResource()->SetName(L"postEffectTexture_");
+#endif
+
 
 	pso = std::make_unique<PSOManager>();
 
@@ -254,11 +260,7 @@ void DirectXCommon::PostDraw()
 			outBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 #endif
 		} else {
-			if (i == 0) {
-				outBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
-			} else {
-				outBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-			}
+			outBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 			outBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		}
 		commandList_->ResourceBarrier(1, &outBarrier);
@@ -304,6 +306,15 @@ void DirectXCommon::PostDraw()
 		case PostEffect::kHSVFilter:
 			postEffectType = PrimitiveType::kPostEffectHSVFilter;
 			break;
+		case PostEffect::kCRTShutDown:
+			postEffectType = PrimitiveType::kPostEffectCRTShutDown;
+			break;
+		case PostEffect::kDigitalDissolve:
+			postEffectType = PrimitiveType::kPostEffectDigitalDissolve;
+			break;
+		case PostEffect::kSimpleFade:
+			postEffectType = PrimitiveType::kPostEffectSimpleFade;
+			break;
 		default:
 			break;
 		}
@@ -314,7 +325,7 @@ void DirectXCommon::PostDraw()
 			device_.Get(), postEffectType, BlendMode::kNone, D3D12_FILL_MODE_SOLID, D3D12_CULL_MODE_NONE
 		));
 		commandList_->SetGraphicsRootDescriptorTable(0, SrvManager::GetInstance()->GetGPUHandle(currentInput->GetSrvIndex()));
-		if (effect == PostEffect::kDissolve && dissolveMaskTextureHandle_ >= 0) {
+		if ((effect == PostEffect::kDissolve || effect == PostEffect::kDigitalDissolve) && dissolveMaskTextureHandle_ >= 0) {
 			commandList_->SetGraphicsRootDescriptorTable(1, TextureManager::GetInstance()->GetGPUHandle(dissolveMaskTextureHandle_));
 		} else {
 			commandList_->SetGraphicsRootDescriptorTable(1, SrvManager::GetInstance()->GetGPUHandle(depthStencil_->GetSrvIndex()));
@@ -423,41 +434,34 @@ void DirectXCommon::SetHSVValueMultiplier(float valMult) {
 	fullScreenMaterial_.hsvValueMultiplier = valMult < 0.0f ? 0.0f : valMult;
 }
 
+void DirectXCommon::SetCRTShutDownProgress(float progress) {
+	fullScreenMaterial_.crtShutDownProgress = std::clamp(progress, 0.0f, 1.0f);
+}
+
 void DirectXCommon::EndFrame() 
 {	
 	UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
 
-	D3D12_RESOURCE_BARRIER endBarriers[4]{};
+	D3D12_RESOURCE_BARRIER endBarriers[2]{};
 
-	// PRESENTへの遷移
+	// バックバッファを PRESENT への遷移
 	endBarriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	endBarriers[0].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	endBarriers[0].Transition.pResource = swapChainResources_[backBufferIndex].Get();
 	endBarriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	endBarriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 
-	// RenderTextureをCOMMONへ
+	// DepthStencilをDEPTH_WRITEへ（次フレームのシーン描画用）
 	endBarriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	endBarriers[1].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	endBarriers[1].Transition.pResource = renderTexture_->GetResource();
+	endBarriers[1].Transition.pResource = depthStencil_->GetResource();
 	endBarriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	endBarriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
+	endBarriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 
-	// DepthStencilをDEPTH_WRITEへ
-	endBarriers[2].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	endBarriers[2].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	endBarriers[2].Transition.pResource = depthStencil_->GetResource();
-	endBarriers[2].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	endBarriers[2].Transition.StateAfter = D3D12_RESOURCE_STATE_DEPTH_WRITE;
-
-	// tempRenderTextureをCOMMONへ
-	endBarriers[3].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	endBarriers[3].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	endBarriers[3].Transition.pResource = tempRenderTexture_->GetResource();
-	endBarriers[3].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	endBarriers[3].Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
-
-	commandList_->ResourceBarrier(4, endBarriers);
+	// renderTexture_ / tempRenderTexture_ / postEffectTexture_ は
+	// ポストエフェクト描画完了時に PIXEL_SHADER_RESOURCE に統一されているため、
+	// 次フレームの PreDraw / PostDraw で正しく RENDER_TARGET へ遷移できる。COMMONに戻す必要はない。
+	commandList_->ResourceBarrier(2, endBarriers);
 
 	// コマンドリストの内容を確定させる（既存の処理）
 	HRESULT hr = commandList_->Close();
@@ -637,6 +641,12 @@ void DirectXCommon::CreateSwapChain() {
 	assert(SUCCEEDED(hr));
 	hr = swapChain_->GetBuffer(1, IID_PPV_ARGS(swapChainResources_[1].GetAddressOf()));
 	assert(SUCCEEDED(hr));
+
+#if defined(_DEBUG)
+	swapChainResources_[0]->SetName(L"swapChainResources_[0]");
+	swapChainResources_[1]->SetName(L"swapChainResources_[1]");
+#endif
+
 
 	//ディスクリプタヒープの生成
 	//ディスクリプタサイズを取得する

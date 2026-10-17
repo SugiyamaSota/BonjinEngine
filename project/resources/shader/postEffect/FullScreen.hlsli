@@ -23,7 +23,8 @@ struct Material
     float32_t3 vignetteColor;
     float32_t vignetteScale;
     float32_t vignettePower;
-    float32_t2 padding4;
+    float32_t crtShutDownProgress;
+    float32_t padding4;
 };
 
 ConstantBuffer<Material> gMaterial : register(b0);

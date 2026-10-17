@@ -5,6 +5,7 @@
 #include <vector>
 
 #include"../interface/IScene.h"
+#include "SceneTransition.h"
 
 namespace Bonjin
 {
@@ -32,15 +33,21 @@ namespace Bonjin
         // 💡 シーン切り替えロジック
         void ChangeScene(SceneType nextSceneType);
         void RequestSceneChange(SceneType nextSceneType);
+        void RequestSceneChange(SceneType nextSceneType, const TransitionDesc& desc);
+        void StartTransition(const TransitionDesc& desc);
         void RestartCurrentScene();
         void RequestSceneRestart();
 
+        // トランジション状態
+        bool IsTransitionActive() const;
+        SceneTransition* GetTransition() const { return transition_.get(); }
 
         Camera* GetCamera() const { return camera_.get(); }
 
         void SetPostEffect(DirectXCommon::PostEffect effect);
         DirectXCommon::PostEffect GetPostEffect() const;
         void ClearPostEffects();
+        void ResetPostEffects();
         void AddPostEffect(DirectXCommon::PostEffect effect);
         void RemovePostEffect(DirectXCommon::PostEffect effect);
         void SetActiveEffects(const std::vector<DirectXCommon::PostEffect>& effects);
@@ -61,6 +68,8 @@ namespace Bonjin
         float GetRadialBlurWidth() const;
         void SetDissolveThreshold(float threshold);
         float GetDissolveThreshold() const;
+        void SetFadeAmount(float amount);
+        float GetFadeAmount() const;
         void SetDissolveEdgeColor(const Vector3& color);
         Vector3 GetDissolveEdgeColor() const;
         void SetDissolveEdgeWidth(float width);
@@ -73,6 +82,8 @@ namespace Bonjin
         float GetHSVSaturationMultiplier() const;
         void SetHSVValueMultiplier(float valMult);
         float GetHSVValueMultiplier() const;
+        void SetCRTShutDownProgress(float progress);
+        float GetCRTShutDownProgress() const;
 
         IScene* GetCurrentScene() const { return currentScene_; }
         const std::map<SceneType, std::unique_ptr<IScene>>& GetScenes() const { return scenes_; }
@@ -91,9 +102,10 @@ namespace Bonjin
         bool hasPendingSceneChange_ = false;
         bool hasPendingSceneRestart_ = false;
         SceneType pendingSceneType_ = "TitleScene";
-
         std::unique_ptr<Camera> camera_ = nullptr;
+        std::unique_ptr<SceneTransition> transition_ = nullptr;
 
+        void ExecuteSceneChange(SceneType nextSceneType);
     };
 
 }

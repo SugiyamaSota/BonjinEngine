@@ -28,6 +28,9 @@ enum class PrimitiveType {
 	kSkinningObject3D,
 	kPostEffectHSVFilter,
 	kGpuLightning,
+	kPostEffectCRTShutDown,
+	kPostEffectDigitalDissolve,
+	kPostEffectSimpleFade,
 	kCount,
 };
 
@@ -53,6 +56,9 @@ public:
 		BlendMode mode,
 		D3D12_FILL_MODE fillMode,
 		D3D12_CULL_MODE cullMode);
+
+	// 主要PSOの事前生成（起動時ウォームアップで描画スタッターを防止）
+	void WarmUpPSOs(ID3D12Device* device);
 
 private:
 

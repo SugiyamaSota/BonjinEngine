@@ -12,7 +12,9 @@ public:
 	virtual ~BaseObject();
 
 	void LoadModel(const std::string& directoryName, const std::string& fileName);
+	void SetModel(const std::string& modelKey);
 	void CreateModel(ModelBuilder::ModelType type, const std::string& textureFilepath);
+	void CopyModelResourceFrom(const BaseObject& other, bool shareMaterial = true);
 
 	// 共通の描画インターフェース
 	virtual void Draw() = 0;
@@ -32,6 +34,7 @@ public:
 	void SetColor(const Vector4& color) { if (materialData_) materialData_->color = color; }
 	void SetEnableLighting(bool enable) { if (materialData_) materialData_->enableLighting = enable; }
 	void SetEnableEnableEnvironmentMap(bool flag) { if (materialData_) materialData_->enableEnvironmentMap = flag; }
+	void SetUVTransform(const Matrix4x4& transform) { if (materialData_) materialData_->uvTransform = transform; }
 	const ModelData& GetModelData() const { return modelData_; }
 
 protected:
@@ -59,6 +62,8 @@ protected:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
 	Material* materialData_ = nullptr;
+	bool isMaterialOwner_ = true;
+	bool isResourceOwner_ = true;
 
 	int textureHandle_ = 0;
 	int envTextureHandle_ = 0;

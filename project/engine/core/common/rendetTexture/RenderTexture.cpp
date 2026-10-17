@@ -7,9 +7,6 @@ RenderTexture::RenderTexture(ID3D12Device* device, D3D12_CPU_DESCRIPTOR_HANDLE r
 	: rtvHandle_(rtvHandle)
 {
 
-	// 赤でクリア
-	clearColor_ = { 1.0f, 0.0f, 0.0f, 1.0f };
-
 	const Vector4& clearColorValue = clearColor_;
 
 	// 1. リソース生成

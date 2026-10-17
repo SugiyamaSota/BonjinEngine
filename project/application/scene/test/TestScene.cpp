@@ -28,7 +28,7 @@ void TestScene::Initialize(Camera* camera)
 	testSkyBox_->SetName("SkyBox (testSkyBox_)");
 
 	testCube_ = std::make_unique<Object3D>();
-	testCube_->LoadModel("human", "walk.gltf");
+	testCube_->SetModel("human");
 	testCube_->SetName("Human (testCube_)");
 	testCube_->SetEnableEnableEnvironmentMap(false);
 	testCube_->SetCullMode(D3D12_CULL_MODE_FRONT);
@@ -164,6 +164,27 @@ void TestScene::Update(float deltaTime) {
 			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
 			sceneManager->SetNoiseAlpha(progress * 0.7f);
 		}
+		else if (isDigitalDissolveActive_) {
+			// デジタルディゾルブ検証
+			if (digitalTransitionTimer_ >= 0.0f) {
+				// ワンショット遷移（0.0: 真っ黒 -> 1.0: 実体化）
+				const float kTransitionDuration = 1.6f;
+				digitalTransitionTimer_ += deltaTime;
+				digitalDissolveThreshold_ = std::clamp(digitalTransitionTimer_ / kTransitionDuration, 0.0f, 1.0f);
+				if (digitalTransitionTimer_ >= kTransitionDuration + 0.3f) {
+					digitalTransitionTimer_ = -1.0f; // 遷移完了
+				}
+			}
+			else if (isDigitalDissolveAuto_) {
+				static float animTimer = 0.0f;
+				animTimer += deltaTime * 0.8f;
+				digitalDissolveThreshold_ = (std::sin(animTimer) * 0.5f + 0.5f);
+			}
+			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kDigitalDissolve);
+			sceneManager->SetDissolveThreshold(digitalDissolveThreshold_);
+			sceneManager->SetDissolveEdgeWidth(digitalDissolveEdgeWidth_);
+			sceneManager->SetDissolveEdgeColor(digitalDissolveEdgeColor_);
+		}
 		else {
 			// 何も適用しない場合はFullScreenのデフォルト
 			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kFullScreen);
@@ -221,8 +242,41 @@ void TestScene::DrawSceneImGui() {
 		if (isPaused_) {
 			isLowHP_ = false;
 			damageTimer_ = 0.0f;
+			isDigitalDissolveActive_ = false;
 		}
 	}
+
+	if (ImGui::Checkbox("Digital Dissolve (Cyber Effect)", &isDigitalDissolveActive_)) {
+		if (isDigitalDissolveActive_) {
+			isLowHP_ = false;
+			isPaused_ = false;
+			damageTimer_ = 0.0f;
+		}
+	}
+
+	if (isDigitalDissolveActive_) {
+		ImGui::Indent();
+		if (ImGui::Button("Trigger Black -> Digital Transition (1.6s)")) {
+			digitalTransitionTimer_ = 0.0f;
+			digitalDissolveThreshold_ = 0.0f;
+			isDigitalDissolveAuto_ = false;
+		}
+		ImGui::Checkbox("Auto Ping-Pong Animation", &isDigitalDissolveAuto_);
+		if (digitalTransitionTimer_ >= 0.0f) {
+			ImGui::ProgressBar(digitalDissolveThreshold_, ImVec2(0.0f, 0.0f), "Transitioning from Black...");
+		} else if (isDigitalDissolveAuto_) {
+			ImGui::ProgressBar(digitalDissolveThreshold_, ImVec2(0.0f, 0.0f), "Auto Playing...");
+		} else {
+			ImGui::SliderFloat("Threshold (0=Black, 1=Screen)", &digitalDissolveThreshold_, 0.0f, 1.0f);
+		}
+		ImGui::SliderFloat("Edge Width", &digitalDissolveEdgeWidth_, 0.001f, 0.2f);
+		float edgeCol[3] = { digitalDissolveEdgeColor_.x, digitalDissolveEdgeColor_.y, digitalDissolveEdgeColor_.z };
+		if (ImGui::ColorEdit3("Cyber Edge Color", edgeCol)) {
+			digitalDissolveEdgeColor_ = { edgeCol[0], edgeCol[1], edgeCol[2] };
+		}
+		ImGui::Unindent();
+	}
+
 	ImGui::Checkbox("Manual PostEffect Control", &isManualPostEffect_);
 
 	ImGui::Separator();

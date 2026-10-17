@@ -30,6 +30,21 @@ void ImGuiManager::Initialize() {
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
+	// 日本語フォントの読み込み（Windowsシステムフォント）
+	const char* fontCandidates[] = {
+		"C:\\Windows\\Fonts\\meiryo.ttc",
+		"C:\\Windows\\Fonts\\msgothic.ttc",
+		"C:\\Windows\\Fonts\\YuGothM.ttc"
+	};
+	for (const char* fontPath : fontCandidates) {
+		DWORD attr = GetFileAttributesA(fontPath);
+		if (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY)) {
+			ImFontConfig config;
+			io.Fonts->AddFontFromFileTTF(fontPath, 18.0f, &config, io.Fonts->GetGlyphRangesJapanese());
+			break;
+		}
+	}
+
 	ImGui_ImplWin32_Init(WinApp::GetInstance()->GetHWND());
 
 	// 1. SrvManagerからImGui用のインデックスを安全に確保

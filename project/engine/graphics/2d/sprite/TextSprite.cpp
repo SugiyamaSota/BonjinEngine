@@ -20,6 +20,13 @@ namespace Bonjin {
     }
 
     void TextSprite::SetText(const std::wstring& text, int fontSize, COLORREF textColor) {
+        if (hasSrv_ && text == cachedText_ && fontSize == cachedFontSize_ && textColor == cachedTextColor_) {
+            return;
+        }
+        cachedText_ = text;
+        cachedFontSize_ = fontSize;
+        cachedTextColor_ = textColor;
+
         CreateTextTexture(text, fontSize, textColor);
         RefreshVertexData();
     }
@@ -127,13 +134,13 @@ namespace Bonjin {
 
         // 3. 中間バッファを作成しGPUへコピー
         uint64_t uploadSize = width * height * 4;
-        Microsoft::WRL::ComPtr<ID3D12Resource> uploadBuffer = CreateBufferResource(device_, uploadSize);
+        uploadBuffer_ = CreateBufferResource(device_, uploadSize);
         
         if (pBits != nullptr) {
             void* pData = nullptr;
-            uploadBuffer->Map(0, nullptr, &pData);
+            uploadBuffer_->Map(0, nullptr, &pData);
             memcpy(pData, pBits, uploadSize);
-            uploadBuffer->Unmap(0, nullptr);
+            uploadBuffer_->Unmap(0, nullptr);
         }
 
         // オブジェクトの選択を復元（これをしないと正しく削除されずリークする）
@@ -145,12 +152,8 @@ namespace Bonjin {
         DeleteObject(hBmp);
         DeleteDC(hdc);
 
-        // コピー用一時コマンドリストの作成と実行
-        Microsoft::WRL::ComPtr<ID3D12CommandAllocator> tempAllocator;
-        device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(tempAllocator.GetAddressOf()));
-        
-        Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> tempCmdList;
-        device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, tempAllocator.Get(), nullptr, IID_PPV_ARGS(tempCmdList.GetAddressOf()));
+        // メインコマンドリストにテクスチャコピーとバリアを記録
+        auto commandList = dxCommon_->GetCommandList();
 
         D3D12_TEXTURE_COPY_LOCATION dst{};
         dst.pResource = textTexture.Get();
@@ -158,7 +161,7 @@ namespace Bonjin {
         dst.SubresourceIndex = 0;
 
         D3D12_TEXTURE_COPY_LOCATION src{};
-        src.pResource = uploadBuffer.Get();
+        src.pResource = uploadBuffer_.Get();
         src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
         src.PlacedFootprint.Offset = 0;
         src.PlacedFootprint.Footprint.Width = width;
@@ -167,7 +170,7 @@ namespace Bonjin {
         src.PlacedFootprint.Footprint.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
         src.PlacedFootprint.Footprint.RowPitch = width * 4;
 
-        tempCmdList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+        commandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
 
         // バリアの変更 (COPY_DEST -> GENERIC_READ)
         D3D12_RESOURCE_BARRIER barrier = {};
@@ -177,22 +180,7 @@ namespace Bonjin {
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
         barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
         barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
-        tempCmdList->ResourceBarrier(1, &barrier);
-
-        tempCmdList->Close();
-        ID3D12CommandList* lists[] = { tempCmdList.Get() };
-        dxCommon_->GetCommandQueue()->ExecuteCommandLists(1, lists);
-
-        // 同期待機
-        Microsoft::WRL::ComPtr<ID3D12Fence> fence;
-        device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence.GetAddressOf()));
-        HANDLE eventHandle = CreateEventEx(nullptr, nullptr, 0, EVENT_MODIFY_STATE | SYNCHRONIZE);
-        dxCommon_->GetCommandQueue()->Signal(fence.Get(), 1);
-        if (fence->GetCompletedValue() < 1) {
-            fence->SetEventOnCompletion(1, eventHandle);
-            WaitForSingleObject(eventHandle, INFINITE);
-        }
-        CloseHandle(eventHandle);
+        commandList->ResourceBarrier(1, &barrier);
 
         // 古いテクスチャの解放とSRVの生成
         textureResource_ = textTexture;
