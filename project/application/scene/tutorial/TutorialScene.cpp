@@ -22,6 +22,8 @@ void TutorialScene::Initialize(Camera* camera) {
 
 	tutorialEditor_ = std::make_unique<TutorialEditor>();
 	tutorialEditor_->Initialize(tutorialManager_.get());
+
+	battleController_->TriggerGoSignal();
 }
 
 void TutorialScene::Unload() {

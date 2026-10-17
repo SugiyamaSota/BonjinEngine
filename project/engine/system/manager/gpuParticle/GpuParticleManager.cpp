@@ -326,6 +326,69 @@ void GpuParticleManager::EmitSparks(
     }
 }
 
+void GpuParticleManager::EmitRadialSparks(
+    const Vector3& pos, int count, const Vector4& color,
+    const Vector3& planeRight, const Vector3& planeUp,
+    float speed, float lifeTime, float scale)
+{
+    Vector3 normRight = Normalize(planeRight);
+    Vector3 normUp = Normalize(planeUp);
+    Vector3 normForward = Cross(normRight, normUp);
+    if (Length(normForward) > 0.001f) {
+        normForward = Normalize(normForward);
+    }
+
+    for (int i = 0; i < count; ++i) {
+        int idx = AllocateParticle();
+        if (idx < 0) break;
+
+        auto& p = particles_[idx];
+        p.position = pos;
+
+        // 平面上の360度ランダムな放射角度
+        float angle = dist01_(randomEngine_) * 2.0f * std::numbers::pi_v<float>;
+        float cosA = std::cos(angle);
+        float sinA = std::sin(angle);
+
+        // 平面上の放射ベクトル + 奥行きへの微弱な広がり
+        Vector3 dir = Add(Multiply(cosA, normRight), Multiply(sinA, normUp));
+        float depthJitter = distSigned_(randomEngine_) * 0.35f;
+        dir = Add(dir, Multiply(depthJitter, normForward));
+        if (Length(dir) > 0.001f) {
+            dir = Normalize(dir);
+        }
+
+        float sp = speed * (0.55f + 0.9f * dist01_(randomEngine_));
+        p.velocity = Multiply(sp, dir);
+
+        p.color = color;
+        p.scale = scale * (0.65f + 0.7f * dist01_(randomEngine_));
+        p.baseScale = p.scale;
+        p.lifeTime = lifeTime * (0.6f + 0.8f * dist01_(randomEngine_));
+        p.currentLife = 0.0f;
+        p.intensity = 3.6f;
+        p.type = 1; // スパーク
+    }
+}
+
+void GpuParticleManager::EmitFlashGlow(
+    const Vector3& pos, const Vector4& color, float scale, float lifeTime, float intensity)
+{
+    int idx = AllocateParticle();
+    if (idx < 0) return;
+
+    auto& gp = particles_[idx];
+    gp.position = pos;
+    gp.velocity = { 0.0f, 0.0f, 0.0f };
+    gp.color = color;
+    gp.scale = scale;
+    gp.baseScale = scale;
+    gp.lifeTime = lifeTime;
+    gp.currentLife = 0.0f;
+    gp.intensity = intensity;
+    gp.type = 2; // フラッシュグロー
+}
+
 void GpuParticleManager::Clear() {
     for (uint32_t i = 0; i < kMaxParticles; ++i) {
         particles_[i].isActive = false;

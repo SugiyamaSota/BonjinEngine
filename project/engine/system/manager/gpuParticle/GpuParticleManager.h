@@ -22,6 +22,8 @@ public:
 
     void EmitLightning(const GpuLightningConfig& config);
     void EmitSparks(const Vector3& pos, int count, const Vector4& color, float speed = 5.0f, float lifeTime = 0.4f, float scale = 0.12f);
+    void EmitRadialSparks(const Vector3& pos, int count, const Vector4& color, const Vector3& planeRight, const Vector3& planeUp, float speed = 8.0f, float lifeTime = 0.5f, float scale = 0.18f);
+    void EmitFlashGlow(const Vector3& pos, const Vector4& color, float scale = 1.0f, float lifeTime = 0.3f, float intensity = 3.0f);
     void Clear();
     void DrawImGui();
 

@@ -49,6 +49,7 @@ void GameScene::Initialize(Camera* camera)
 	} else {
 		phase_ = GamePhase::kPlay;
 		battleController_->SetHudVisible(true);
+		battleController_->TriggerGoSignal();
 	}
 }
 
@@ -190,6 +191,7 @@ void GameScene::FinishHighlight() {
 	}
 	if (battleController_) {
 		battleController_->SetHudVisible(true);
+		battleController_->TriggerGoSignal();
 	}
 	ChangePhase(GamePhase::kPlay);
 }

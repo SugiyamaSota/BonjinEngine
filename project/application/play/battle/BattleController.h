@@ -14,6 +14,7 @@
 #include "gameObject/GameObject.h"
 #include "gameObject/camera/CameraController.h"
 #include "hud/HUD.h"
+#include "hud/GoSignalBanner.h"
 
 namespace Bonjin {
 
@@ -39,11 +40,13 @@ public:
 	CameraController* GetCameraController() const { return cameraController_.get(); }
 	void UpdateVisuals(float deltaTime);
 	void SetHudVisible(bool visible) { isHudVisible_ = visible; }
+	void TriggerGoSignal();
 
 private:
 	bool isHudVisible_ = true;
 	Camera* camera_ = nullptr;
 	std::unique_ptr<CameraController> cameraController_;
+	std::unique_ptr<GoSignalBanner> goSignalBanner_;
 
 	std::unique_ptr<Player> player_;
 	std::unique_ptr<Object3D> playerModel_;

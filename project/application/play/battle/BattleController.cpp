@@ -123,6 +123,9 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	hud_ = std::make_unique<HUD>();
 	hud_->Initialize();
 
+	goSignalBanner_ = std::make_unique<GoSignalBanner>();
+	goSignalBanner_->Initialize();
+
 	GpuParticleManager::GetInstance()->Clear();
 
 	if (player_) {
@@ -137,6 +140,9 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 }
 
 void BattleController::Unload() {
+	if (goSignalBanner_) {
+		goSignalBanner_.reset();
+	}
 	GpuParticleManager::GetInstance()->Clear();
 	hud_.reset();
 	lockedOnEnemies_.clear();
@@ -237,6 +243,10 @@ void BattleController::Update(float deltaTime) {
 	if (hud_) {
 		hud_->Update(player_.get(), deltaTime);
 	}
+
+	if (goSignalBanner_) {
+		goSignalBanner_->Update(deltaTime);
+	}
 }
 
 void BattleController::Draw() {
@@ -274,6 +284,11 @@ void BattleController::Draw() {
 	// 2D HUD / UIの描画
 	if (isHudVisible_ && hud_) {
 		hud_->Draw();
+	}
+
+	// 「GO!」演出バナー描画
+	if (goSignalBanner_) {
+		goSignalBanner_->Draw();
 	}
 }
 
@@ -593,5 +608,11 @@ void BattleController::UpdateVisuals(float deltaTime) {
 	}
 	if (player_) {
 		player_->UpdateModel();
+	}
+}
+
+void BattleController::TriggerGoSignal() {
+	if (goSignalBanner_) {
+		goSignalBanner_->Trigger(player_.get(), camera_);
 	}
 }
