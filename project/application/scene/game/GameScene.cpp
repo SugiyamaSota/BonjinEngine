@@ -44,7 +44,7 @@ void GameScene::Initialize(Camera* camera)
 		// ポストエフェクトを一旦クリアし、SimpleFade（真っ黒スタート: 0.0f）だけを有効化
 		auto sm = SceneManager::GetInstance();
 		sm->ClearPostEffects();
-		sm->AddPostEffect(DirectXCommon::PostEffect::kSimpleFade);
+		sm->AddPostEffect(PostEffect::kSimpleFade);
 		sm->SetFadeAmount(0.0f);
 	} else {
 		phase_ = GamePhase::kPlay;
@@ -148,7 +148,7 @@ void GameScene::UpdateHighlightPhase(float deltaTime) {
 
 				// SimpleFade を終了し、DigitalDissolve を開始
 				sm->ClearPostEffects();
-				sm->AddPostEffect(DirectXCommon::PostEffect::kDigitalDissolve);
+				sm->AddPostEffect(PostEffect::kDigitalDissolve);
 				sm->SetDissolveThreshold(0.0f); // 真っ黒から実体化スタート
 				sm->SetDissolveEdgeWidth(0.06f); // サイバー発光エッジ
 				sm->SetDissolveEdgeColor({ 0.0f, 1.5f, 2.0f }); // サイバーブルー

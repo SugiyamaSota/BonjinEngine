@@ -19,7 +19,7 @@ Particle::Particle() :BaseObject() {
 		particles_[index].currentTime = 0.0f;
 	}
 
-	cullMode_ = D3D12_CULL_MODE_NONE;
+	cullMode_ = CullMode::kNone;
 }
 
 Particle::~Particle() {

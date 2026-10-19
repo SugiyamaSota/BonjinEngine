@@ -35,7 +35,7 @@ void TitleScene::Initialize(Camera* camera) {
 	sceneManager->SetFullScreenVignetteColor({ 0.0f, 0.04f, 0.16f }); // サイバーブルー調
 	sceneManager->SetFullScreenVignetteScale(18.0f);
 	sceneManager->SetFullScreenVignettePower(0.85f);
-	sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
+	sceneManager->AddPostEffect(PostEffect::kRandomNoise);
 	sceneManager->SetNoiseAlpha(0.015f); // 走査線・ホログラム風の微細ノイズ
 
 	// 初回開幕デジタルディゾルブ（真っ黒から実体化）
@@ -70,7 +70,7 @@ void TitleScene::Unload() {
 	// ポストエフェクトのクリーンアップ
 	auto sceneManager = SceneManager::GetInstance();
 	sceneManager->ResetPostEffects();
-	sceneManager->RemovePostEffect(DirectXCommon::PostEffect::kRadialBlur);
+	sceneManager->RemovePostEffect(PostEffect::kRadialBlur);
 	sceneManager->SetRadialBlurWidth(0.0f);
 	sceneManager->SetFullScreenVignette(false);
 	sceneManager->SetNoiseAlpha(0.0f);
@@ -115,8 +115,8 @@ void TitleScene::Update(float deltaTime) {
 			// ラジアルブラーの追加（光速突入演出）
 			auto sceneManager = SceneManager::GetInstance();
 			auto activeEffects = sceneManager->GetActiveEffects();
-			if (std::find(activeEffects.begin(), activeEffects.end(), DirectXCommon::PostEffect::kRadialBlur) == activeEffects.end()) {
-				sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRadialBlur);
+			if (std::find(activeEffects.begin(), activeEffects.end(), PostEffect::kRadialBlur) == activeEffects.end()) {
+				sceneManager->AddPostEffect(PostEffect::kRadialBlur);
 			}
 
 			// スタート時のカメラ激震シェイク
@@ -147,7 +147,7 @@ void TitleScene::UpdateDiveTransition(float deltaTime) {
 		// bgm停止と、se
 		BgmPlayer::GetInstance()->Stop();
 		sceneManager->SetRadialBlurWidth(0.0f);
-		sceneManager->RemovePostEffect(DirectXCommon::PostEffect::kRadialBlur);
+		sceneManager->RemovePostEffect(PostEffect::kRadialBlur);
 		if (!SePlayer::GetInstance()->IsPlaying(shutdownSEId)) {
 			SePlayer::GetInstance()->Play(shutdownSEId, 1.0f);
 		}

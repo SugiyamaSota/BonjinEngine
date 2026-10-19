@@ -48,15 +48,15 @@ void SceneTransition::EnterPhase(TransitionPhase nextPhase) {
     case TransitionPhase::kOut:
         // アウト演出の開始準備
         if (desc_.outType == TransitionType::kDigitalDissolve) {
-            sm->AddPostEffect(DirectXCommon::PostEffect::kDigitalDissolve);
+            sm->AddPostEffect(PostEffect::kDigitalDissolve);
             sm->SetDissolveThreshold(1.0f); // 完全に表示された状態から開始
             sm->SetDissolveEdgeWidth(0.06f);
             sm->SetDissolveEdgeColor(desc_.edgeColor);
         } else if (desc_.outType == TransitionType::kFadeBlack) {
-            sm->AddPostEffect(DirectXCommon::PostEffect::kSimpleFade);
+            sm->AddPostEffect(PostEffect::kSimpleFade);
             sm->SetFadeAmount(1.0f);
         } else if (desc_.outType == TransitionType::kCRTShutDown) {
-            sm->AddPostEffect(DirectXCommon::PostEffect::kCRTShutDown);
+            sm->AddPostEffect(PostEffect::kCRTShutDown);
             sm->SetCRTShutDownProgress(0.0f);
         }
         break;
@@ -95,12 +95,12 @@ void SceneTransition::EnterPhase(TransitionPhase nextPhase) {
 
         // イン演出の開始準備
         if (desc_.inType == TransitionType::kDigitalDissolve) {
-            sm->AddPostEffect(DirectXCommon::PostEffect::kDigitalDissolve);
+            sm->AddPostEffect(PostEffect::kDigitalDissolve);
             sm->SetDissolveThreshold(0.0f); // 真っ黒から実体化スタート
             sm->SetDissolveEdgeWidth(0.06f);
             sm->SetDissolveEdgeColor(desc_.edgeColor);
         } else if (desc_.inType == TransitionType::kFadeBlack) {
-            sm->AddPostEffect(DirectXCommon::PostEffect::kSimpleFade);
+            sm->AddPostEffect(PostEffect::kSimpleFade);
             sm->SetFadeAmount(0.0f); // 真っ黒から明るくスタート
         }
         break;

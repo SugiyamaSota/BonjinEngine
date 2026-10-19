@@ -18,6 +18,7 @@ namespace Bonjin {
         /// </summary>
         void SetText(const std::wstring& text, int fontSize = 32, COLORREF textColor = RGB(255, 255, 255));
 
+    protected:
         // 基底クラスの純粋仮想関数を実装
         D3D12_GPU_DESCRIPTOR_HANDLE GetSRVHandle() const override;
 

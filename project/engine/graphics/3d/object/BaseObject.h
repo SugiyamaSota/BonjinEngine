@@ -3,6 +3,8 @@
 #include <wrl/client.h>
 #include <string>
 
+#include "RenderTypes.h"
+
 namespace Bonjin {
 	class IScene;
 }
@@ -27,8 +29,8 @@ public:
 	void SetParentScene(Bonjin::IScene* parent) { parentScene_ = parent; }
 
 	// 共通のセッター
-	void SetFillMode(D3D12_FILL_MODE fillMode) { fillMode_ = fillMode; }
-	void SetCullMode(D3D12_CULL_MODE cullMode) { cullMode_ = cullMode; }
+	void SetFillMode(FillMode fillMode) { fillMode_ = fillMode; }
+	void SetCullMode(CullMode cullMode) { cullMode_ = cullMode; }
 	void SetBlendMode(BlendMode blendMode) { blendMode_ = blendMode; }
 	void SetPrimitiveType(PrimitiveType primitiveType) { primitiveType_ = primitiveType; }
 	void SetColor(const Vector4& color) { if (materialData_) materialData_->color = color; }
@@ -69,8 +71,8 @@ protected:
 	int envTextureHandle_ = 0;
 
 	// 各モードの変数
-	D3D12_FILL_MODE fillMode_ = D3D12_FILL_MODE_SOLID;
-	D3D12_CULL_MODE cullMode_ = D3D12_CULL_MODE_BACK;
+	FillMode fillMode_ = FillMode::kSolid;
+	CullMode cullMode_ = CullMode::kBack;
 	BlendMode blendMode_ = BlendMode::kNone;
 	PrimitiveType primitiveType_ = PrimitiveType::kObject3D;
 

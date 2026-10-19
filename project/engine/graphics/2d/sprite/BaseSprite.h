@@ -50,10 +50,10 @@ namespace Bonjin {
         void SetFlipX(bool flag) { isFlipX_ = flag; }
         void SetFlipY(bool flag) { isFlipY_ = flag; }
 
+    protected:
         // 派生クラスごとに固有のGPU記述子ハンドルを返させるための仮想関数
         virtual D3D12_GPU_DESCRIPTOR_HANDLE GetSRVHandle() const = 0;
 
-    protected:
         // 頂点リソース
         Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_ = nullptr;
         VertexData* vertexData_ = nullptr;
