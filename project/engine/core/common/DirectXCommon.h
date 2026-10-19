@@ -11,23 +11,12 @@
 
 #include "rendetTexture/RenderTexture.h"
 #include "depthStencil/DepthStencil.h"
+#include "PostEffectTypes.h"
 
 class DirectXCommon {
 public:
-	enum class PostEffect {
-		kFullScreen,
-		kBoxFilter,
-		kGaussianFilter,
-		kLuminanceBasedOutline,
-		kDepthBasedOutline,
-		kRadialBlur,
-		kDissolve,
-		kRandomNoise,
-		kHSVFilter,
-		kCRTShutDown,
-		kDigitalDissolve,
-		kSimpleFade
-	};
+	using PostEffect = ::PostEffect;
+
 
 	/// --- インスタンス関連 ---
 	// 生成、取得

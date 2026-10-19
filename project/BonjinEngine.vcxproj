@@ -333,6 +333,8 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\system\platform\input\Gamepad.h" />
     <ClInclude Include="engine\graphics\core\pso\graphicsPipelineStateBuilder\GraphicsPipelineStateBuilder.h" />
     <ClInclude Include="engine\graphics\core\pso\PSOManager.h" />
+    <ClInclude Include="engine\graphics\core\pso\RenderTypes.h" />
+    <ClInclude Include="engine\graphics\core\pso\PostEffectTypes.h" />
     <ClInclude Include="engine\graphics\core\pso\rootSignatureBuilder\RootSignatureBuilder.h" />
     <ClInclude Include="engine\graphics\core\pso\shaderCompiler\ShaderCompiler.h" />
     <ClInclude Include="externals\Audio\common.h" />

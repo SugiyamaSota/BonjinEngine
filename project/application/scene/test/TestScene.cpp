@@ -31,7 +31,7 @@ void TestScene::Initialize(Camera* camera)
 	testCube_->SetModel("human");
 	testCube_->SetName("Human (testCube_)");
 	testCube_->SetEnableEnableEnvironmentMap(false);
-	testCube_->SetCullMode(D3D12_CULL_MODE_FRONT);
+	testCube_->SetCullMode(CullMode::kFront);
 	cubeAnimation_ = AnimationBuilder::LoadAnimationFile("resources/models/human", "walk.gltf");
 	skeletonDebugRenderer_ = std::make_unique<SkeletonDebugRenderer>();
 	if (testCube_->GetSkeleton().has_value()) {
@@ -142,26 +142,26 @@ void TestScene::Update(float deltaTime) {
 
 		if (isPaused_) {
 			// ポーズ中はガウシアンブラーとHSVフィルター（彩度減、輝度減）
-			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kGaussianFilter);
-			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kHSVFilter);
+			sceneManager->AddPostEffect(PostEffect::kGaussianFilter);
+			sceneManager->AddPostEffect(PostEffect::kHSVFilter);
 			sceneManager->SetHSVSaturationMultiplier(0.3f);
 			sceneManager->SetHSVValueMultiplier(0.5f);
 		}
 		else if (isLowHP_) {
 			// 瀕死時はモノクロビネット＋ノイズ
-			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kFullScreen);
+			sceneManager->AddPostEffect(PostEffect::kFullScreen);
 			sceneManager->SetFullScreenGray(true);
 			sceneManager->SetFullScreenVignette(true);
-			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
+			sceneManager->AddPostEffect(PostEffect::kRandomNoise);
 			sceneManager->SetNoiseAlpha(0.3f);
 		}
 		else if (damageTimer_ > 0.0f) {
 			// 被弾時はRadialBlurと強いノイズ（タイマーで減衰）
 			float progress = damageTimer_ / 0.3f;
-			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRadialBlur);
+			sceneManager->AddPostEffect(PostEffect::kRadialBlur);
 			sceneManager->SetRadialBlurWidth(progress * 0.04f);
 			sceneManager->SetRadialBlurCenter({0.5f, 0.5f});
-			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRandomNoise);
+			sceneManager->AddPostEffect(PostEffect::kRandomNoise);
 			sceneManager->SetNoiseAlpha(progress * 0.7f);
 		}
 		else if (isDigitalDissolveActive_) {
@@ -180,14 +180,14 @@ void TestScene::Update(float deltaTime) {
 				animTimer += deltaTime * 0.8f;
 				digitalDissolveThreshold_ = (std::sin(animTimer) * 0.5f + 0.5f);
 			}
-			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kDigitalDissolve);
+			sceneManager->AddPostEffect(PostEffect::kDigitalDissolve);
 			sceneManager->SetDissolveThreshold(digitalDissolveThreshold_);
 			sceneManager->SetDissolveEdgeWidth(digitalDissolveEdgeWidth_);
 			sceneManager->SetDissolveEdgeColor(digitalDissolveEdgeColor_);
 		}
 		else {
 			// 何も適用しない場合はFullScreenのデフォルト
-			sceneManager->AddPostEffect(DirectXCommon::PostEffect::kFullScreen);
+			sceneManager->AddPostEffect(PostEffect::kFullScreen);
 			sceneManager->SetFullScreenGray(false);
 			sceneManager->SetFullScreenVignette(false);
 		}

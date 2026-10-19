@@ -24,6 +24,8 @@
 #include"LightManager.h"
 #include"GpuParticleManager.h"
 #include"GpuParticleStructs.h"
+#include"RenderTypes.h"
+#include"PostEffectTypes.h"
 
 /// <summary>
 /// リソースリークチェッカーの構造体
@@ -69,5 +71,10 @@ namespace Bonjin {
 	/// 最後のフレームに呼び出し
 	/// </summary>
 	void EndFrame();
+
+	/// <summary>
+	/// GPU処理の完了待機とコマンドリストのリセット
+	/// </summary>
+	void WaitGPU();
 }
 

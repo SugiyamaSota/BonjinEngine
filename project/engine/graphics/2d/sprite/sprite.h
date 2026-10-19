@@ -19,10 +19,10 @@ namespace Bonjin {
         // テクスチャの切り取り範囲設定 (ピクセル単位: x, y, width, height)
         void SetTextureRect(float x, float y, float width, float height) { textureRect_ = { x, y, width, height }; }
 
+    protected:
         // 基底クラスの純粋仮想関数を実装
         D3D12_GPU_DESCRIPTOR_HANDLE GetSRVHandle() const override;
 
-    protected:
         // Sprite独自の頂点構築処理
         void RefreshVertexData() override;
 

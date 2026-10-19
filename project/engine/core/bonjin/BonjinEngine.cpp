@@ -79,3 +79,7 @@ void Bonjin::EndFrame() {
 	ImGuiManager::GetInstance()->EndFrame();
 	DirectXCommon::GetInstance()->EndFrame();
 }
+
+void Bonjin::WaitGPU() {
+	DirectXCommon::GetInstance()->WaitAndResetCommandList();
+}

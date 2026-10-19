@@ -41,7 +41,7 @@ void Core::Initialize() {
 	particleManager->CreateParticleGroup("enemyChargeRing", ModelBuilder::ModelType::kRing, "resources/textures/gradationLine.png");
 	particleManager->CreateParticleGroup("landingDust", ModelBuilder::ModelType::kPlane, "resources/textures/circle.png");
 
-	DirectXCommon::GetInstance()->WaitAndResetCommandList();
+	Bonjin::WaitGPU();
 
 	///--- ゲーム固有データの読み込み
 	// プレイヤーのレベルごとのステータステーブル
@@ -59,7 +59,7 @@ void Core::Initialize() {
 	// 最初のシーンを設定
 	sceneManager->ChangeScene("TitleScene");
 
-	DirectXCommon::GetInstance()->WaitAndResetCommandList();
+	Bonjin::WaitGPU();
 }
 
 void Core::Run() {

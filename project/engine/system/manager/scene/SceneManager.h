@@ -6,6 +6,7 @@
 
 #include"../interface/IScene.h"
 #include "SceneTransition.h"
+#include "PostEffectTypes.h"
 
 namespace Bonjin
 {
@@ -44,14 +45,14 @@ namespace Bonjin
 
         Camera* GetCamera() const { return camera_.get(); }
 
-        void SetPostEffect(DirectXCommon::PostEffect effect);
-        DirectXCommon::PostEffect GetPostEffect() const;
+        void SetPostEffect(PostEffect effect);
+        PostEffect GetPostEffect() const;
         void ClearPostEffects();
         void ResetPostEffects();
-        void AddPostEffect(DirectXCommon::PostEffect effect);
-        void RemovePostEffect(DirectXCommon::PostEffect effect);
-        void SetActiveEffects(const std::vector<DirectXCommon::PostEffect>& effects);
-        const std::vector<DirectXCommon::PostEffect>& GetActiveEffects() const;
+        void AddPostEffect(PostEffect effect);
+        void RemovePostEffect(PostEffect effect);
+        void SetActiveEffects(const std::vector<PostEffect>& effects);
+        const std::vector<PostEffect>& GetActiveEffects() const;
         void SetFullScreenGray(bool isGray);
         bool IsFullScreenGray() const;
         void SetFullScreenVignette(bool isVignette);

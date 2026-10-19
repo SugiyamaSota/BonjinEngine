@@ -255,11 +255,11 @@ void SceneManager::RequestSceneRestart() {
 	hasPendingSceneRestart_ = true;
 }
 
-void SceneManager::SetPostEffect(DirectXCommon::PostEffect effect) {
+void SceneManager::SetPostEffect(PostEffect effect) {
 	DirectXCommon::GetInstance()->SetPostEffect(effect);
 }
 
-DirectXCommon::PostEffect SceneManager::GetPostEffect() const {
+PostEffect SceneManager::GetPostEffect() const {
 	return DirectXCommon::GetInstance()->GetPostEffect();
 }
 
@@ -275,19 +275,19 @@ void SceneManager::ResetPostEffects() {
 	SetCRTShutDownProgress(0.0f);
 }
 
-void SceneManager::AddPostEffect(DirectXCommon::PostEffect effect) {
+void SceneManager::AddPostEffect(PostEffect effect) {
 	DirectXCommon::GetInstance()->AddPostEffect(effect);
 }
 
-void SceneManager::RemovePostEffect(DirectXCommon::PostEffect effect) {
+void SceneManager::RemovePostEffect(PostEffect effect) {
 	DirectXCommon::GetInstance()->RemovePostEffect(effect);
 }
 
-void SceneManager::SetActiveEffects(const std::vector<DirectXCommon::PostEffect>& effects) {
+void SceneManager::SetActiveEffects(const std::vector<PostEffect>& effects) {
 	DirectXCommon::GetInstance()->SetActiveEffects(effects);
 }
 
-const std::vector<DirectXCommon::PostEffect>& SceneManager::GetActiveEffects() const {
+const std::vector<PostEffect>& SceneManager::GetActiveEffects() const {
 	return DirectXCommon::GetInstance()->GetActiveEffects();
 }
 

@@ -84,7 +84,7 @@ void Object3D::Draw() {
     }
 
     ID3D12PipelineState* pso = common_->GetPSO()->GetPipelineState(
-        device_, drawType, blendMode_, fillMode_, cullMode_
+        device_, drawType, blendMode_, ToD3D12(fillMode_), ToD3D12(cullMode_)
     );
 
     commandList->SetGraphicsRootSignature(common_->GetPSO()->GetRootSignature(drawType));

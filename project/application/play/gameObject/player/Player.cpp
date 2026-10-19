@@ -186,12 +186,12 @@ void Player::Update() {
 		auto sceneManager = Bonjin::SceneManager::GetInstance();
 		if (teleportBlurTimer_ <= 0.0f) {
 			teleportBlurTimer_ = 0.0f;
-			sceneManager->RemovePostEffect(DirectXCommon::PostEffect::kRadialBlur);
+			sceneManager->RemovePostEffect(PostEffect::kRadialBlur);
 			sceneManager->SetRadialBlurWidth(0.0f);
 		} else {
 			auto activeEffects = sceneManager->GetActiveEffects();
-			if (std::find(activeEffects.begin(), activeEffects.end(), DirectXCommon::PostEffect::kRadialBlur) == activeEffects.end()) {
-				sceneManager->AddPostEffect(DirectXCommon::PostEffect::kRadialBlur);
+			if (std::find(activeEffects.begin(), activeEffects.end(), PostEffect::kRadialBlur) == activeEffects.end()) {
+				sceneManager->AddPostEffect(PostEffect::kRadialBlur);
 			}
 			float t = teleportBlurTimer_ / (std::max)(0.001f, teleportBlurMaxTime_); // 1.0 -> 0.0
 			float easedT = t * t;

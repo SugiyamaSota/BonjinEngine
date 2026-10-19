@@ -3,7 +3,7 @@
 
 SkyBox::SkyBox() : BaseObject() {
     primitiveType_ = PrimitiveType::kSkyBox;
-    cullMode_ = D3D12_CULL_MODE_NONE;
+    cullMode_ = CullMode::kNone;
 
     viewMatrix_ = MakeIdentity4x4();
     projectionMatrix_ = MakePerspectiveFovMatrix(0.45f, float(1280) / float(720), 0.1f, 100.0f);
@@ -52,7 +52,7 @@ void SkyBox::Draw() {
     auto commandList = common_->GetCommandList();
 
     ID3D12PipelineState* pso = common_->GetPSO()->GetPipelineState(
-        device_, primitiveType_, blendMode_, fillMode_, cullMode_
+        device_, primitiveType_, blendMode_, ToD3D12(fillMode_), ToD3D12(cullMode_)
     );
 
     commandList->SetGraphicsRootSignature(common_->GetPSO()->GetRootSignature(primitiveType_));
