@@ -39,6 +39,7 @@ namespace Bonjin
         TransitionType GetTransitionOutType() const override { return TransitionType::kCRTShutDown; }
         float GetTransitionOutDuration() const override { return 0.24f; }
         float GetTransitionWaitDuration() const override { return 0.50f; } // パチンコ風の息を呑む静寂のタメ（ブラックアウト）
+        DissolveMode GetTransitionDissolveMode() const override { return DissolveMode::kRandom; }
 
         // --- フェーズから参照するアクセサ ---
         TitleWorld* GetWorld() const { return world_.get(); }

@@ -24,7 +24,7 @@ struct Material
     float32_t vignetteScale;
     float32_t vignettePower;
     float32_t crtShutDownProgress;
-    float32_t padding4;
+    int32_t dissolveMode;
 };
 
 ConstantBuffer<Material> gMaterial : register(b0);

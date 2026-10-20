@@ -43,6 +43,7 @@ void TitleScene::Initialize(Camera* camera) {
 	startDesc.waitDuration = 0.0f;
 	startDesc.inType = TransitionType::kDigitalDissolve;
 	startDesc.inDuration = 1.4f;
+	startDesc.dissolveMode = DissolveMode::kRandom;
 	sceneManager->StartTransition(startDesc);
 
 	// BGM再生（ループ）

@@ -87,6 +87,7 @@ namespace Bonjin
 		/// </summary>
 		virtual TransitionType GetTransitionInType() const { return TransitionType::kDigitalDissolve; }
 		virtual float GetTransitionInDuration() const { return 1.0f; }
+		virtual DissolveMode GetTransitionDissolveMode() const { return DissolveMode::kBottomToTop; }
 
 		/// <summary>
 		/// シーン独自のカスタムアウト演出を行うか

@@ -15,7 +15,7 @@ void TutorialScene::Initialize(Camera* camera) {
 	PlayerStatusRepository::GetInstance()->Load("resources/data/player_status.json");
 
 	battleController_ = std::make_unique<BattleController>();
-	battleController_->Initialize(camera_, "resources/maps/tutorial.csv");
+	battleController_->Initialize(camera_, "resources/maps/tutorial.json");
 
 	tutorialManager_ = std::make_unique<TutorialManager>();
 	tutorialManager_->Initialize("resources/data/tutorial.json");

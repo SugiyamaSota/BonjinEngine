@@ -32,6 +32,14 @@ public:
 	void SetLerpFactor(float factor) { lerpFactor_ = factor; }
 	float GetLerpFactor() const { return lerpFactor_; }
 	const Vector3& GetCurrentTarget() const { return currentTarget_; }
+	Camera* GetCamera() const { return camera_; }
+
+	/// <summary>
+	/// カメラの距離（半径）を設定・取得・リセット
+	/// </summary>
+	void SetCameraRadius(float radius);
+	float GetCameraRadius() const;
+	void ResetCameraRadius();
 
 	/// <summary>
 	/// ImGuiでの編集用描画

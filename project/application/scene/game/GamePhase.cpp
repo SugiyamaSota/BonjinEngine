@@ -44,8 +44,11 @@ void GamePhaseHighlight::Enter(GameScene* scene) {
 	// ポストエフェクトを一旦クリアし、SimpleFade（真っ黒スタート: 0.0f）だけを有効化
 	auto sm = SceneManager::GetInstance();
 	sm->ClearPostEffects();
-	sm->AddPostEffect(PostEffect::kSimpleFade);
-	sm->SetFadeAmount(0.0f);
+	sm->AddPostEffect(PostEffect::kDigitalDissolve);
+	sm->SetDissolveMode(DissolveMode::kRightToLeft);
+	sm->SetDissolveThreshold(0.0f); // 真っ黒から実体化スタート
+	sm->SetDissolveEdgeWidth(0.06f); // サイバー発光エッジ
+	sm->SetDissolveEdgeColor({ 0.0f, 1.5f, 2.0f }); // サイバーブルー
 }
 
 void GamePhaseHighlight::Update(GameScene* scene, float deltaTime) {
@@ -71,6 +74,8 @@ void GamePhaseHighlight::Update(GameScene* scene, float deltaTime) {
 		sm->SetFadeAmount(t); // 徐々に明るくなる
 
 		if (timer_ >= kFadeDuration) {
+			sm->ClearPostEffects();
+			sm->AddPostEffect(PostEffect::kSimpleFade);
 			sm->SetFadeAmount(1.0f);
 			subState_ = SubState::kCameraPan;
 			timer_ = 0.0f;
@@ -89,12 +94,48 @@ void GamePhaseHighlight::Update(GameScene* scene, float deltaTime) {
 			bc->GetCameraController()->Update(targetPos, deltaTime);
 
 			if (timer_ >= duration) {
-				subState_ = SubState::kFadeOut;
-				timer_ = 0.0f;
+				// 3つ目（または最後のハイライト）に達した場合はフェードアウトせずにカメラを引きながらプレイヤーへ移動
+				bool isLastHighlight = (currentHighlightIndex_ >= 2 || currentHighlightIndex_ + 1 >= highlights.size());
+				if (isLastHighlight) {
+					subState_ = SubState::kReturnToPlayer;
+					returnStartPos_ = targetPos;
+					timer_ = 0.0f;
+					// 画面は明るい状態（FadeAmount = 1.0f）を維持
+					sm->SetFadeAmount(1.0f);
+				} else {
+					subState_ = SubState::kFadeOut;
+					timer_ = 0.0f;
+				}
 			}
 		} else {
-			subState_ = SubState::kPlayerFocusIn;
+			subState_ = SubState::kReturnToPlayer;
 			timer_ = 0.0f;
+		}
+		break;
+	}
+	case SubState::kReturnToPlayer: {
+		float t = std::clamp(timer_ / kReturnDuration, 0.0f, 1.0f);
+
+		// なめらかな補間カーブ (SmootherStep: 6t^5 - 15t^4 + 10t^3)
+		float smoothT = t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
+
+		Vector3 playerPos = bc->GetPlayer() ? bc->GetPlayer()->GetWorldPosition() : Vector3{ 0.0f, 0.0f, 0.0f };
+		Vector3 currentTarget = Lerp(returnStartPos_, playerPos, smoothT);
+
+		// カメラ注視点をプレイヤー位置へ向けて更新
+		bc->GetCameraController()->SetTargetInstant(currentTarget);
+
+		// 移動中にカメラを引き（ズームアウト）にし、プレイヤーに近づくにつれて通常距離に戻す
+		float pullFactor = std::sin(t * 3.1415926535f);
+		float currentRadius = Camera::kDefaultRadius + (kMaxPullBackRadius - Camera::kDefaultRadius) * pullFactor;
+		bc->GetCameraController()->SetCameraRadius(currentRadius);
+
+		if (timer_ >= kReturnDuration) {
+			// プレイヤーに到着完了！カメラ距離を確実に通常に戻し、GOシグナルを発行
+			bc->GetCameraController()->ResetCameraRadius();
+			bc->GetCameraController()->SetTargetInstant(playerPos);
+			FinishHighlight(scene);
+			return;
 		}
 		break;
 	}
@@ -160,7 +201,11 @@ void GamePhaseHighlight::DrawImGui(GameScene* scene) {
 	ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.8f, 1.0f), "=== Stage Intro Highlight ===");
 	auto bc = scene->GetBattleController();
 	if (bc && bc->GetMapChipField()) {
-		ImGui::Text("Highlight: %zu / %zu", currentHighlightIndex_ + 1, bc->GetMapChipField()->GetHighlights().size());
+		if (subState_ == SubState::kReturnToPlayer) {
+			ImGui::Text("State: Return to Player (Pull-back Camera)");
+		} else {
+			ImGui::Text("Highlight: %zu / %zu", currentHighlightIndex_ + 1, bc->GetMapChipField()->GetHighlights().size());
+		}
 	}
 	if (ImGui::Button("Skip Highlight")) {
 		FinishHighlight(scene);
@@ -172,11 +217,15 @@ void GamePhaseHighlight::DrawImGui(GameScene* scene) {
 }
 
 void GamePhaseHighlight::Exit(GameScene* scene) {
-	(void)scene;
 	auto sm = SceneManager::GetInstance();
 	sm->ClearPostEffects();
 	sm->SetFadeAmount(1.0f);
 	sm->SetDissolveThreshold(1.0f);
+
+	auto bc = scene->GetBattleController();
+	if (bc && bc->GetCameraController()) {
+		bc->GetCameraController()->ResetCameraRadius();
+	}
 }
 
 void GamePhaseHighlight::FinishHighlight(GameScene* scene) {
@@ -186,10 +235,13 @@ void GamePhaseHighlight::FinishHighlight(GameScene* scene) {
 	sm->SetDissolveThreshold(1.0f);
 
 	auto bc = scene->GetBattleController();
-	if (bc && bc->GetPlayer()) {
-		bc->GetCameraController()->SetTargetInstant(bc->GetPlayer()->GetWorldPosition());
-	}
 	if (bc) {
+		if (bc->GetCameraController()) {
+			bc->GetCameraController()->ResetCameraRadius();
+			if (bc->GetPlayer()) {
+				bc->GetCameraController()->SetTargetInstant(bc->GetPlayer()->GetWorldPosition());
+			}
+		}
 		bc->SetHudVisible(true);
 		bc->TriggerGoSignal();
 	}
@@ -206,7 +258,9 @@ void GamePhasePlay::Enter(GameScene* scene) {
 	auto bc = scene->GetBattleController();
 	if (bc) {
 		bc->SetHudVisible(true);
-		bc->TriggerGoSignal();
+		if (!bc->IsGoSignalActive()) {
+			bc->TriggerGoSignal();
+		}
 	}
 }
 

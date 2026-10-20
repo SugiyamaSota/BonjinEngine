@@ -52,10 +52,38 @@ PixelShaderOutPut main(VertexShaderOutPut input)
     float timeStep = floor(gMaterial.time * 24.0f);
     float timeFlicker = Hash21(blockCoord + float2(timeStep * 0.07f, timeStep * 0.13f));
 
-    // スキャンの進行をMaterialから取得し分岐
-    float scanPos = 1.0f-blockUV.y;
-    float blockThreshold = scanPos * 0.65f + blockRand * 0.25f + subRand * 0.10f;
-    //float blockThreshold = blockRand * 0.9f + subRand * 0.1f;
+    // スキャンの進行/モードをMaterialから取得して分岐
+    // dissolveMode: 0 = 下から上(BottomToTop), 1 = 上から下(TopToBottom), 2 = 画面全体ランダム(Random), 3 = 左から右, 4 = 右から左
+    float blockThreshold = 0.0f;
+    if (gMaterial.dissolveMode == 1)
+    {
+        // 上から下へスキャン
+        float scanPos = blockUV.y;
+        blockThreshold = scanPos * 0.65f + blockRand * 0.25f + subRand * 0.10f;
+    }
+    else if (gMaterial.dissolveMode == 2)
+    {
+        // 画面全体からランダムにフェード（スキャン線なし）
+        blockThreshold = blockRand * 0.80f + subRand * 0.20f;
+    }
+    else if (gMaterial.dissolveMode == 3)
+    {
+        // 左から右へスキャン
+        float scanPos = blockUV.x;
+        blockThreshold = scanPos * 0.65f + blockRand * 0.25f + subRand * 0.10f;
+    }
+    else if (gMaterial.dissolveMode == 4)
+    {
+        // 右から左へスキャン
+        float scanPos = 1.0f - blockUV.x;
+        blockThreshold = scanPos * 0.65f + blockRand * 0.25f + subRand * 0.10f;
+    }
+    else
+    {
+        // デフォルト: 下から上へスキャン
+        float scanPos = 1.0f - blockUV.y;
+        blockThreshold = scanPos * 0.65f + blockRand * 0.25f + subRand * 0.10f;
+    }
 
     // 進行度との差分（正なら出現済み、負なら未出現）
     float edgeWidth = max(gMaterial.dissolveEdgeWidth, 0.02f);

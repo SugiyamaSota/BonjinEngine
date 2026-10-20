@@ -58,6 +58,8 @@ public:
 	Vector3 GetDissolveEdgeColor() const { return fullScreenMaterial_.dissolveEdgeColor; }
 	void SetDissolveEdgeWidth(float width);
 	float GetDissolveEdgeWidth() const { return fullScreenMaterial_.dissolveEdgeWidth; }
+	void SetDissolveMode(DissolveMode mode);
+	DissolveMode GetDissolveMode() const { return static_cast<DissolveMode>(fullScreenMaterial_.dissolveMode); }
 	void SetNoiseAlpha(float alpha);
 	float GetNoiseAlpha() const { return fullScreenMaterial_.noiseAlpha; }
 	void SetHSVHueShift(float hueShift);
@@ -218,7 +220,7 @@ private:
 		float vignetteScale;
 		float vignettePower;
 		float crtShutDownProgress;
-		float padding4;
+		int32_t dissolveMode;
 	};
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> fullScreenCB_ = nullptr;

@@ -21,6 +21,7 @@ public:
 		kFadeIn,
 		kCameraPan,
 		kFadeOut,
+		kReturnToPlayer,
 		kPlayerFocusIn
 	};
 
@@ -35,8 +36,11 @@ private:
 	SubState subState_ = SubState::kFadeIn;
 	size_t currentHighlightIndex_ = 0;
 	float timer_ = 0.0f;
+	Vector3 returnStartPos_ = { 0.0f, 0.0f, 0.0f };
 	static constexpr float kFadeDuration = 0.5f;
 	static constexpr float kPlayerFocusDuration = 0.8f;
+	static constexpr float kReturnDuration = 1.8f;
+	static constexpr float kMaxPullBackRadius = 90.0f;
 };
 
 /// <summary>

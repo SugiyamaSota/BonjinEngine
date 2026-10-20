@@ -41,6 +41,27 @@ void CameraController::SetTargetInstant(const Vector3& target) {
 	}
 }
 
+void CameraController::SetCameraRadius(float radius) {
+	if (camera_) {
+		camera_->SetRadius(radius);
+		camera_->Update(Camera::CameraType::kNormal);
+	}
+}
+
+float CameraController::GetCameraRadius() const {
+	if (camera_) {
+		return camera_->GetRadius();
+	}
+	return Camera::kDefaultRadius;
+}
+
+void CameraController::ResetCameraRadius() {
+	if (camera_) {
+		camera_->SetRadius(Camera::kDefaultRadius);
+		camera_->Update(Camera::CameraType::kNormal);
+	}
+}
+
 void CameraController::DrawImGui() {
 #ifdef USE_IMGUI
 	if (ImGui::TreeNode("Camera Controller")) {

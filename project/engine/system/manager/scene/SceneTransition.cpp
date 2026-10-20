@@ -52,6 +52,7 @@ void SceneTransition::EnterPhase(TransitionPhase nextPhase) {
             sm->SetDissolveThreshold(1.0f); // 完全に表示された状態から開始
             sm->SetDissolveEdgeWidth(0.06f);
             sm->SetDissolveEdgeColor(desc_.edgeColor);
+            sm->SetDissolveMode(desc_.dissolveMode);
         } else if (desc_.outType == TransitionType::kFadeBlack) {
             sm->AddPostEffect(PostEffect::kSimpleFade);
             sm->SetFadeAmount(1.0f);
@@ -99,6 +100,7 @@ void SceneTransition::EnterPhase(TransitionPhase nextPhase) {
             sm->SetDissolveThreshold(0.0f); // 真っ黒から実体化スタート
             sm->SetDissolveEdgeWidth(0.06f);
             sm->SetDissolveEdgeColor(desc_.edgeColor);
+            sm->SetDissolveMode(desc_.dissolveMode);
         } else if (desc_.inType == TransitionType::kFadeBlack) {
             sm->AddPostEffect(PostEffect::kSimpleFade);
             sm->SetFadeAmount(0.0f); // 真っ黒から明るくスタート
