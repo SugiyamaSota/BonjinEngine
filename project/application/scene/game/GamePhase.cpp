@@ -76,12 +76,11 @@ void GamePhaseHighlight::Update(GameScene* scene, float deltaTime) {
 	switch (subState_) {
 	case SubState::kFadeIn: {
 		float t = std::clamp(timer_ / kFadeDuration, 0.0f, 1.0f);
-		sm->SetDissolveThreshold(t); // 徐々に実体化（0.0 -> 1.0）
+		sm->SetFadeAmount(t); // 徐々に実体化（0.0 -> 1.0）
 
 		if (timer_ >= kFadeDuration) {
 			sm->ClearPostEffects(); // パン中は通常描画（エフェクトなしで鮮明に）
 			sm->SetFadeAmount(1.0f);
-			sm->SetDissolveThreshold(1.0f);
 			subState_ = SubState::kCameraPan;
 			timer_ = 0.0f;
 		}
@@ -162,9 +161,6 @@ void GamePhaseHighlight::Update(GameScene* scene, float deltaTime) {
 				// 次のハイライトへカメラを瞬時に移動させて Fade In
 				bc->GetCameraController()->SetTargetInstant(highlights[currentHighlightIndex_].startWorldPos);
 				bc->UpdateVisuals(0.0f);
-
-				// 2回目以降のハイライトも DigitalDissolve で実体化開始！
-				SetupHighlightDissolve();
 
 				subState_ = SubState::kFadeIn;
 			} else {
