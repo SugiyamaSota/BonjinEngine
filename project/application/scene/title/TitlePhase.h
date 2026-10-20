@@ -51,6 +51,7 @@ public:
 private:
 	std::string targetSceneType_;
 	float timer_ = 0.0f;
+	bool transitionRequested_ = false;
 	static constexpr float kDiveDuration = 1.0f;
 };
 

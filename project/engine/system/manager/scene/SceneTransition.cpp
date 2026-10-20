@@ -63,21 +63,8 @@ void SceneTransition::EnterPhase(TransitionPhase nextPhase) {
         break;
 
     case TransitionPhase::kWait:
-        // 暗転状態の維持・シーン切り替え指示
-        shouldSwitchScene_ = true;
-
-        if (desc_.outType == TransitionType::kDigitalDissolve) {
-            sm->SetDissolveThreshold(0.0f); // 完全暗転
-        } else if (desc_.outType == TransitionType::kFadeBlack) {
-            sm->SetFadeAmount(0.0f);
-        } else if (desc_.outType == TransitionType::kCRTShutDown) {
-            sm->SetCRTShutDownProgress(1.0f); // 完全ブラックアウト
-        }
-        break;
-
-    case TransitionPhase::kIn:
-        // 前のアウト演出固有のエフェクトをクリーンアップ
-        if (desc_.outType == TransitionType::kCRTShutDown && desc_.inType != TransitionType::kCRTShutDown) {
+        // アウト演出の完了。新シーン初期化（ExecuteSceneChange）の前に、旧アウト演出固有のエフェクトをクリーンアップ
+        if (desc_.outType == TransitionType::kCRTShutDown) {
             sm->SetCRTShutDownProgress(0.0f);
             sm->RemovePostEffect(DirectXCommon::PostEffect::kCRTShutDown);
         }
@@ -88,8 +75,19 @@ void SceneTransition::EnterPhase(TransitionPhase nextPhase) {
             sm->RemovePostEffect(DirectXCommon::PostEffect::kDigitalDissolve);
         }
 
-        // カスタムイン演出の場合、シーン側に演出を委任して即座に通常更新へ移行
-        if (desc_.inType == TransitionType::kCustom) {
+        // 暗転状態の維持・シーン切り替え指示
+        shouldSwitchScene_ = true;
+
+        if (desc_.inType == TransitionType::kDigitalDissolve) {
+            sm->SetDissolveThreshold(0.0f); // 完全暗転
+        } else if (desc_.inType == TransitionType::kFadeBlack) {
+            sm->SetFadeAmount(0.0f);
+        }
+        break;
+
+    case TransitionPhase::kIn:
+        // カスタムイン演出や演出なしの場合は即座に通常更新へ移行
+        if (desc_.inType == TransitionType::kCustom || desc_.inType == TransitionType::kNone) {
             EnterPhase(TransitionPhase::kIdle);
             return;
         }
@@ -137,7 +135,7 @@ void SceneTransition::Update(float deltaTime) {
     case TransitionPhase::kWait: {
         float dur = desc_.waitDuration;
         if (dur <= 0.0f || timer_ >= dur) {
-            if (desc_.inType == TransitionType::kNone) {
+            if (desc_.inType == TransitionType::kNone || desc_.inType == TransitionType::kCustom) {
                 EnterPhase(TransitionPhase::kIdle);
             } else {
                 EnterPhase(TransitionPhase::kIn);

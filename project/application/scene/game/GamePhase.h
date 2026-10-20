@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../engine/interface/BaseScene.h"
+#include "PostEffectTypes.h"
 #include <vector>
 
 namespace Bonjin {
@@ -33,10 +34,13 @@ public:
 	void FinishHighlight(GameScene* scene);
 
 private:
+	void SetupHighlightDissolve();
+
 	SubState subState_ = SubState::kFadeIn;
 	size_t currentHighlightIndex_ = 0;
 	float timer_ = 0.0f;
 	Vector3 returnStartPos_ = { 0.0f, 0.0f, 0.0f };
+	DissolveMode dissolveMode_ = DissolveMode::kRightToLeft;
 	static constexpr float kFadeDuration = 0.5f;
 	static constexpr float kPlayerFocusDuration = 0.8f;
 	static constexpr float kReturnDuration = 1.8f;

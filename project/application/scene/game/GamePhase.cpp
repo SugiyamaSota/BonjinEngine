@@ -19,6 +19,16 @@ namespace Bonjin {
 // GamePhaseHighlight
 // ===================================================================
 
+void GamePhaseHighlight::SetupHighlightDissolve() {
+	auto sm = SceneManager::GetInstance();
+	sm->ClearPostEffects();
+	sm->AddPostEffect(PostEffect::kDigitalDissolve);
+	sm->SetDissolveMode(dissolveMode_);
+	sm->SetDissolveThreshold(0.0f); // 真っ黒から実体化スタート
+	sm->SetDissolveEdgeWidth(0.06f); // サイバー発光エッジ
+	sm->SetDissolveEdgeColor({ 0.0f, 1.5f, 2.0f }); // サイバーブルー
+}
+
 void GamePhaseHighlight::Enter(GameScene* scene) {
 	subState_ = SubState::kFadeIn;
 	currentHighlightIndex_ = 0;
@@ -41,14 +51,8 @@ void GamePhaseHighlight::Enter(GameScene* scene) {
 	// 最初のカメラ位置に合わせて描画用モデルを初期更新
 	bc->UpdateVisuals(0.0f);
 
-	// ポストエフェクトを一旦クリアし、SimpleFade（真っ黒スタート: 0.0f）だけを有効化
-	auto sm = SceneManager::GetInstance();
-	sm->ClearPostEffects();
-	sm->AddPostEffect(PostEffect::kDigitalDissolve);
-	sm->SetDissolveMode(DissolveMode::kRightToLeft);
-	sm->SetDissolveThreshold(0.0f); // 真っ黒から実体化スタート
-	sm->SetDissolveEdgeWidth(0.06f); // サイバー発光エッジ
-	sm->SetDissolveEdgeColor({ 0.0f, 1.5f, 2.0f }); // サイバーブルー
+	// 初回ハイライトのDigitalDissolveを開始
+	SetupHighlightDissolve();
 }
 
 void GamePhaseHighlight::Update(GameScene* scene, float deltaTime) {
@@ -59,8 +63,9 @@ void GamePhaseHighlight::Update(GameScene* scene, float deltaTime) {
 	}
 
 	// スキップ判定 (SPACEキー または GAMEPAD Aボタン)
-	if (Input::GetInstance()->IsTrigger(DIK_SPACE) || 
-		Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_A)) {
+	// ※ シーン切り替え直後の入力残りや連打による誤スキップを防ぐため0.2秒のガードを設ける
+	if (timer_ > 0.2f && (Input::GetInstance()->IsTrigger(DIK_SPACE) || 
+		Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_A))) {
 		FinishHighlight(scene);
 		return;
 	}
@@ -71,12 +76,12 @@ void GamePhaseHighlight::Update(GameScene* scene, float deltaTime) {
 	switch (subState_) {
 	case SubState::kFadeIn: {
 		float t = std::clamp(timer_ / kFadeDuration, 0.0f, 1.0f);
-		sm->SetFadeAmount(t); // 徐々に明るくなる
+		sm->SetDissolveThreshold(t); // 徐々に実体化（0.0 -> 1.0）
 
 		if (timer_ >= kFadeDuration) {
-			sm->ClearPostEffects();
-			sm->AddPostEffect(PostEffect::kSimpleFade);
+			sm->ClearPostEffects(); // パン中は通常描画（エフェクトなしで鮮明に）
 			sm->SetFadeAmount(1.0f);
+			sm->SetDissolveThreshold(1.0f);
 			subState_ = SubState::kCameraPan;
 			timer_ = 0.0f;
 		}
@@ -101,8 +106,14 @@ void GamePhaseHighlight::Update(GameScene* scene, float deltaTime) {
 					returnStartPos_ = targetPos;
 					timer_ = 0.0f;
 					// 画面は明るい状態（FadeAmount = 1.0f）を維持
+					sm->ClearPostEffects();
 					sm->SetFadeAmount(1.0f);
+					sm->SetDissolveThreshold(1.0f);
 				} else {
+					// 次のハイライトへ向けて暗転フェードアウト開始
+					sm->ClearPostEffects();
+					sm->AddPostEffect(PostEffect::kSimpleFade);
+					sm->SetFadeAmount(1.0f);
 					subState_ = SubState::kFadeOut;
 					timer_ = 0.0f;
 				}
@@ -151,23 +162,16 @@ void GamePhaseHighlight::Update(GameScene* scene, float deltaTime) {
 				// 次のハイライトへカメラを瞬時に移動させて Fade In
 				bc->GetCameraController()->SetTargetInstant(highlights[currentHighlightIndex_].startWorldPos);
 				bc->UpdateVisuals(0.0f);
-				sm->SetFadeAmount(0.0f);
+
+				// 2回目以降のハイライトも DigitalDissolve で実体化開始！
+				SetupHighlightDissolve();
+
 				subState_ = SubState::kFadeIn;
 			} else {
-				// 全ハイライト完了 -> プレイヤーへカメラを瞬時に移動させて DigitalDissolve で実体化スタート！
+				subState_ = SubState::kReturnToPlayer;
 				if (bc->GetPlayer()) {
-					bc->GetCameraController()->SetTargetInstant(bc->GetPlayer()->GetWorldPosition());
+					returnStartPos_ = bc->GetPlayer()->GetWorldPosition();
 				}
-				bc->UpdateVisuals(0.0f);
-
-				// SimpleFade を終了し、DigitalDissolve を開始
-				sm->ClearPostEffects();
-				sm->AddPostEffect(PostEffect::kDigitalDissolve);
-				sm->SetDissolveThreshold(0.0f); // 真っ黒から実体化スタート
-				sm->SetDissolveEdgeWidth(0.06f); // サイバー発光エッジ
-				sm->SetDissolveEdgeColor({ 0.0f, 1.5f, 2.0f }); // サイバーブルー
-
-				subState_ = SubState::kPlayerFocusIn;
 			}
 		}
 		break;

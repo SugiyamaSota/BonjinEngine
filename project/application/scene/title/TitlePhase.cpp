@@ -70,7 +70,8 @@ void TitlePhaseDive::Update(TitleScene* scene, float deltaTime) {
 	sm->SetRadialBlurWidth(eased * 0.11f);
 
 	// ズーム最高潮に達した瞬間、共通トランジション（CRT電源断 → 静寂ブラックアウト → 次シーンディゾルブ）を起動！
-	if (progress >= 1.0f) {
+	if (progress >= 1.0f && !transitionRequested_) {
+		transitionRequested_ = true;
 		// BGM停止とSE再生
 		BgmPlayer::GetInstance()->Stop();
 		sm->SetRadialBlurWidth(0.0f);
