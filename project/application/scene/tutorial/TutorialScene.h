@@ -12,7 +12,7 @@ enum class TutorialPhase {
 	kComplete,
 };
 
-class TutorialScene : public BaseScene<TutorialPhase> {
+class TutorialScene : public LegacyBaseScene<TutorialPhase> {
 public:
 	void Initialize(Camera* camera) override;
 	void Unload() override;

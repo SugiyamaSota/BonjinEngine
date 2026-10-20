@@ -15,7 +15,7 @@ namespace Bonjin
         kDive,         // ズーム＆激震シェイク突入（約1.0秒）
     };
 
-    class TitleScene : public BaseScene<TitlePhase>
+    class TitleScene : public BaseScene<TitleScene>
     {
     public:
         virtual ~TitleScene() = default;
@@ -40,6 +40,12 @@ namespace Bonjin
         float GetTransitionOutDuration() const override { return 0.24f; }
         float GetTransitionWaitDuration() const override { return 0.50f; } // パチンコ風の息を呑む静寂のタメ（ブラックアウト）
 
+        // --- フェーズから参照するアクセサ ---
+        TitleWorld* GetWorld() const { return world_.get(); }
+        TitleUI* GetUI() const { return ui_.get(); }
+        Camera* GetCamera() const { return camera_; }
+        uint32_t GetShutdownSEId() const { return shutdownSEId; }
+
     private:
         // --- 3D背景ワールド ---
         std::unique_ptr<TitleWorld> world_ = nullptr;
@@ -47,17 +53,10 @@ namespace Bonjin
         // --- 2D UI / HUD ---
         std::unique_ptr<TitleUI> ui_ = nullptr;
 
-        // --- タイマー・演出制御 ---
+        // --- タイマー ---
         float timer_ = 0.0f;
-        float diveTimer_ = 0.0f;
-        const float kDiveDuration = 1.0f; // ダイブ（ズーム＆シェイク）にかける時間
 
-        uint32_t shutdownSEId;
-
-        SceneType targetSceneType_ = "GameScene"; // 遷移先シーン（GameScene または TutorialScene）
-
-    private:
-        void UpdateDiveTransition(float deltaTime);
+        uint32_t shutdownSEId = 0;
     };
 
-}
+}
