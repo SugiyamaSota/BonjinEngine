@@ -37,6 +37,7 @@ void CameraController::SetTargetInstant(const Vector3& target) {
 	currentTarget_ = target;
 	if (camera_) {
 		camera_->SetTarget(currentTarget_);
+		camera_->Update(Camera::CameraType::kNormal);
 	}
 }
 

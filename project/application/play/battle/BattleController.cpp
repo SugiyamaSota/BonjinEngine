@@ -161,29 +161,36 @@ void BattleController::Unload() {
 }
 
 void BattleController::Update(float deltaTime) {
-	// ヒットストップの開始リクエストチェック
-	if (player_ && player_->ConsumeHitStopRequest()) {
-		hitStopTimer_ = 0.05f; // 1秒間時を止める
-	}
-
-	// ヒットストップ中の処理
+	// ヒットストップ中の処理（時間停止中ならカメラをプレイヤーに固定し、全ビジュアルをフリーズ状態で同期）
 	if (hitStopTimer_ > 0.0f) {
 		hitStopTimer_ -= deltaTime;
 		if (hitStopTimer_ < 0.0f) {
 			hitStopTimer_ = 0.0f;
 		}
 
-		// カメラ、天球、パーティクルの更新のみを行い、他はフリーズ
-		skyBox_->Update(InitializeWorldTransform(), camera_);
-		cameraController_->Update(player_->GetWorldPosition(), deltaTime);
-		particleManager_->Update(camera_);
-		GpuParticleManager::GetInstance()->Update(deltaTime, camera_);
+		if (cameraController_) {
+			cameraController_->SetTargetInstant(player_->GetWorldPosition());
+		}
+		UpdateVisuals(0.0f);
 		return;
 	}
 
 	(void)deltaTime;
 	skyBox_->Update(InitializeWorldTransform(), camera_);
+
+	// プレイヤー更新（テレポート実行）
 	player_->Update();
+
+	// テレポート等によりヒットストップがリクエストされた場合、その場で即座にカメラを合わせ、テレポート後視点で完全同期フリーズ
+	float hitStopDuration = 0.0f;
+	if (player_ && player_->ConsumeHitStopRequest(hitStopDuration)) {
+		hitStopTimer_ = hitStopDuration;
+		if (cameraController_) {
+			cameraController_->SetTargetInstant(player_->GetWorldPosition());
+		}
+		UpdateVisuals(0.0f);
+		return;
+	}
 
 	// アンカーの即着地処理
 	if (player_->HasAnchor()) {
