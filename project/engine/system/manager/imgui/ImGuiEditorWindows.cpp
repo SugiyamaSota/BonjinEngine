@@ -144,6 +144,11 @@ void ImGuiEditorWindows::DrawSystemSettings(SceneManager* sceneManager) {
 			if (ImGui::ColorEdit3("Edge Color", edgeColor)) {
 				sceneManager->SetDissolveEdgeColor({ edgeColor[0], edgeColor[1], edgeColor[2] });
 			}
+			int currentMode = static_cast<int>(sceneManager->GetDissolveMode());
+			const char* modeNames[] = { "Bottom to Top", "Top to Bottom", "Screen Random", "Left to Right", "Right to Left" };
+			if (ImGui::Combo("Direction / Mode", &currentMode, modeNames, IM_ARRAYSIZE(modeNames))) {
+				sceneManager->SetDissolveMode(static_cast<DissolveMode>(currentMode));
+			}
 		}
 
 		if (ImGui::CollapsingHeader("RandomNoise Settings")) {

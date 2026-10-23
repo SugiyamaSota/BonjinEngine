@@ -211,6 +211,7 @@ void Player::Update() {
 			worldTransform_.translate = teleportQueue_.front();
 			teleportQueue_.pop_front();
 			teleportTimer_ = teleportInterval_;
+			UpdateModel(); // テレポート先の位置で即座にモデル行列を更新
 
 			// GPU雷霆エフェクトの発生
 			EmitTeleportLightning(lastTeleportStartPos_, worldTransform_.translate);
@@ -220,11 +221,17 @@ void Player::Update() {
 
 			velocity_ = { 0.0f, 0.0f, 0.0f }; // 速度のリセット
 
-			// カメラシェイクとヒットストップ
+			// カメラシェイク
 			if (enableTeleportShake_ && camera_) {
 				camera_->StartShake(lockonTeleportShakeIntensity_, lockonTeleportShakeDuration_);
 			}
-			hitStopRequested_ = true;
+
+			// テレポート終了時（最後の敵）はフィニッシュヒットストップ、途中は短いヒットストップ
+			if (teleportQueue_.empty()) {
+				RequestHitStop(teleportFinishHitStopDuration_);
+			} else {
+				RequestHitStop(teleportMidHitStopDuration_);
+			}
 		}
 	}
 
@@ -407,6 +414,7 @@ void Player::Update() {
 				Vector3 startPos = worldTransform_.translate;
 				// プレイヤーを計算された座標にテレポート
 				worldTransform_.translate = teleportPosition;
+				UpdateModel(); // テレポート先の位置で即座にモデル行列を更新
 
 				// GPU雷霆テレポートエフェクトとブラーの発生
 				EmitTeleportLightning(startPos, teleportPosition);
@@ -552,6 +560,7 @@ void Player::GainExp(int amount) {
 		// レベルアップ時の演出（エフェクト生成やSE再生など）をここに記述
 	}
 }
+
 void Player::RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies) {
 	size_t defeatedCount = 0;
 	for (Bonjin::BaseEnemy* enemy : enemies) {
@@ -579,6 +588,7 @@ void Player::RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies) {
 		worldTransform_.translate = teleportQueue_.front();
 		teleportQueue_.pop_front();
 		teleportTimer_ = teleportInterval_;
+		UpdateModel(); // テレポート先の位置で即座にモデル行列を更新
 
 		// GPU雷霆エフェクトの発生
 		EmitTeleportLightning(lastTeleportStartPos_, worldTransform_.translate);
@@ -588,11 +598,17 @@ void Player::RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies) {
 
 		velocity_ = { 0.0f, 0.0f, 0.0f };
 
-		// カメラシェイクとヒットストップ
+		// カメラシェイク
 		if (enableTeleportShake_ && camera_) {
 			camera_->StartShake(lockonTeleportShakeIntensity_, lockonTeleportShakeDuration_);
 		}
-		hitStopRequested_ = true;
+
+		// 初回テレポート（敵が1体のみなら終了時フィニッシュ、まだ残っていれば途中）
+		if (teleportQueue_.empty()) {
+			RequestHitStop(teleportFinishHitStopDuration_);
+		} else {
+			RequestHitStop(teleportMidHitStopDuration_);
+		}
 
 		// 演出終了まで無敵状態にする
 		isInvincible_ = true;
@@ -725,6 +741,13 @@ void Player::DrawImGui() {
 				ImGui::DragFloat("Anchor Shake Duration", &teleportShakeDuration_, 0.01f, 0.01f, 1.0f, "%.2fs");
 				ImGui::DragFloat("Chain Lock-on Shake Intensity", &lockonTeleportShakeIntensity_, 0.05f, 0.0f, 3.0f, "%.2f");
 				ImGui::DragFloat("Chain Lock-on Shake Duration", &lockonTeleportShakeDuration_, 0.01f, 0.01f, 1.0f, "%.2fs");
+				ImGui::TreePop();
+			}
+
+			if (ImGui::TreeNode("4. Hit Stop (ヒットストップ)")) {
+				ImGui::Checkbox("Enable Hit Stop", &enableHitStop_);
+				ImGui::DragFloat("Mid-Chain Duration", &teleportMidHitStopDuration_, 0.01f, 0.0f, 1.0f, "%.2fs");
+				ImGui::DragFloat("Finish Duration", &teleportFinishHitStopDuration_, 0.01f, 0.0f, 1.0f, "%.2fs");
 				ImGui::TreePop();
 			}
 

@@ -20,7 +20,7 @@ namespace Bonjin
 		kGoal,
 	};
 
-	class TestScene : public BaseScene<TestPhase>
+	class TestScene : public LegacyBaseScene<TestPhase>
 	{
 	public:
 		// --- オーバーライド関数 --- 

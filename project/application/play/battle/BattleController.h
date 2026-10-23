@@ -38,9 +38,11 @@ public:
 	bool IsGoalReached() const { return isGoalReached_; }
 
 	CameraController* GetCameraController() const { return cameraController_.get(); }
+	Camera* GetCamera() const { return camera_; }
 	void UpdateVisuals(float deltaTime);
 	void SetHudVisible(bool visible) { isHudVisible_ = visible; }
 	void TriggerGoSignal();
+	bool IsGoSignalActive() const { return goSignalBanner_ && goSignalBanner_->IsActive(); }
 
 private:
 	bool isHudVisible_ = true;

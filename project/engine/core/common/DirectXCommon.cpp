@@ -108,6 +108,7 @@ void DirectXCommon::Initialize() {
 	fullScreenMaterial_.vignetteColor = { 0.0f, 0.0f, 0.0f };
 	fullScreenMaterial_.vignetteScale = 16.0f;
 	fullScreenMaterial_.vignettePower = 0.8f;
+	fullScreenMaterial_.dissolveMode = static_cast<int32_t>(DissolveMode::kBottomToTop);
 	fullScreenCB_ = CreateBufferResource(device_.Get(), sizeof(FullScreenMaterial));
 	fullScreenCB_->Map(0, nullptr, reinterpret_cast<void**>(&fullScreenData_));
 	*fullScreenData_ = fullScreenMaterial_;
@@ -416,6 +417,10 @@ void DirectXCommon::SetDissolveEdgeColor(const Vector3& color) {
 
 void DirectXCommon::SetDissolveEdgeWidth(float width) {
 	fullScreenMaterial_.dissolveEdgeWidth = std::clamp(width, 0.0f, 0.2f);
+}
+
+void DirectXCommon::SetDissolveMode(DissolveMode mode) {
+	fullScreenMaterial_.dissolveMode = static_cast<int32_t>(mode);
 }
 
 void DirectXCommon::SetNoiseAlpha(float alpha) {

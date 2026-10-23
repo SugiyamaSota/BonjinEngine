@@ -200,6 +200,7 @@ void SceneManager::RequestSceneChange(SceneType nextSceneType) {
 			desc.inType = it->second->GetTransitionInType();
 		}
 		desc.inDuration = it->second->GetTransitionInDuration();
+		desc.dissolveMode = it->second->GetTransitionDissolveMode();
 	}
 
 	RequestSceneChange(nextSceneType, desc);
@@ -377,6 +378,14 @@ void SceneManager::SetDissolveEdgeWidth(float width) {
 
 float SceneManager::GetDissolveEdgeWidth() const {
 	return DirectXCommon::GetInstance()->GetDissolveEdgeWidth();
+}
+
+void SceneManager::SetDissolveMode(DissolveMode mode) {
+	DirectXCommon::GetInstance()->SetDissolveMode(mode);
+}
+
+DissolveMode SceneManager::GetDissolveMode() const {
+	return DirectXCommon::GetInstance()->GetDissolveMode();
 }
 
 void SceneManager::SetNoiseAlpha(float alpha) {

@@ -1,20 +1,19 @@
 #include "TitleScene.h"
-#include "input/Input.h"
-#include "input/Gamepad.h"
+#include "TitlePhase.h"
+
 #include "SceneManager.h"
 #include "GpuParticleManager.h"
-#include <algorithm>
-#include <cmath>
 
 using namespace Bonjin;
 
 void TitleScene::Initialize(Camera* camera) {
 	currentSceneType_ = "TitleScene";
 	nextSceneType_ = "TitleScene";
-	phase_ = TitlePhase::kActive;
 	camera_ = camera;
 	timer_ = 0.0f;
-	diveTimer_ = 0.0f;
+
+	// 初期フェーズを設定
+	ChangePhase(std::make_unique<TitlePhaseActive>());
 
 	// GPUパーティクルのクリア
 	GpuParticleManager::GetInstance()->Clear();
@@ -44,6 +43,7 @@ void TitleScene::Initialize(Camera* camera) {
 	startDesc.waitDuration = 0.0f;
 	startDesc.inType = TransitionType::kDigitalDissolve;
 	startDesc.inDuration = 1.4f;
+	startDesc.dissolveMode = DissolveMode::kRandom;
 	sceneManager->StartTransition(startDesc);
 
 	// BGM再生（ループ）
@@ -54,6 +54,11 @@ void TitleScene::Initialize(Camera* camera) {
 }
 
 void TitleScene::Unload() {
+	if (currentPhase_) {
+		currentPhase_->Exit(this);
+		currentPhase_.reset();
+	}
+
 	if (world_) {
 		world_->Unload();
 		world_.reset();
@@ -74,15 +79,14 @@ void TitleScene::Unload() {
 	sceneManager->SetRadialBlurWidth(0.0f);
 	sceneManager->SetFullScreenVignette(false);
 	sceneManager->SetNoiseAlpha(0.0f);
-
-	
 }
 
 void TitleScene::Update(float deltaTime) {
 	timer_ += deltaTime;
 
-	bool isDiving = (phase_ == TitlePhase::kDive);
-	float diveProgress = isDiving ? std::clamp(diveTimer_ / kDiveDuration, 0.0f, 1.0f) : 1.0f;
+	auto phase = static_cast<ITitlePhase*>(GetCurrentPhase());
+	bool isDiving = phase ? phase->IsDiving() : false;
+	float diveProgress = phase ? phase->GetDiveProgress() : 1.0f;
 
 	// 1. 3D空間ワールドの更新
 	if (world_) {
@@ -97,62 +101,9 @@ void TitleScene::Update(float deltaTime) {
 		ui_->Update(deltaTime, isDiving, diveProgress);
 	}
 
-	// 4. シーンフェーズ処理
-	switch (phase_) {
-	case TitlePhase::kActive:
-		// スペースキーまたはゲームパッドAボタンでダイブ突入開始
-		if (Input::GetInstance()->IsTrigger(DIK_SPACE) || Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_A)) {
-			// 選択中のメニューに応じて遷移先を決定（GameScene または TutorialScene）
-			if (ui_ && ui_->GetSelectedMenuItem() == TitleUI::TitleMenuItem::kTutorial) {
-				targetSceneType_ = "TutorialScene";
-			} else {
-				targetSceneType_ = "GameScene";
-			}
-
-			ChangePhase(TitlePhase::kDive);
-			diveTimer_ = 0.0f;
-
-			// ラジアルブラーの追加（光速突入演出）
-			auto sceneManager = SceneManager::GetInstance();
-			auto activeEffects = sceneManager->GetActiveEffects();
-			if (std::find(activeEffects.begin(), activeEffects.end(), PostEffect::kRadialBlur) == activeEffects.end()) {
-				sceneManager->AddPostEffect(PostEffect::kRadialBlur);
-			}
-
-			// スタート時のカメラ激震シェイク
-			if (camera_) {
-				camera_->StartShake(4.5f, 1.0f);
-			}
-		}
-		break;
-
-	case TitlePhase::kDive:
-		UpdateDiveTransition(deltaTime);
-		break;
-	}
-}
-
-void TitleScene::UpdateDiveTransition(float deltaTime) {
-	diveTimer_ += deltaTime;
-	float progress = std::clamp(diveTimer_ / kDiveDuration, 0.0f, 1.0f);
-	float eased = progress * progress * progress;
-
-	// ラジアルブラーを加速強化（光速の吸引感）
-	auto sceneManager = SceneManager::GetInstance();
-	sceneManager->SetRadialBlurWidth(eased * 0.11f);
-
-	// ズーム最高潮に達した瞬間、共通トランジション（CRT電源断 → 静寂ブラックアウト → 次シーンディゾルブ）を起動！
-	if (progress >= 1.0f) {
-
-		// bgm停止と、se
-		BgmPlayer::GetInstance()->Stop();
-		sceneManager->SetRadialBlurWidth(0.0f);
-		sceneManager->RemovePostEffect(PostEffect::kRadialBlur);
-		if (!SePlayer::GetInstance()->IsPlaying(shutdownSEId)) {
-			SePlayer::GetInstance()->Play(shutdownSEId, 1.0f);
-		}
-		// ハイブリッド方式：シーン名だけ渡せば、TitleSceneのOut設定と次シーンのIn設定が自動適用される！
-		sceneManager->RequestSceneChange(targetSceneType_);
+	// 4. シーンフェーズ処理（ステート委譲）
+	if (currentPhase_) {
+		currentPhase_->Update(this, deltaTime);
 	}
 }
 
@@ -171,6 +122,10 @@ void TitleScene::Draw() {
 	if (ui_) {
 		ui_->Draw();
 	}
+
+	if (currentPhase_) {
+		currentPhase_->Draw(this);
+	}
 }
 
 void TitleScene::DrawImGui() {
@@ -179,6 +134,10 @@ void TitleScene::DrawImGui() {
 		world_->DrawImGui();
 	}
 	GpuParticleManager::GetInstance()->DrawImGui();
+
+	if (currentPhase_) {
+		currentPhase_->DrawImGui(this);
+	}
 #endif
 }
 

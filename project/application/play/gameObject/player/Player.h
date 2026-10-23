@@ -90,6 +90,19 @@ public:
 		return lockedOnEnemies_ ? lockedOnEnemies_->size() : 0;
 	}
 
+	void RequestHitStop(float duration) {
+		if (!enableHitStop_) return;
+		hitStopRequested_ = true;
+		hitStopDuration_ = duration;
+	}
+
+	bool ConsumeHitStopRequest(float& outDuration) {
+		if (!hitStopRequested_) return false;
+		hitStopRequested_ = false;
+		outDuration = hitStopDuration_;
+		return true;
+	}
+
 	bool ConsumeHitStopRequest() {
 		if (!hitStopRequested_) return false;
 		hitStopRequested_ = false;
@@ -229,7 +242,7 @@ private:
 	bool enableTeleportLightning_ = true;
 	Vector4 lightningCoreColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };
 	Vector4 lightningColor_ = { 0.3f, 0.7f, 1.0f, 1.0f };
-	float lightningShowDuration_ = 0.16f;
+	float lightningShowDuration_ = 1.0f;
 	float lightningBoltRadius_ = 0.35f;
 	float lightningBoltScale_ = 0.22f;
 	int lightningSubdivisions_ = 7;
@@ -240,7 +253,12 @@ private:
 	float lightningIntensity_ = 3.5f;
 	float lightningSparkSpeed_ = 7.0f;
 
+	// ヒットストップ演出用
 	bool hitStopRequested_ = false;
+	bool enableHitStop_ = true;
+	float hitStopDuration_ = 0.05f;
+	float teleportMidHitStopDuration_ = 0.05f;    // 連続テレポート途中
+	float teleportFinishHitStopDuration_ = 0.3f;  // 連続テレポート終了時（フィニッシュ）
 
 	// ダメージVignette演出用
 	float damageEffectTimer_ = 0.0f;

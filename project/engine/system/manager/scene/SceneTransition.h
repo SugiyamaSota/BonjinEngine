@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "math/Struct.h"
+#include "PostEffectTypes.h"
 
 namespace Bonjin {
 
@@ -36,6 +37,7 @@ namespace Bonjin {
         TransitionType inType = TransitionType::kDigitalDissolve;  // イン演出の種類
         float inDuration = 1.0f;                                   // イン演出の秒数
         Vector3 edgeColor = { 0.0f, 1.5f, 2.0f };                  // ディゾルブ時のサイバー発光色
+        DissolveMode dissolveMode = DissolveMode::kBottomToTop;     // ディゾルブの方向・モード
     };
 
     /// <summary>

@@ -8,7 +8,7 @@ float DegToRad(float deg) {
 }
 
 void Camera::Initialize(uint32_t clientWidth, uint32_t clientHeight) {
-	radius_ = 50.0f;
+	radius_ = kDefaultRadius;
 	direction_ = Direction::kBack;
 
 	if (direction_ == Direction::kFront) {
@@ -132,7 +132,7 @@ void Camera::CalculateCameraPositionAndRotation() {
 }
 
 void Camera::ResetPosition() {
-	radius_ = 50.0f;
+	radius_ = kDefaultRadius;
 	targetPosition_ = { 0,0,0 };
 }
 

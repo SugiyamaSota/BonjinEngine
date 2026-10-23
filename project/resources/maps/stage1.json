@@ -76,37 +76,38 @@
   ],
   "highlights": [
      {
-      "name": "Citadel Peak & Target Goal",
-      "type": "goal",
+      "name": "Cyber Fortress Ramparts",
+      "type": "index",
+      "startX": 43.0,
+      "startY": 11.0,
       "panDirection": {
-        "x": -3.0,
+        "x": 6.0,
         "y": 0.0,
         "z": 0.0
       },
-      "duration": 2.5
+      "duration": 2.2
     },
     {
       "name": "Sky Corridor & Aerial Enemies",
       "type": "enemy",
       "enemyIndex": 3,
       "panDirection": {
-        "x": -7.5,
+        "x": 7.5,
         "y": 0.0,
         "z": 0.0
       },
       "duration": 2.2
     },
+    
     {
-      "name": "Cyber Fortress Ramparts",
-      "type": "index",
-      "startX": 43.0,
-      "startY": 11.0,
+      "name": "Citadel Peak & Target Goal",
+      "type": "goal",
       "panDirection": {
-        "x": -6.0,
+        "x": 3.0,
         "y": 0.0,
         "z": 0.0
       },
-      "duration": 2.2
+      "duration": 2.5
     }
   ]
 }

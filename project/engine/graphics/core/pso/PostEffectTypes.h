@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 /// <summary>
 /// ポストエフェクトの種類（DirectXCommonから独立した型）
@@ -16,4 +17,15 @@ enum class PostEffect {
 	kCRTShutDown,
 	kDigitalDissolve,
 	kSimpleFade,
+};
+
+/// <summary>
+/// デジタルディゾルブの進行方向/スキャンモード
+/// </summary>
+enum class DissolveMode : int32_t {
+	kBottomToTop = 0, // 下から上（デフォルト）
+	kTopToBottom = 1, // 上から下
+	kRandom = 2,      // 画面全体からランダム
+	kLeftToRight = 3, // 左から右
+	kRightToLeft = 4, // 右から左
 };

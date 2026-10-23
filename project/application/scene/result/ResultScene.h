@@ -12,7 +12,7 @@ enum class ResultPhase {
 	kFadeOut,
 };
 
-class ResultScene : public BaseScene<ResultPhase> {
+class ResultScene : public LegacyBaseScene<ResultPhase> {
 public:
 	virtual ~ResultScene() = default;
 

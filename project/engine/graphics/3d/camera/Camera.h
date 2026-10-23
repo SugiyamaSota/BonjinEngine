@@ -93,6 +93,8 @@ public:
 
 	Vector3 Project(const Vector3& worldPos);
 
+	static constexpr float kDefaultRadius = 50.0f;
+
 	///// --- ゲッター関数 --- /////
 	Matrix4x4 GetViewMatrix()const { return viewMatrix_; }
 	Matrix4x4 GetProjectionMatrix()const {return projectionMatrix_; }
@@ -100,11 +102,13 @@ public:
 	Vector3 GetEye() const { return translation_; } // カメラの視点位置を返す
 	float GetFarZ() const { return farZ_; }         // 遠クリップ距離を返す
 	Vector3 GetWorldPosition()const ;
+	float GetRadius() const { return radius_; }
 
 	///// --- セッター関数 --- /////
 	void ResetPosition();
 	void ResetRotation();
 	void SetPosition(Vector3 position) { translation_ = position; }
+	void SetRadius(float radius) { radius_ = radius; }
 	void StartShake(float intensity, float duration) {
 		shakeIntensity_ = intensity;
 		shakeDuration_ = duration;
