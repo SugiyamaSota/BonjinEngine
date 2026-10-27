@@ -818,6 +818,16 @@ void Player::ApplyDamage(int damage) {
 	sceneManager->SetFullScreenVignetteScale(3.0f);
 }
 
+void Player::ResetDamageEffect() {
+	damageEffectTimer_ = 0.0f;
+	auto sceneManager = Bonjin::SceneManager::GetInstance();
+	sceneManager->SetFullScreenVignette(false);
+	sceneManager->SetFullScreenVignetteColor(origVignetteColor_);
+	sceneManager->SetFullScreenVignetteScale(origVignetteScale_);
+	sceneManager->SetFullScreenVignettePower(origVignettePower_);
+}
+
+
 void Player::EmitTeleportLightning(const Vector3& start, const Vector3& end) {
 	if (!enableTeleportLightning_) {
 		return;

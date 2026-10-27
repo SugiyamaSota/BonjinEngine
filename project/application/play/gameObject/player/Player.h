@@ -111,6 +111,10 @@ public:
 
 	// HP関連
 	void ApplyDamage(int damage);
+	/// <summary>
+	/// ダメージVignette演出を即時キャンセルする（deathPhase移行時など）
+	/// </summary>
+	void ResetDamageEffect();
 
 	// レベル・経験値関連
 	void GainExp(int amount);
