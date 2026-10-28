@@ -78,9 +78,13 @@ void SceneTransition::EnterPhase(TransitionPhase nextPhase) {
         // 暗転状態の維持・シーン切り替え指示
         shouldSwitchScene_ = true;
 
+        // イン演出のエフェクトをこの時点で有効化して真っ黒を維持する
+        // （待機中はシーン描画がスキップされるため、未適用だとクリア色が露出する）
         if (desc_.inType == TransitionType::kDigitalDissolve) {
+            AddPostEffectOnce(PostEffect::kDigitalDissolve);
             sm->SetDissolveThreshold(0.0f); // 完全暗転
         } else if (desc_.inType == TransitionType::kFadeBlack) {
+            AddPostEffectOnce(PostEffect::kSimpleFade);
             sm->SetFadeAmount(0.0f);
         }
         break;
@@ -94,13 +98,13 @@ void SceneTransition::EnterPhase(TransitionPhase nextPhase) {
 
         // イン演出の開始準備
         if (desc_.inType == TransitionType::kDigitalDissolve) {
-            sm->AddPostEffect(PostEffect::kDigitalDissolve);
+            AddPostEffectOnce(PostEffect::kDigitalDissolve);
             sm->SetDissolveThreshold(0.0f); // 真っ黒から実体化スタート
             sm->SetDissolveEdgeWidth(0.06f);
             sm->SetDissolveEdgeColor(desc_.edgeColor);
             sm->SetDissolveMode(desc_.dissolveMode);
         } else if (desc_.inType == TransitionType::kFadeBlack) {
-            sm->AddPostEffect(PostEffect::kSimpleFade);
+            AddPostEffectOnce(PostEffect::kSimpleFade);
             sm->SetFadeAmount(0.0f); // 真っ黒から明るくスタート
         }
         break;
@@ -176,6 +180,14 @@ void SceneTransition::ApplyCurrentEffect() {
             // 消失(0.0) -> 表示(1.0)
             sm->SetDissolveThreshold(progress_);
         }
+    }
+}
+
+void SceneTransition::AddPostEffectOnce(PostEffect effect) {
+    auto sm = SceneManager::GetInstance();
+    const auto& effects = sm->GetActiveEffects();
+    if (std::find(effects.begin(), effects.end(), effect) == effects.end()) {
+        sm->AddPostEffect(effect);
     }
 }
 

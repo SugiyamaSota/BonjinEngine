@@ -13,6 +13,16 @@ void ResultScene::Initialize(Camera* camera) {
 	camera_ = camera;
 	timer_ = 0.0f;
 
+	// 前シーンのポストエフェクト（ビネット等）を残さない
+	SceneManager::GetInstance()->SetFullScreenVignette(false);
+
+	// 全画面の黒背景
+	background_ = std::make_unique<Sprite>();
+	background_->Initialize("default.png");
+	background_->SetSize({ 1280.0f, 720.0f });
+	background_->SetTranslate({ 0.0f, 0.0f });
+	background_->SetColor({ 0.0f, 0.0f, 0.0f, 1.0f });
+
 	// 「GameClear」テキストスプライトの生成（金色・明るい黄色）
 	gameClearText_ = std::make_unique<TextSprite>();
 	gameClearText_->Initialize();
@@ -36,6 +46,7 @@ void ResultScene::Initialize(Camera* camera) {
 }
 
 void ResultScene::Unload() {
+	background_.reset();
 	gameClearText_.reset();
 	gameOverText_.reset();
 	spaceToTitleText_.reset();
@@ -43,6 +54,10 @@ void ResultScene::Unload() {
 
 void ResultScene::Update(float deltaTime) {
 	timer_ += deltaTime;
+
+	if (background_) {
+		background_->Update();
+	}
 
 	// 結果に応じたテキストの更新
 	if (isClear_) {
@@ -78,6 +93,10 @@ void ResultScene::Update(float deltaTime) {
 }
 
 void ResultScene::Draw() {
+	if (background_) {
+		background_->Draw();
+	}
+
 	if (isClear_) {
 		if (gameClearText_) {
 			gameClearText_->Draw();
