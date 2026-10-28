@@ -89,6 +89,7 @@ namespace Bonjin {
         void EnterPhase(TransitionPhase nextPhase);
         void ApplyCurrentEffect();
         void CleanupEffects();
+        void AddPostEffectOnce(PostEffect effect); // 未登録の場合のみ追加（重複防止）
     };
 
 }
