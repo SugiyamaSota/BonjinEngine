@@ -5,12 +5,6 @@
 
 namespace Bonjin {
 
-enum class GamePhase {
-	kHighlight,
-	kPlay,
-	kGoal,
-};
-
 class GameScene : public BaseScene<GameScene>
 	{
 	public:

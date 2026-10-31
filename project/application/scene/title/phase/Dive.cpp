@@ -1,50 +1,17 @@
-#include "TitlePhase.h"
-#include "TitleScene.h"
+#include "Dive.h"
+#include "../TitleScene.h"
 
-#include "input/Input.h"
-#include "input/Gamepad.h"
 #include "SceneManager.h"
 
 #include <algorithm>
 
-namespace Bonjin {
+namespace Bonjin::TitlePhase {
 
-// ===================================================================
-// TitlePhaseActive
-// ===================================================================
-
-void TitlePhaseActive::Enter(TitleScene* scene) {
-	(void)scene;
-}
-
-void TitlePhaseActive::Update(TitleScene* scene, float deltaTime) {
-	(void)deltaTime;
-
-	// スペースキーまたはゲームパッドAボタンでダイブ突入開始
-	if (Input::GetInstance()->IsTrigger(DIK_SPACE) || Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_A)) {
-		// 選択中のメニューに応じて遷移先を決定（GameScene または TutorialScene）
-		std::string targetScene = "GameScene";
-		if (scene->GetUI() && scene->GetUI()->GetSelectedMenuItem() == TitleUI::TitleMenuItem::kTutorial) {
-			targetScene = "TutorialScene";
-		}
-
-		scene->ChangePhase(std::make_unique<TitlePhaseDive>(targetScene));
-	}
-}
-
-void TitlePhaseActive::Exit(TitleScene* scene) {
-	(void)scene;
-}
-
-// ===================================================================
-// TitlePhaseDive
-// ===================================================================
-
-TitlePhaseDive::TitlePhaseDive(const std::string& targetSceneType)
+Dive::Dive(const std::string& targetSceneType)
 	: targetSceneType_(targetSceneType), timer_(0.0f) {
 }
 
-void TitlePhaseDive::Enter(TitleScene* scene) {
+void Dive::Enter(TitleScene* scene) {
 	timer_ = 0.0f;
 
 	// ラジアルブラーの追加（光速突入演出）
@@ -60,7 +27,7 @@ void TitlePhaseDive::Enter(TitleScene* scene) {
 	}
 }
 
-void TitlePhaseDive::Update(TitleScene* scene, float deltaTime) {
+void Dive::Update(TitleScene* scene, float deltaTime) {
 	timer_ += deltaTime;
 	float progress = std::clamp(timer_ / kDiveDuration, 0.0f, 1.0f);
 	float eased = progress * progress * progress;
@@ -87,14 +54,14 @@ void TitlePhaseDive::Update(TitleScene* scene, float deltaTime) {
 	}
 }
 
-void TitlePhaseDive::Exit(TitleScene* scene) {
+void Dive::Exit(TitleScene* scene) {
 	(void)scene;
 	auto sm = SceneManager::GetInstance();
 	sm->SetRadialBlurWidth(0.0f);
 	sm->RemovePostEffect(PostEffect::kRadialBlur);
 }
 
-float TitlePhaseDive::GetDiveProgress() const {
+float Dive::GetDiveProgress() const {
 	return std::clamp(timer_ / kDiveDuration, 0.0f, 1.0f);
 }
 

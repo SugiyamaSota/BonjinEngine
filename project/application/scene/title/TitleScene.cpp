@@ -1,5 +1,5 @@
 #include "TitleScene.h"
-#include "TitlePhase.h"
+#include "phase/Active.h"
 
 #include "SceneManager.h"
 #include "GpuParticleManager.h"
@@ -13,7 +13,7 @@ void TitleScene::Initialize(Camera* camera) {
 	timer_ = 0.0f;
 
 	// 初期フェーズを設定
-	ChangePhase(std::make_unique<TitlePhaseActive>());
+	ChangePhase(std::make_unique<TitlePhase::Active>());
 
 	// GPUパーティクルのクリア
 	GpuParticleManager::GetInstance()->Clear();

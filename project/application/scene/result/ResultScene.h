@@ -6,13 +6,7 @@
 
 namespace Bonjin {
 
-enum class ResultPhase {
-	kFadeIn,
-	kActive,
-	kFadeOut,
-};
-
-class ResultScene : public LegacyBaseScene<ResultPhase> {
+class ResultScene : public BaseScene<ResultScene> {
 public:
 	virtual ~ResultScene() = default;
 

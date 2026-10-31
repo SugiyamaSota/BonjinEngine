@@ -1,5 +1,6 @@
 #include "GameScene.h"
-#include "GamePhase.h"
+#include "phase/Highlight.h"
+#include "phase/Play.h"
 
 #include "gameObject/player/PlayerStatusRepository.h"
 
@@ -22,9 +23,9 @@ void GameScene::Initialize(Camera* camera)
 	// ハイライトデータが存在する場合は kHighlight フェーズを開始、なければ kPlay フェーズ
 	const auto& highlights = battleController_->GetMapChipField()->GetHighlights();
 	if (!highlights.empty()) {
-		ChangePhase(std::make_unique<GamePhaseHighlight>());
+		ChangePhase(std::make_unique<GamePhase::Highlight>());
 	} else {
-		ChangePhase(std::make_unique<GamePhasePlay>());
+		ChangePhase(std::make_unique<GamePhase::Play>());
 	}
 }
 

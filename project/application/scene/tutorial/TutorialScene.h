@@ -7,12 +7,7 @@
 
 namespace Bonjin {
 
-enum class TutorialPhase {
-	kPlay,
-	kComplete,
-};
-
-class TutorialScene : public LegacyBaseScene<TutorialPhase> {
+class TutorialScene : public BaseScene<TutorialScene> {
 public:
 	void Initialize(Camera* camera) override;
 	void Unload() override;
@@ -21,6 +16,9 @@ public:
 	SceneType GetNextScene() const override;
 	void DrawSceneImGui() override;
 	const char* GetScenename() const override { return "TutorialScene"; }
+
+	// フェーズから参照するアクセサ
+	TutorialManager* GetTutorialManager() const { return tutorialManager_.get(); }
 
 private:
 	std::unique_ptr<BattleController> battleController_;

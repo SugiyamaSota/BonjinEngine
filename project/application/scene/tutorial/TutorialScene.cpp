@@ -1,6 +1,6 @@
 #include "TutorialScene.h"
+#include "phase/Play.h"
 #include "gameObject/player/PlayerStatusRepository.h"
-#include "SceneManager.h"
 #include <algorithm>
 
 using namespace Bonjin;
@@ -8,7 +8,6 @@ using namespace Bonjin;
 void TutorialScene::Initialize(Camera* camera) {
 	currentSceneType_ = "TutorialScene";
 	nextSceneType_ = currentSceneType_;
-	phase_ = TutorialPhase::kPlay;
 	camera_ = camera;
 
 	// プレイヤーステータスの読み込み
@@ -24,9 +23,16 @@ void TutorialScene::Initialize(Camera* camera) {
 	tutorialEditor_->Initialize(tutorialManager_.get());
 
 	battleController_->TriggerGoSignal();
+
+	// 初期フェーズを設定
+	ChangePhase(std::make_unique<TutorialPhase::Play>());
 }
 
 void TutorialScene::Unload() {
+	if (currentPhase_) {
+		currentPhase_->Exit(this);
+		currentPhase_.reset();
+	}
 	if (tutorialEditor_) {
 		tutorialEditor_.reset();
 	}
@@ -48,10 +54,10 @@ void TutorialScene::Update(float deltaTime) {
 
 	if (tutorialManager_) {
 		tutorialManager_->Update(battleController_.get(), deltaTime);
-		if (tutorialManager_->IsCompleted() && phase_ != TutorialPhase::kComplete) {
-			ChangePhase(TutorialPhase::kComplete);
-			SceneManager::GetInstance()->RequestSceneChange("GameScene");
-		}
+	}
+
+	if (currentPhase_) {
+		currentPhase_->Update(this, deltaTime);
 	}
 }
 
