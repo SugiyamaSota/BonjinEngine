@@ -10,11 +10,6 @@
 namespace Bonjin
 {
 
-    enum class TitlePhase {
-        kActive,
-        kDive,         // ズーム＆激震シェイク突入（約1.0秒）
-    };
-
     class TitleScene : public BaseScene<TitleScene>
     {
     public:

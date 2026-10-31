@@ -75,6 +75,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;USE_IMGUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -101,6 +102,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -131,6 +133,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Development|x64'">
     <ClCompile>
+      <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -179,7 +182,17 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="application\play\logic\CollisionManager.cpp" />
     <ClCompile Include="application\play\mapchip\MapChipField.cpp" />
     <ClCompile Include="application\scene\game\GameScene.cpp" />
-    <ClCompile Include="application\scene\game\GamePhase.cpp" />
+    <ClCompile Include="application\scene\game\phase\GameOver.cpp" />
+    <ClCompile Include="application\scene\game\phase\Goal.cpp" />
+    <ClCompile Include="application\scene\game\phase\Highlight.cpp" />
+    <ClCompile Include="application\scene\game\phase\Play.cpp" />
+    <ClCompile Include="application\scene\result\phase\Active.cpp" />
+    <ClCompile Include="application\scene\result\phase\FadeIn.cpp" />
+    <ClCompile Include="application\scene\result\phase\FadeOut.cpp" />
+    <ClCompile Include="application\scene\title\phase\Active.cpp" />
+    <ClCompile Include="application\scene\title\phase\Dive.cpp" />
+    <ClCompile Include="application\scene\tutorial\phase\Complete.cpp" />
+    <ClCompile Include="application\scene\tutorial\phase\Play.cpp" />
     <ClCompile Include="application\scene\tutorial\TutorialScene.cpp" />
     <ClCompile Include="application\scene\tutorial\TutorialManager.cpp" />
     <ClCompile Include="application\scene\tutorial\TutorialEditor.cpp" />
@@ -256,7 +269,6 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="engine\system\platform\windows\WinApp.cpp" />
     <ClCompile Include="engine\system\utility\time\Time.cpp" />
     <ClCompile Include="application\scene\title\TitleScene.cpp" />
-    <ClCompile Include="application\scene\title\TitlePhase.cpp" />
     <ClCompile Include="application\scene\title\TitleWorld.cpp" />
     <ClCompile Include="application\scene\title\TitleUI.cpp" />
     <ClCompile Include="application\scene\result\ResultScene.cpp" />
@@ -315,7 +327,21 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\interface\BaseScene.h" />
     <ClInclude Include="engine\interface\IScene.h" />
     <ClInclude Include="application\scene\game\GameScene.h" />
-    <ClInclude Include="application\scene\game\GamePhase.h" />
+    <ClInclude Include="application\scene\game\phase\GameOver.h" />
+    <ClInclude Include="application\scene\game\phase\Goal.h" />
+    <ClInclude Include="application\scene\game\phase\Highlight.h" />
+    <ClInclude Include="application\scene\game\phase\Play.h" />
+    <ClInclude Include="application\scene\game\phase\IGamePhase.h" />
+    <ClInclude Include="application\scene\result\phase\IResultPhase.h" />
+    <ClInclude Include="application\scene\result\phase\Active.h" />
+    <ClInclude Include="application\scene\result\phase\FadeIn.h" />
+    <ClInclude Include="application\scene\result\phase\FadeOut.h" />
+    <ClInclude Include="application\scene\title\phase\ITitlePhase.h" />
+    <ClInclude Include="application\scene\title\phase\Active.h" />
+    <ClInclude Include="application\scene\title\phase\Dive.h" />
+    <ClInclude Include="application\scene\tutorial\phase\ITutorialPhase.h" />
+    <ClInclude Include="application\scene\tutorial\phase\Complete.h" />
+    <ClInclude Include="application\scene\tutorial\phase\Play.h" />
     <ClInclude Include="application\scene\tutorial\TutorialScene.h" />
     <ClInclude Include="application\scene\tutorial\TutorialManager.h" />
     <ClInclude Include="application\scene\tutorial\TutorialEditor.h" />
@@ -362,7 +388,6 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="engine\system\utility\time\Time.h" />
     <ClInclude Include="engine\system\manager\scene\SceneTransition.h" />
     <ClInclude Include="application\scene\title\TitleScene.h" />
-    <ClInclude Include="application\scene\title\TitlePhase.h" />
     <ClInclude Include="application\scene\title\TitleWorld.h" />
     <ClInclude Include="application\scene\title\TitleUI.h" />
     <ClInclude Include="application\scene\result\ResultScene.h" />

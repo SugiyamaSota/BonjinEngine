@@ -1,6 +1,5 @@
 #include "ResultScene.h"
-#include "input/Input.h"
-#include "input/Gamepad.h"
+#include "phase/FadeIn.h"
 #include "SceneManager.h"
 #include <cmath>
 
@@ -9,7 +8,6 @@ using namespace Bonjin;
 void ResultScene::Initialize(Camera* camera) {
 	currentSceneType_ = "ResultScene";
 	nextSceneType_ = currentSceneType_;
-	phase_ = ResultPhase::kFadeIn;
 	camera_ = camera;
 	timer_ = 0.0f;
 
@@ -43,9 +41,17 @@ void ResultScene::Initialize(Camera* camera) {
 	spaceToTitleText_->SetAnchor({ 0.5f, 0.5f, 0.0f });
 	spaceToTitleText_->SetText(L"SpaceToTitle", 36, RGB(220, 220, 220));
 	spaceToTitleText_->SetTranslate({ 640.0f, 480.0f });
+
+	// 初期フェーズを設定
+	ChangePhase(std::make_unique<ResultPhase::FadeIn>());
 }
 
 void ResultScene::Unload() {
+	if (currentPhase_) {
+		currentPhase_->Exit(this);
+		currentPhase_.reset();
+	}
+
 	background_.reset();
 	gameClearText_.reset();
 	gameOverText_.reset();
@@ -77,18 +83,8 @@ void ResultScene::Update(float deltaTime) {
 		spaceToTitleText_->Update();
 	}
 
-	switch (phase_) {
-	case ResultPhase::kFadeIn:
-		ChangePhase(ResultPhase::kActive);
-		break;
-	case ResultPhase::kActive:
-		if (Input::GetInstance()->IsTrigger(DIK_SPACE) || Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_A)) {
-			ChangePhase(ResultPhase::kFadeOut);
-			SceneManager::GetInstance()->RequestSceneChange("TitleScene");
-		}
-		break;
-	case ResultPhase::kFadeOut:
-		break;
+	if (currentPhase_) {
+		currentPhase_->Update(this, deltaTime);
 	}
 }
 
