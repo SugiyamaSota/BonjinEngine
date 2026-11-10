@@ -14,7 +14,7 @@ struct alignas(16) ParticleDataGPU {
     Vector4 color{ 1.0f, 1.0f, 1.0f, 1.0f };
     float intensity = 1.0f;
     float lifeRatio = 1.0f; // 1.0以上で死亡
-    uint32_t particleType = 0; // 0: 雷ボルト, 1: スパーク火花, 2: 接地点グロー
+    uint32_t particleType = 0; // 0: 雷ボルト, 1: スパーク火花, 2: 接地点グロー, 3: 光沢リング
     float customParam = 0.0f;
 };
 
@@ -44,7 +44,9 @@ struct ParticleState {
     float lifeTime = 0.2f;
     float currentLife = 0.0f;
     float intensity = 2.0f;
-    uint32_t type = 0; // 0: 雷ボルト, 1: スパーク, 2: グロー
+    uint32_t type = 0; // 0: 雷ボルト, 1: スパーク, 2: グロー, 3: 光沢リング
+    float customParam = 0.0f; // 光沢リング: ハイライト初期角度
+    float customSpeed = 0.0f; // 光沢リング: ハイライト回転速度[rad/s]
     bool isActive = false;
 };
 

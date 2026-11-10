@@ -15,6 +15,8 @@ void TutorialScene::Initialize(Camera* camera) {
 
 	battleController_ = std::make_unique<BattleController>();
 	battleController_->Initialize(camera_, "resources/maps/tutorial.json");
+	// チュートリアル中のみ敵のリスポーンを有効にする
+	battleController_->SetEnemyRespawnEnabled(true);
 
 	tutorialManager_ = std::make_unique<TutorialManager>();
 	tutorialManager_->Initialize("resources/data/tutorial.json");

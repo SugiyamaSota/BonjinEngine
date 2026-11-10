@@ -389,6 +389,27 @@ void GpuParticleManager::EmitFlashGlow(
     gp.type = 2; // フラッシュグロー
 }
 
+void GpuParticleManager::EmitGlossRing(
+    const Vector3& pos, const Vector4& color, float scale, float lifeTime, float intensity, float spin)
+{
+    int idx = AllocateParticle();
+    if (idx < 0) return;
+
+    auto& rp = particles_[idx];
+    rp.position = pos;
+    rp.velocity = { 0.0f, 0.0f, 0.0f };
+    rp.color = color;
+    rp.scale = scale * 0.25f;
+    rp.baseScale = scale;
+    rp.lifeTime = lifeTime;
+    rp.currentLife = 0.0f;
+    rp.intensity = intensity;
+    rp.type = 3; // 光沢リング
+    // 左上(画面座標系で -x,-y)寄りからハイライトを開始し、少しランダムに揺らす
+    rp.customParam = -2.35f + distSigned_(randomEngine_) * 0.4f;
+    rp.customSpeed = spin;
+}
+
 void GpuParticleManager::Clear() {
     for (uint32_t i = 0; i < kMaxParticles; ++i) {
         particles_[i].isActive = false;
@@ -452,6 +473,14 @@ void GpuParticleManager::Update(float deltaTime, const Camera* camera) {
         }
 
         float decayIntensity = p.intensity * std::exp(-lifeRatio * 4.0f);
+        float customParam = 0.0f;
+        if (p.type == 3) {
+            // 光沢リング: EaseOutCubic で素早く広がり、発光はゆっくり落とす
+            float inv = 1.0f - lifeRatio;
+            p.scale = p.baseScale * (0.25f + 0.75f * (1.0f - inv * inv * inv));
+            decayIntensity = p.intensity * (0.35f + 0.65f * inv);
+            customParam = p.customParam + p.customSpeed * p.currentLife;
+        }
 
         mappedGpuData_[i].position = p.position;
         mappedGpuData_[i].scale = p.scale;
@@ -459,7 +488,7 @@ void GpuParticleManager::Update(float deltaTime, const Camera* camera) {
         mappedGpuData_[i].intensity = decayIntensity;
         mappedGpuData_[i].lifeRatio = lifeRatio;
         mappedGpuData_[i].particleType = p.type;
-        mappedGpuData_[i].customParam = 0.0f;
+        mappedGpuData_[i].customParam = customParam;
     }
 }
 

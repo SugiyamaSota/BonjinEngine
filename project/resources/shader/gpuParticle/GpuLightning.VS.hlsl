@@ -16,6 +16,7 @@ VertexOutput main(VertexInput input, uint32_t instanceId : SV_InstanceID)
         output.color = float32_t4(0.0f, 0.0f, 0.0f, 0.0f);
         output.intensity = 0.0f;
         output.particleType = 0;
+        output.customParam = 0.0f;
         return output;
     }
 
@@ -35,6 +36,7 @@ VertexOutput main(VertexInput input, uint32_t instanceId : SV_InstanceID)
     output.color = float32_t4(particle.color.rgb, alpha);
     output.intensity = particle.intensity;
     output.particleType = particle.particleType;
+    output.customParam = particle.customParam;
 
     return output;
 }

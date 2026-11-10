@@ -55,6 +55,9 @@ protected:
 	// 物理設定
 	PhysicsType physicsType_ = PhysicsType::None;
 
+	// 重力の一時停止フラグ（trueの間は重力加速度を適用しない）
+	bool isGravitySuspended_ = false;
+
 	// コライダー
 	std::unique_ptr<Collider> collider_;
 

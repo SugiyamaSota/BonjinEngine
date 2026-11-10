@@ -178,6 +178,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="application\play\gameObject\player\PlayerStatusRepository.cpp" />
     <ClCompile Include="application\play\hud\HUD.cpp" />
     <ClCompile Include="application\play\hud\GoSignalBanner.cpp" />
+    <ClCompile Include="application\play\hud\AnchorStockIndicator.cpp" />
     <ClCompile Include="application\play\logic\Collision.cpp" />
     <ClCompile Include="application\play\logic\CollisionManager.cpp" />
     <ClCompile Include="application\play\mapchip\MapChipField.cpp" />
@@ -301,6 +302,7 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="application\play\gameObject\player\PlayerStatusRepository.h" />
     <ClInclude Include="application\play\hud\HUD.h" />
     <ClInclude Include="application\play\hud\GoSignalBanner.h" />
+    <ClInclude Include="application\play\hud\AnchorStockIndicator.h" />
     <ClInclude Include="application\play\logic\Collider.h" />
     <ClInclude Include="application\play\logic\Collision.h" />
     <ClInclude Include="application\play\logic\CollisionConfig.h" />

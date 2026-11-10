@@ -7,8 +7,8 @@ struct ParticleDataGPU
     float32_t4 color;          // 色 (RGB) + アルファ (A)
     float32_t  intensity;      // 発光強度 (Bloom/加算発光用)
     float32_t  lifeRatio;      // 生存割合 (0.0=誕生, 1.0=寿命終了)
-    uint32_t   particleType;   // 0: 雷ボルトの節点/セグメント, 1: 飛散スパーク, 2: 接地点グロー
-    float32_t  customParam;    // 予備/角度/太さパラメータ
+    uint32_t   particleType;   // 0: 雷ボルトの節点/セグメント, 1: 飛散スパーク, 2: 接地点グロー, 3: 光沢リング
+    float32_t  customParam;    // 予備/角度/太さパラメータ（光沢リング: ハイライト角度）
 };
 
 struct SceneBuffer
@@ -34,4 +34,5 @@ struct VertexOutput
     float32_t4 color        : COLOR0;
     float32_t  intensity    : INTENSITY0;
     uint32_t   particleType : TYPE0;
+    float32_t  customParam  : CUSTOM0;
 };

@@ -15,6 +15,7 @@
 #include "gameObject/camera/CameraController.h"
 #include "hud/HUD.h"
 #include "hud/GoSignalBanner.h"
+#include "hud/AnchorStockIndicator.h"
 
 namespace Bonjin {
 
@@ -68,8 +69,9 @@ private:
 	std::mt19937 randomEngine_{std::random_device{}()};
 
 	std::unique_ptr<HUD> hud_;
+	std::unique_ptr<AnchorStockIndicator> anchorStockIndicator_;
 
-	bool isEnemyRespawnEnabled_ = true;
+	bool isEnemyRespawnEnabled_ = false; // チュートリアルのみ有効化する
 	float enemyRespawnTime_ = 3.0f;
 	bool isGoalReached_ = false;
 	float hitStopTimer_ = 0.0f;

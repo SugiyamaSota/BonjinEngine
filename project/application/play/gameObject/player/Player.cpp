@@ -219,7 +219,7 @@ void Player::Update() {
 				teleportBlurTimer_ = teleportBlurMaxTime_; // テレポートブラーを開始
 			}
 
-			velocity_ = { 0.0f, 0.0f, 0.0f }; // 速度のリセット
+			StartPostTeleportFloat(); // 速度リセット＋滞空開始
 
 			// カメラシェイク
 			if (enableTeleportShake_ && camera_) {
@@ -237,6 +237,15 @@ void Player::Update() {
 
 	// 1.移動処理
 	Move();
+
+	// テレポート中・テレポート直後は重力を止めて滞空させる（急落下防止）
+	if (postTeleportFloatTimer_ > 0.0f) {
+		postTeleportFloatTimer_ -= 1.0f / 60.0f;
+	}
+	isGravitySuspended_ = !teleportQueue_.empty() || postTeleportFloatTimer_ > 0.0f;
+	if (isGravitySuspended_ && velocity_.y < 0.0f) {
+		velocity_.y = 0.0f;
+	}
 
 	if (isKnockedBack_) {
 		velocity_.x *= kKnockbackAttenuation;
@@ -293,9 +302,21 @@ void Player::Update() {
 		anchorRechargeTimer_ = 0.0f;
 	}
 
+	// ストックが増えた瞬間に光沢リングを出す（リチャージ / 撃破回復など全経路を検知）
+	UpdateStockGainEffect();
+
+	// ストック0の間はエンジンがショートしたような火花を散らす
+	UpdateShortCircuitEffect();
+
 	// アンカー操作（発射 / 長押し回収）
 	bool isAnchorKeyPressed = Gamepad::GetInstance()->IsPress(XINPUT_GAMEPAD_X) || Input::GetInstance()->IsPress(DIK_J);
 	bool isAnchorKeyTriggered = Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_X) || Input::GetInstance()->IsTrigger(DIK_J);
+
+	// 頭上のストック表示を要求（ストック切れで撃てない場合は拒否演出）
+	if (isAnchorKeyTriggered) {
+		anchorIndicatorRequested_ = true;
+		anchorShootDenied_ = (anchor_ == nullptr && anchorStock_ <= 0);
+	}
 
 	if (anchor_ != nullptr) {
 		// すでにアンカーが存在する場合：長押しで回収
@@ -415,6 +436,7 @@ void Player::Update() {
 				// プレイヤーを計算された座標にテレポート
 				worldTransform_.translate = teleportPosition;
 				UpdateModel(); // テレポート先の位置で即座にモデル行列を更新
+				StartPostTeleportFloat(); // 速度リセット＋滞空開始
 
 				// GPU雷霆テレポートエフェクトとブラーの発生
 				EmitTeleportLightning(startPos, teleportPosition);
@@ -596,7 +618,7 @@ void Player::RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies) {
 			teleportBlurTimer_ = teleportBlurMaxTime_; // テレポートブラーを開始
 		}
 
-		velocity_ = { 0.0f, 0.0f, 0.0f };
+		StartPostTeleportFloat(); // 速度リセット＋滞空開始
 
 		// カメラシェイク
 		if (enableTeleportShake_ && camera_) {
@@ -614,6 +636,11 @@ void Player::RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies) {
 		isInvincible_ = true;
 		invincibleTimer_ = teleportInterval_ * (teleportQueue_.size() + 2);
 	}
+}
+
+void Player::StartPostTeleportFloat() {
+	velocity_ = { 0.0f, 0.0f, 0.0f };
+	postTeleportFloatTimer_ = postTeleportFloatDuration_;
 }
 
 void Player::AddAnchorRechargeProgress(float seconds) {
@@ -687,6 +714,33 @@ void Player::DrawImGui() {
 			}
 		}
 
+		if (ImGui::TreeNode("Anchor Stock Gain Ring")) {
+			ImGui::Checkbox("Enable", &enableStockGainRing_);
+			ImGui::ColorEdit4("Color", &stockGainRingColor_.x);
+			ImGui::DragFloat("Scale", &stockGainRingScale_, 0.05f, 0.1f, 10.0f);
+			ImGui::DragFloat("Life Time", &stockGainRingLifeTime_, 0.01f, 0.05f, 3.0f, "%.2fs");
+			ImGui::DragFloat("Intensity", &stockGainRingIntensity_, 0.05f, 0.0f, 10.0f);
+			ImGui::DragFloat("Highlight Spin", &stockGainRingSpin_, 0.05f, -20.0f, 20.0f, "%.2f rad/s");
+			if (ImGui::Button("Test Emit")) {
+				prevAnchorStockForFx_ = anchorStock_ - 1;
+			}
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("Anchor Empty Short Circuit")) {
+			ImGui::Checkbox("Enable", &enableShortCircuit_);
+			ImGui::DragFloat("Interval Min", &shortCircuitIntervalMin_, 0.01f, 0.01f, 2.0f, "%.2fs");
+			ImGui::DragFloat("Interval Max", &shortCircuitIntervalMax_, 0.01f, 0.01f, 2.0f, "%.2fs");
+			ImGui::SliderFloat("Arc Chance", &shortCircuitArcChance_, 0.0f, 1.0f);
+			ImGui::DragInt("Spark Count", &shortCircuitSparkCount_, 1.0f, 0, 64);
+			ImGui::DragFloat("Spark Speed", &shortCircuitSparkSpeed_, 0.1f, 0.0f, 20.0f);
+			ImGui::ColorEdit4("Spark Color", &shortCircuitSparkColor_.x);
+			ImGui::ColorEdit4("Arc Color", &shortCircuitArcColor_.x);
+			ImGui::SliderFloat("Body Brightness", &shortCircuitBodyBrightness_, 0.0f, 1.0f);
+			ImGui::DragFloat("Body Fade Speed", &shortCircuitFadeSpeed_, 0.1f, 0.1f, 30.0f);
+			ImGui::TreePop();
+		}
+
 		if (ImGui::TreeNode("Anchor Fray & Hold Retract")) {
 			ImGui::Text("Hold Timer: %.2f / %.2f", anchorHoldTimer_, kAnchorHoldTime);
 			ImGui::Text("Fray Active: %s (Timer: %.2f / %.2f)", isFrayActive_ ? "true" : "false", frayTimer_, kFrayDuration);
@@ -710,6 +764,7 @@ void Player::DrawImGui() {
 			}
 
 			ImGui::DragFloat("Teleport Interval", &teleportInterval_, 0.01f, 0.01f, 1.0f, "%.2fs");
+			ImGui::DragFloat("Post-Teleport Float", &postTeleportFloatDuration_, 0.01f, 0.0f, 1.0f, "%.2fs");
 
 			if (ImGui::TreeNode("1. GPU Lightning (雷霆エフェクト)")) {
 				ImGui::Checkbox("Enable Lightning", &enableTeleportLightning_);
@@ -827,6 +882,106 @@ void Player::ResetDamageEffect() {
 	sceneManager->SetFullScreenVignettePower(origVignettePower_);
 }
 
+
+void Player::UpdateStockGainEffect() {
+	const int gained = anchorStock_ - prevAnchorStockForFx_;
+	prevAnchorStockForFx_ = anchorStock_;
+	if (!enableStockGainRing_ || gained <= 0) {
+		return;
+	}
+
+	GpuParticleManager* gpu = GpuParticleManager::GetInstance();
+	const Vector3 center = { worldTransform_.translate.x, worldTransform_.translate.y, worldTransform_.translate.z - 0.3f };
+
+	// 満タンになった時は少し大きく・白寄りに
+	const bool isFull = anchorStock_ >= kMaxAnchorStock;
+	Vector4 color = stockGainRingColor_;
+	float scale = stockGainRingScale_;
+	if (isFull) {
+		color = { color.x + (1.0f - color.x) * 0.3f, color.y + (1.0f - color.y) * 0.3f, color.z + (1.0f - color.z) * 0.3f, color.w };
+		scale *= 1.25f;
+	}
+
+	// 一度に複数回復した場合は、サイズ違いの輪を重ねて段数を表現
+	for (int i = 0; i < gained; ++i) {
+		const float s = scale * (1.0f + 0.35f * static_cast<float>(i));
+		gpu->EmitGlossRing(center, color, s, stockGainRingLifeTime_ + 0.08f * static_cast<float>(i), stockGainRingIntensity_, stockGainRingSpin_);
+	}
+	// 中心の小さなきらめき
+	gpu->EmitFlashGlow(center, color, scale * 0.35f, 0.15f, stockGainRingIntensity_);
+}
+
+void Player::UpdateShortCircuitEffect() {
+	const float dt = 1.0f / 60.0f;
+	const bool isShorting = enableShortCircuit_ && anchorStock_ <= 0;
+
+	// 本体の明るさ（ショート中はずっと暗いまま）
+	const float targetBrightness = isShorting ? shortCircuitBodyBrightness_ : 1.0f;
+	const float t = (std::min)(1.0f, shortCircuitFadeSpeed_ * dt);
+	currentBodyBrightness_ += (targetBrightness - currentBodyBrightness_) * t;
+	const float brightness = currentBodyBrightness_;
+	if (model_) {
+		model_->SetColor({ brightness, brightness, brightness, 1.0f });
+	}
+
+	if (!isShorting) {
+		shortCircuitTimer_ = 0.0f; // 0になった瞬間に即バチッと出るようにリセット
+		return;
+	}
+
+	shortCircuitTimer_ -= dt;
+	if (shortCircuitTimer_ > 0.0f) {
+		return;
+	}
+
+	static std::mt19937 randomEngine(std::random_device{}());
+	std::uniform_real_distribution<float> dist01(0.0f, 1.0f);
+	std::uniform_real_distribution<float> distSigned(-1.0f, 1.0f);
+
+	const float intervalMin = (std::min)(shortCircuitIntervalMin_, shortCircuitIntervalMax_);
+	const float intervalMax = (std::max)(shortCircuitIntervalMin_, shortCircuitIntervalMax_);
+	shortCircuitTimer_ = intervalMin + (intervalMax - intervalMin) * dist01(randomEngine);
+
+	GpuParticleManager* gpu = GpuParticleManager::GetInstance();
+	const Vector3 center = worldTransform_.translate;
+
+	// 体の表面付近のランダムな一点から火花が噴き出す
+	Vector3 sparkPos = {
+		center.x + distSigned(randomEngine) * kWidth * 0.45f,
+		center.y + distSigned(randomEngine) * kHeight * 0.45f,
+		center.z - 0.3f,
+	};
+	const int sparkCount = shortCircuitSparkCount_ + static_cast<int>(dist01(randomEngine) * shortCircuitSparkCount_);
+	gpu->EmitSparks(sparkPos, sparkCount, shortCircuitSparkColor_, shortCircuitSparkSpeed_, 0.35f, 0.07f);
+
+	// 一瞬のフラッシュ
+	gpu->EmitFlashGlow(sparkPos, shortCircuitArcColor_, 0.6f + 0.5f * dist01(randomEngine), 0.08f, 2.5f);
+
+	// 時々、体の上を走る小さな放電アーク
+	if (dist01(randomEngine) < shortCircuitArcChance_) {
+		const float angle = dist01(randomEngine) * 2.0f * std::numbers::pi_v<float>;
+		const float length = 0.6f + 0.6f * dist01(randomEngine);
+		GpuLightningConfig arc{};
+		arc.start = sparkPos;
+		arc.end = {
+			sparkPos.x + std::cos(angle) * length,
+			sparkPos.y + std::sin(angle) * length,
+			sparkPos.z,
+		};
+		arc.coreColor = { 1.0f, 0.9f, 0.8f, 1.0f };
+		arc.glowColor = shortCircuitArcColor_;
+		arc.boltRadius = 0.18f;
+		arc.boltScale = 0.08f;
+		arc.subdivisions = 4;
+		arc.mainBranches = 1;
+		arc.sparksPerSegment = 0;
+		arc.impactSparks = 6;
+		arc.duration = 0.07f + 0.05f * dist01(randomEngine);
+		arc.intensity = 3.0f;
+		arc.sparkSpeed = 3.0f;
+		gpu->EmitLightning(arc);
+	}
+}
 
 void Player::EmitTeleportLightning(const Vector3& start, const Vector3& end) {
 	if (!enableTeleportLightning_) {
