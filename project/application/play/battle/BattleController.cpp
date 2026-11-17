@@ -46,9 +46,9 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	GenerateBlocksAndGoal();
 
 	playerModel_ = std::make_unique<Object3D>();
-	playerModel_->CreateModel(
-		ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+	playerModel_->SetModel("player");
 	playerModel_->SetEnableEnableEnvironmentMap(false);
+	playerModel_->SetCullMode(CullMode::kFront);
 
 	player_ = std::make_unique<Player>();
 	const Vector2 pSpawn = mapChipField_->GetPlayerSpawn();
@@ -65,7 +65,7 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	const auto& enemySpawns = mapChipField_->GetEnemySpawns();
 	for (const auto& spawn : enemySpawns) {
 		enemyModels_.push_back(std::make_unique<Object3D>());
-		enemyModels_.back()->CopyModelResourceFrom(*playerModel_, false);
+		enemyModels_.back()->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
 		enemyModels_.back()->SetEnableEnableEnvironmentMap(false);
 
 		const Vector3 enemyPosition = mapChipField_->GetMapChipPosition(spawn.x, spawn.y);

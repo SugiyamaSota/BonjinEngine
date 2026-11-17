@@ -35,14 +35,32 @@ void Player::Initialize(Object3D* model, Camera* camera, const Vector3& position
 	frayLineEffect_ = std::make_unique<Bonjin::FrayLine3D>();
 	frayLineEffect_->Initialize();
 
+	// 回収中アンカーはプレイヤーモデルではなく球を使う
 	retractAnchorModel_ = std::make_unique<Object3D>();
-	if (model) {
-		retractAnchorModel_->CopyModelResourceFrom(*model, false);
-	} else {
-		retractAnchorModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
-	}
+	retractAnchorModel_->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
 	retractAnchorModel_->SetBlendMode(BlendMode::kNormal);
 	retractAnchorModel_->SetEnableEnableEnvironmentMap(false);
+
+	// スケルトン付きモデルならアニメーションを準備
+	hasAnimator_ = model_ && model_->GetSkeleton().has_value();
+	if (hasAnimator_) {
+		animator_.Initialize(*model_->GetSkeleton());
+	}
+}
+
+void Player::UpdateModel() {
+	if (!model_) {
+		return;
+	}
+	// モデルは足元原点・高さ約1.0なので、当たり判定(中心原点・高さkHeight)に合わせて補正する
+	if (hasAnimator_) {
+		animator_.Apply(*model_->GetSkeleton());
+	}
+	WorldTransform modelTransform = worldTransform_;
+	modelTransform.scale = { modelScale_, modelScale_, modelScale_ };
+	modelTransform.rotate.y += modelRotateYOffset_;
+	modelTransform.translate.y += modelOffsetY_;
+	model_->Update(modelTransform, camera_);
 }
 
 void Player::OnCollision(Bonjin::Collider* other) {
@@ -264,6 +282,17 @@ void Player::Update() {
 		}
 	}
 
+	// アニメーション状態の更新 (空中:ジャンプ / 地上で移動中:走り / それ以外:待機)
+	if (hasAnimator_) {
+		PlayerAnimator::State animState = PlayerAnimator::State::kIdle;
+		if (!onGround_) {
+			animState = PlayerAnimator::State::kJump;
+		} else if (std::abs(velocity_.x) > runAnimationSpeedThreshold_) {
+			animState = PlayerAnimator::State::kRun;
+		}
+		animator_.Update(1.0f / 60.0f, animState);
+	}
+
 	// 2.物理とマップ衝突判定の更新
 	GameObject::Update();
 
@@ -275,16 +304,19 @@ void Player::Update() {
 	if (turnTimer_ > 0.0f) {
 
 		{
-			turnTimer_ -= 1.0f / 60.0f;
-			// 左右の自キャラ角度テーブル
+			turnTimer_ = (std::max)(turnTimer_ - 1.0f / 60.0f, 0.0f);
+			// 左右の自キャラ角度テーブル (右:0, 左:π)
+			// 0とπの間を補間するので、振り返り中は必ずカメラ側を向いて回る
 			float destinationRotationYTable[] = {
-				std::numbers::pi_v<float> *-4.0f / 2.0f,
-				std::numbers::pi_v<float> *2.0f / 2.0f,
+				0.0f,
+				std::numbers::pi_v<float>,
 			};
 			// 状況に応じた角度を取得する
 			float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
-			// 自キャラの角度を設定する
-			worldTransform_.rotate.y = destinationRotationY * (1.0f - turnTimer_);
+			// 旋回開始角度から目標角度へ補間する (0→1)
+			float t = 1.0f - turnTimer_ / kTimeTurn;
+			t = t * t * (3.0f - 2.0f * t); // smoothstep
+			worldTransform_.rotate.y = turnFirstRotationY_ + (destinationRotationY - turnFirstRotationY_) * t;
 		}
 	}
 
@@ -473,6 +505,7 @@ void Player::Draw() {
 	{
 		anchor_->Draw();
 	}
+
 	else if (isFrayActive_ && retractAnchorModel_)
 	{
 		// 回収中のアンカー本体フェードアウト描画
@@ -693,6 +726,13 @@ void Player::DrawImGui() {
 		Vector3 pos = GetPosition();
 		ImGui::Text("Player Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
 		ImGui::Text("On Ground: %s", onGround_ ? "true" : "false");
+		ImGui::DragFloat("Model Scale", &modelScale_, 0.01f, 0.01f, 10.0f);
+		ImGui::DragFloat("Model Offset Y", &modelOffsetY_, 0.01f);
+		ImGui::SliderAngle("Model Rotate Y Offset", &modelRotateYOffset_);
+		ImGui::DragFloat("Run Anim Threshold", &runAnimationSpeedThreshold_, 0.001f, 0.0f, 1.0f);
+		if (hasAnimator_) {
+			animator_.DrawImGui();
+		}
 		ImGui::Text("Player HP: %d", statusComponent_.GetHp());
 		ImGui::Text("Player Level: %d", statusComponent_.GetLevel());
 		ImGui::Text("Player Exp: %d / %d", statusComponent_.GetExp(), statusComponent_.GetRequiredExp());

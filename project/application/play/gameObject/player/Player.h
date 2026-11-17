@@ -2,6 +2,7 @@
 #include <cassert>
 #include <list>
 #include <memory>
+#include <numbers>
 
 #include "../anchor/anchor.h"
 #include "../../logic/Data.h"
@@ -13,6 +14,7 @@
 #include "FrayLine3D.h"
 
 #include "PlayerStatusComponent.h"
+#include "PlayerAnimator.h"
 
 class MapChipField;
 namespace Bonjin {
@@ -55,6 +57,9 @@ protected:
 	void OnMapCollision(const CollisionMapInfo& collisionMapinfo) override;
 
 public:
+	// モデル表示用の補正を加えて描画行列を更新
+	void UpdateModel() override;
+
 	Vector3 GetWorldPosition();
 	AABB GetAABB();
 	void OnCollision(Bonjin::BaseEnemy* enemy);
@@ -207,6 +212,21 @@ private:
 
 	static inline const float kWidth = 1.9f;
 	static inline const float kHeight = 1.9f;
+
+	// プレイヤーモデルの見た目補正 (モデルは足元原点・高さ約1.0)
+	// 見た目の大きさ倍率 (当たり判定kWidth/kHeightには影響しない)
+	static inline const float kModelSizeMultiplier = 2.0f;
+	float modelScale_ = kHeight * kModelSizeMultiplier;
+	// 足元を当たり判定の底に合わせる
+	float modelOffsetY_ = -kHeight / 2.0f;
+	// モデルは+Z(奥)向きなので、回転0で右(+X)を向くよう90度回す
+	float modelRotateYOffset_ = std::numbers::pi_v<float> / 2.0f;
+
+	// モデルのアニメーション
+	PlayerAnimator animator_;
+	bool hasAnimator_ = false;
+	// この速さ以上で走りアニメーションにする
+	float runAnimationSpeedThreshold_ = 0.01f;
 
 	// Padのデッドゾーン
 	long kPadDeadZone_ = 750;
