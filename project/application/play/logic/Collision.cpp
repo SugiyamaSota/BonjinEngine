@@ -2,10 +2,14 @@
 #include "../mapchip/MapChipField.h"
 #include "vector.h"
 
+#include <algorithm>
 #include <array>
+#include <cmath>
 
 namespace {
 constexpr float kCollisionInset = 0.01f;
+// 横方向の判定で側面を調べる間隔 (マップのブロック高さ2.0より十分細かく)
+constexpr float kSideSampleInterval = 1.0f;
 
 Vector3 GetCornerPosition(const Vector3& center, float width, float height, Corner corner) {
 	const Vector3 offsets[kNumCorner] = {
@@ -55,8 +59,23 @@ CollisionMapInfo ResolveMapCollision(
 			GetCornerPosition(nextPosition, width, height, bottomCorner),
 			Vector3{0.0f, kCollisionInset, 0.0f});
 
-		if (IsBlock(mapChipField, top) || IsBlock(mapChipField, bottom)) {
-			const Vector3 hitPosition = IsBlock(mapChipField, bottom) ? bottom : top;
+		// 1マスより背が高い物体は、上下の角の間にある壁を見落とさないよう
+		// マスの高さより細かい間隔で側面を調べる（下から順に、最初に当たった点を使う）
+		const float span = top.y - bottom.y;
+		const int sampleCount = (std::max)(2, static_cast<int>(std::ceil(span / kSideSampleInterval)) + 1);
+		bool isHit = false;
+		Vector3 hitPosition = bottom;
+		for (int i = 0; i < sampleCount; ++i) {
+			const float t = static_cast<float>(i) / static_cast<float>(sampleCount - 1);
+			const Vector3 sample{ bottom.x, bottom.y + span * t, bottom.z };
+			if (IsBlock(mapChipField, sample)) {
+				isHit = true;
+				hitPosition = sample;
+				break;
+			}
+		}
+
+		if (isHit) {
 			const IndexSet index = mapChipField.GetMapChipIndexSetByPosition(hitPosition);
 			const Rect rect = mapChipField.GetRectByIndex(index.xIndex, index.yIndex);
 			bool resolved = false;

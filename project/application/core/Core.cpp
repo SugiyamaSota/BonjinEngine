@@ -26,6 +26,7 @@ void Core::Initialize() {
 	// テクスチャ
 	auto textureManager = TextureManager::GetInstance();
 	textureManager->LoadTexture("resources/textures/cube.jpg");
+	textureManager->LoadTexture("resources/textures/block_metal.png");
 	textureManager->LoadTexture("resources/textures/default.png");
 	textureManager->LoadTexture("resources/textures/SkyBox_Dark.dds");
 	textureManager->LoadTexture("resources/textures/skyBox.dds");

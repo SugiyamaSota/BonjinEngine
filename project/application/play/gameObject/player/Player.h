@@ -60,6 +60,16 @@ public:
 	// モデル表示用の補正を加えて描画行列を更新
 	void UpdateModel() override;
 
+	// 描画モデルのワールド変換 (足元合わせ・向き補正込み)
+	WorldTransform GetModelWorldTransform() const;
+	// 描画モデルの中心(腰のボーン)のワールド座標。スケルトンが無ければ当たり判定の中心
+	Vector3 GetModelCenterPosition() const;
+
+	/// <summary>
+	/// 床や天井にめり込んでいたら上下に押し出す (出現・テレポート直後用)
+	/// </summary>
+	void ResolveMapEmbedding();
+
 	Vector3 GetWorldPosition();
 	AABB GetAABB();
 	void OnCollision(Bonjin::BaseEnemy* enemy);
@@ -128,6 +138,36 @@ public:
 
 	bool GetIsGoalReached() const { return isGoalReached_; }
 	void SetIsGoalReached(bool reached) { isGoalReached_ = reached; }
+
+	/// <summary>
+	/// クリア演出(Flair)を開始する。以降はUpdateではなくUpdateClearPerformanceを呼ぶ
+	/// </summary>
+	void StartClearPerformance();
+
+	/// <summary>
+	/// クリア演出の更新 (入力は受け付けず、着地を待ってからFlairを再生する)
+	/// </summary>
+	void UpdateClearPerformance();
+
+	/// <summary>
+	/// クリア演出のFlairが最後まで終わったか
+	/// </summary>
+	bool IsClearPerformanceFinished() const { return clearPhase_ == ClearPhase::kDone; }
+
+	// クリア演出の段階
+	enum class ClearPhase {
+		kNone,     // 演出していない
+		kLanding,  // 着地待ち
+		kStart,    // Flair開始
+		kLoop,     // Flairループ
+		kFinish,   // Flair終了
+		kDone,     // 演出終了 (最後のポーズで待機)
+	};
+	ClearPhase GetClearPhase() const { return clearPhase_; }
+	// 今の段階に入ってからの経過時間(秒)
+	float GetClearPhaseTimer() const { return clearPhaseTimer_; }
+	// アニメーションの再生長さ(秒)。カメラ演出の同期用
+	float GetAnimationPlayLength(PlayerAnimator::State state) const { return hasAnimator_ ? animator_.GetClipPlayLength(state) : 0.0f; }
 
 	// ロックオン中の敵をすべて削除する処理（入力判定を含む)
 	void HandleLockOnRemovalInput();
@@ -210,13 +250,15 @@ private:
 	float invincibleTimer_ = 0.0f;
 	static inline const float kInvincibleTime = 1.5f;
 
-	static inline const float kWidth = 1.9f;
-	static inline const float kHeight = 1.9f;
+	// 当たり判定 (見た目のロボットに合わせる)
+	// 高さ: モデルの身長(約1.0) * 見た目の倍率 → 約2マス
+	// 幅  : 横から見た体の厚み(約0.19*3.8≒0.72)に、走りで手足が前後に振れる分を足したもの
+	static inline const float kHeight = 3.8f;
+	static inline const float kWidth = 1.0f;
 
 	// プレイヤーモデルの見た目補正 (モデルは足元原点・高さ約1.0)
-	// 見た目の大きさ倍率 (当たり判定kWidth/kHeightには影響しない)
-	static inline const float kModelSizeMultiplier = 2.0f;
-	float modelScale_ = kHeight * kModelSizeMultiplier;
+	// モデルの身長が約1.0なので、当たり判定の高さと同じ倍率にすると身長が当たり判定と一致する
+	float modelScale_ = kHeight;
 	// 足元を当たり判定の底に合わせる
 	float modelOffsetY_ = -kHeight / 2.0f;
 	// モデルは+Z(奥)向きなので、回転0で右(+X)を向くよう90度回す
@@ -225,6 +267,14 @@ private:
 	// モデルのアニメーション
 	PlayerAnimator animator_;
 	bool hasAnimator_ = false;
+
+	// --- クリア演出 ---
+	ClearPhase clearPhase_ = ClearPhase::kNone;
+	float clearPhaseTimer_ = 0.0f;
+	// Flairのループ回数
+	int clearFlairLoopCount_ = 2;
+	// 着地待ちの最大時間 (落ち続けても演出を始める)
+	float clearLandingTimeout_ = 1.0f;
 	// この速さ以上で走りアニメーションにする
 	float runAnimationSpeedThreshold_ = 0.01f;
 

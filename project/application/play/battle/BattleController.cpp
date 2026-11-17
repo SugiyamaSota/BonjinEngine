@@ -55,11 +55,13 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	const Vector3 playerPosition = mapChipField_->GetMapChipPosition(pSpawn.x, pSpawn.y);
 	player_->Initialize(playerModel_.get(), camera_, playerPosition);
 	player_->SetMapChipField(mapChipField_.get());
+	// プレイヤーは2マス分の高さがあり、マスの中心に置くと足が床に埋まるので押し出す
+	player_->ResolveMapEmbedding();
 	player_->SetLockedOnEnemiesList(&lockedOnEnemies_);
 	player_->Update();
 
 	cameraController_ = std::make_unique<CameraController>();
-	cameraController_->Initialize(camera_, playerPosition);
+	cameraController_->Initialize(camera_, player_->GetPosition());
 
 	// 敵の生成
 	const auto& enemySpawns = mapChipField_->GetEnemySpawns();
@@ -143,6 +145,10 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 }
 
 void BattleController::Unload() {
+	// クリア演出で寄せたカメラ距離を次のシーンに持ち越さない
+	if (cameraController_) {
+		cameraController_->ResetCameraRadius();
+	}
 	if (goSignalBanner_) {
 		goSignalBanner_.reset();
 	}
@@ -210,7 +216,7 @@ void BattleController::Update(float deltaTime) {
 
 	if (player_->ConsumeLandingEffectRequest()) {
 		Vector3 dustPosition = player_->GetPosition();
-		dustPosition.y -= 1.0f;
+		dustPosition.y -= player_->GetAABB().max.y - player_->GetPosition().y; // 足元 (高さの半分だけ下)
 		dustPosition.z = -0.1f;
 		EmitLandingDustEffect(dustPosition);
 	}
@@ -237,6 +243,19 @@ void BattleController::Update(float deltaTime) {
 
 	//const IndexSet centerIndex = mapChipField_->GetMapChipIndexSetByCenter();
 	cameraController_->Update(player_->GetWorldPosition(), deltaTime);
+
+	// ImGuiのパーティクル確認 (自動発生)
+	UpdateParticlePreview(deltaTime);
+
+	// ImGuiのテスト再生でクリア演出が動いている間もカメラ演出を付ける
+	if (player_->GetClearPhase() != Player::ClearPhase::kNone) {
+		cameraController_->SetCameraRadius(CalculateClearCameraRadius());
+		UpdateClearPulseEffects(); // 寄るタイミングでパーティクル
+		isClearCameraActive_ = true;
+	} else if (isClearCameraActive_) {
+		cameraController_->ResetCameraRadius();
+		isClearCameraActive_ = false;
+	}
 
 	const uint32_t vertical = mapChipField_->GetNumBlockVirtical();
 	const uint32_t horizontal = mapChipField_->GetNumBlockHorizontal();
@@ -330,12 +349,39 @@ void BattleController::DrawImGui() {
 	}
 
 	GpuParticleManager::GetInstance()->DrawImGui();
+	DrawParticlePreviewImGui();
 
 	if (ImGui::TreeNode("Enemies")) {
 		int index = 0;
 		for (const auto& enemy : enemies_) {
 			enemy->DrawImGui(index++);
 		}
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Clear Camera")) {
+		ImGui::Text("Default Radius: %.1f", Camera::kDefaultRadius);
+		ImGui::DragFloat("Close Radius (FlairStart)", &clearCameraCloseRadius_, 0.1f, 1.0f, 100.0f);
+		ImGui::DragFloat("Pulse Radius (Flairing)", &clearCameraPulseRadius_, 0.1f, 1.0f, 100.0f);
+		ImGui::DragFloat("Pulse In Time", &clearCameraPulseInTime_, 0.005f, 0.0f, 1.0f);
+		ImGui::DragFloat("Pulse Out Time", &clearCameraPulseOutTime_, 0.005f, 0.0f, 2.0f);
+		ImGui::DragFloat("Pulse Offset", &clearCameraPulseOffset_, 0.01f, 0.0f, 2.0f);
+		ImGui::DragFloat("Pulses Per Rotation", &clearCameraPulsesPerRotation_, 0.05f, 0.0f, 8.0f);
+		ImGui::SameLine();
+		ImGui::TextDisabled("(0で寄らない)");
+		if (player_) {
+			const float rotation = player_->GetAnimationPlayLength(PlayerAnimator::State::kFlairing);
+			if (clearCameraPulsesPerRotation_ > 0.0f && rotation > 0.0f) {
+				ImGui::Text("Pulse Interval: %.2fs (1回転 %.2fs)", rotation / clearCameraPulsesPerRotation_, rotation);
+			}
+		}
+		ImGui::SeparatorText("Burst (寄るたびに出すパーティクル)");
+		ImGui::SliderInt("Burst Count", &clearBurstCount_, 0, 12);
+		ImGui::SliderFloat("Burst Max Tilt (deg)", &clearBurstMaxTiltDeg_, 0.0f, 89.0f, "%.0f");
+		if (ImGui::Button("Emit Burst Now")) {
+			EmitClearBurst();
+		}
+		ImGui::TextDisabled("Player > Test Clear Performance で確認できます");
 		ImGui::TreePop();
 	}
 
@@ -375,7 +421,7 @@ void BattleController::GenerateBlocksAndGoal() {
 				blockModels_[i][j] = std::make_unique<Object3D>();
 				if (!blockTemplate) {
 					blockModels_[i][j]->CreateModel(
-						ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
+						ModelBuilder::ModelType::kCube, "resources/textures/block_metal.png");
 					blockTemplate = blockModels_[i][j].get();
 				} else {
 					blockModels_[i][j]->CopyModelResourceFrom(*blockTemplate);
@@ -406,6 +452,153 @@ void BattleController::GenerateBlocksAndGoal() {
 			}
 		}
 	}
+}
+
+Vector3 BattleController::GetPreviewPosition() const {
+	Vector3 base = previewPosition_;
+	if (previewFollowPlayer_ && player_) {
+		base = player_->GetPosition();
+		// プレイヤーの向いている側にずらす
+		const bool facingLeft = std::cos(player_->GetWorldTransform().rotate.y) < 0.0f;
+		base.x += facingLeft ? -previewOffset_.x : previewOffset_.x;
+		base.y += previewOffset_.y;
+		base.z += previewOffset_.z;
+		return base;
+	}
+	return { base.x + previewOffset_.x, base.y + previewOffset_.y, base.z + previewOffset_.z };
+}
+
+void BattleController::EmitPreviewEffect(PreviewEffect effect) {
+	if (!particleManager_) {
+		return;
+	}
+	const Vector3 position = GetPreviewPosition();
+	switch (effect) {
+	case PreviewEffect::kAnchorHit:
+		EmitAnchorHitEffect(position);
+		break;
+	case PreviewEffect::kEnemyDefeat:
+		EmitEnemyDefeatEffect(position);
+		break;
+	case PreviewEffect::kLandingDust:
+		EmitLandingDustEffect(position);
+		break;
+	case PreviewEffect::kEnemyChargeRing: {
+		// Enemy::ChaseBehavior と同じ設定 (敵の代わりに固定位置で縮む)
+		constexpr float kChargeTime = 0.75f;
+		constexpr float kMaxScale = 3.0f;
+		ParticleConfig config;
+		config.position = position;
+		config.scale = { kMaxScale, kMaxScale, 1.0f };
+		config.color = { 1.0f, 0.0f, 0.0f, 0.5f };
+		config.lifeTime = kChargeTime;
+		config.updateFunc = [position](ParticleData& data, float) {
+			float ratio = (data.lifeTime - data.currentTime) / data.lifeTime;
+			ratio = (std::clamp)(ratio, 0.0f, 1.0f);
+			data.transform.scale = { ratio * kMaxScale, ratio * kMaxScale, 1.0f };
+			data.transform.translate = { position.x, position.y, position.z - 0.05f };
+		};
+		particleManager_->Emit("enemyChargeRing", config);
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+void BattleController::UpdateParticlePreview(float deltaTime) {
+	if (!previewAutoEmit_) {
+		previewTimer_ = 0.0f;
+		return;
+	}
+	previewTimer_ -= deltaTime;
+	if (previewTimer_ <= 0.0f) {
+		previewTimer_ = (std::max)(previewInterval_, 0.05f);
+		EmitPreviewEffect(static_cast<PreviewEffect>(previewEffect_));
+	}
+}
+
+void BattleController::DrawParticlePreviewImGui() {
+#ifdef USE_IMGUI
+	if (!ImGui::TreeNode("Particle Preview")) {
+		return;
+	}
+	if (!particleManager_) {
+		ImGui::TextDisabled("ParticleManager がありません");
+		ImGui::TreePop();
+		return;
+	}
+
+	// 登録グループと使用数
+	const uint32_t maxCount = particleManager_->GetMaxCountPerGroup();
+	if (ImGui::BeginTable("ParticleGroups", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+		ImGui::TableSetupColumn("Group");
+		ImGui::TableSetupColumn("Active");
+		ImGui::TableSetupColumn("");
+		ImGui::TableHeadersRow();
+		for (const std::string& name : particleManager_->GetGroupNames()) {
+			const uint32_t active = particleManager_->GetActiveCount(name);
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::TextUnformatted(name.c_str());
+			ImGui::TableSetColumnIndex(1);
+			ImGui::ProgressBar(static_cast<float>(active) / static_cast<float>(maxCount), ImVec2(-1.0f, 0.0f),
+				(std::to_string(active) + " / " + std::to_string(maxCount)).c_str());
+			ImGui::TableSetColumnIndex(2);
+			ImGui::PushID(name.c_str());
+			if (ImGui::SmallButton("Clear")) {
+				particleManager_->Clear(name);
+			}
+			ImGui::PopID();
+		}
+		ImGui::EndTable();
+	}
+
+	ImGui::SeparatorText("Emit");
+	// 発生位置
+	ImGui::Checkbox("Follow Player", &previewFollowPlayer_);
+	if (!previewFollowPlayer_) {
+		ImGui::DragFloat3("Base Position", &previewPosition_.x, 0.1f);
+		if (player_ && ImGui::SmallButton("Set To Player")) {
+			previewPosition_ = player_->GetPosition();
+		}
+	}
+	ImGui::DragFloat3("Offset", &previewOffset_.x, 0.1f);
+	const Vector3 position = GetPreviewPosition();
+	ImGui::Text("Emit Position: (%.2f, %.2f, %.2f)", position.x, position.y, position.z);
+
+	// 演出ごとの発生ボタン
+	static const char* kEffectNames[] = {
+		"Anchor Hit (anchorHitRay + anchorHitFlash)",
+		"Enemy Defeat (enemyDefeatSpark + enemyDefeatRing)",
+		"Landing Dust (landingDust)",
+		"Enemy Charge Ring (enemyChargeRing)",
+	};
+	for (int i = 0; i < static_cast<int>(PreviewEffect::kCount); ++i) {
+		ImGui::PushID(i);
+		if (ImGui::Button("Emit")) {
+			EmitPreviewEffect(static_cast<PreviewEffect>(i));
+		}
+		ImGui::SameLine();
+		ImGui::RadioButton(kEffectNames[i], &previewEffect_, i);
+		ImGui::PopID();
+	}
+
+	// 自動で出し続ける
+	ImGui::Checkbox("Auto Emit (selected)", &previewAutoEmit_);
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(120.0f);
+	ImGui::DragFloat("Interval", &previewInterval_, 0.01f, 0.05f, 5.0f, "%.2f s");
+
+	if (ImGui::Button("Clear All")) {
+		for (const std::string& name : particleManager_->GetGroupNames()) {
+			particleManager_->Clear(name);
+		}
+	}
+	ImGui::TextDisabled("※ヒットストップ中やクリア演出中は自動発生しません");
+
+	ImGui::TreePop();
+#endif
 }
 
 void BattleController::EmitAnchorHitEffect(const Vector3& position) {
@@ -445,8 +638,71 @@ void BattleController::EmitAnchorHitEffect(const Vector3& position) {
 	particleManager_->Emit("anchorHitFlash", flash);
 }
 
-void BattleController::EmitEnemyDefeatEffect(const Vector3& position) {
+int BattleController::GetClearPulseIndex() const {
+	if (!player_ || player_->GetClearPhase() != Player::ClearPhase::kLoop) {
+		return -1;
+	}
+	// CalculateClearCameraRadius の寄りと同じ周期で数える
+	const float rotation = player_->GetAnimationPlayLength(PlayerAnimator::State::kFlairing);
+	const float cycle = clearCameraPulsesPerRotation_ > 0.0f ? rotation / clearCameraPulsesPerRotation_ : 0.0f;
+	if (cycle <= 0.0f) {
+		return -1;
+	}
+	const float time = player_->GetClearPhaseTimer() - clearCameraPulseOffset_;
+	return time < 0.0f ? -1 : static_cast<int>(std::floor(time / cycle));
+}
+
+void BattleController::UpdateClearPulseEffects() {
+	const int index = GetClearPulseIndex();
+	if (index < 0) {
+		lastClearPulseIndex_ = -1;
+		return;
+	}
+	if (index != lastClearPulseIndex_) {
+		lastClearPulseIndex_ = index;
+		EmitClearBurst();
+	}
+}
+
+void BattleController::EmitClearBurst() {
+	if (!player_ || !particleManager_) {
+		return;
+	}
+	const float maxTilt = (std::clamp)(clearBurstMaxTiltDeg_, 0.0f, 89.0f) * std::numbers::pi_v<float> / 180.0f;
+	std::uniform_real_distribution<float> tiltDistribution(-maxTilt, maxTilt);
+	std::uniform_real_distribution<float> rollDistribution(0.0f, std::numbers::pi_v<float> * 2.0f);
+
+	// プレイヤーモデルの中心(腰)。少し手前に出して体に隠れないようにする
+	Vector3 center = player_->GetModelCenterPosition();
+	center.z -= 0.5f;
+	for (int i = 0; i < clearBurstCount_; ++i) {
+		const Vector3 tilt{ tiltDistribution(randomEngine_), tiltDistribution(randomEngine_), rollDistribution(randomEngine_) };
+		EmitEnemyDefeatEffect(center, tilt);
+	}
+}
+
+void BattleController::EmitEnemyDefeatEffect(const Vector3& position, const Vector3& tilt) {
 	constexpr uint32_t kSparkCount = 16;
+
+	// パーティクルの回転と同じ順(X->Y->Z, 行ベクトル)で方向を傾ける。
+	// リングはビルボードで画面向きに裏返る(Y軸180度)ので、火花も同じく左右を反転して面を揃える
+	const bool hasTilt = tilt.x != 0.0f || tilt.y != 0.0f || tilt.z != 0.0f;
+	auto tiltDirection = [&tilt, hasTilt](float x, float y) {
+		if (!hasTilt) {
+			return Vector3{ x, y, 0.0f };
+		}
+		float z = 0.0f;
+		// X
+		float cx = std::cos(tilt.x), sx = std::sin(tilt.x);
+		float y1 = y * cx - z * sx, z1 = y * sx + z * cx;
+		// Y
+		float cy = std::cos(tilt.y), sy = std::sin(tilt.y);
+		float x2 = x * cy + z1 * sy, z2 = -x * sy + z1 * cy;
+		// Z
+		float cz = std::cos(tilt.z), sz = std::sin(tilt.z);
+		float x3 = x2 * cz - y1 * sz, y3 = x2 * sz + y1 * cz;
+		return Vector3{ -x3, y3, -z2 };
+	};
 	std::uniform_real_distribution<float> angleDistribution(
 		0.0f, std::numbers::pi_v<float> * 2.0f);
 	std::uniform_real_distribution<float> speedDistribution(3.0f, 6.0f);
@@ -458,10 +714,11 @@ void BattleController::EmitEnemyDefeatEffect(const Vector3& position) {
 
 		ParticleConfig spark{};
 		spark.position = position;
+		const Vector3 direction = tiltDirection(std::cos(angle), std::sin(angle));
 		spark.velocity = {
-			std::cos(angle) * speed,
-			std::sin(angle) * speed,
-			0.0f
+			direction.x * speed,
+			direction.y * speed,
+			0.0f // 奥行き方向は画面上ほぼ見えないので使わない
 		};
 		const float size = sizeDistribution(randomEngine_);
 		spark.scale = {size, size, 1.0f};
@@ -487,6 +744,7 @@ void BattleController::EmitEnemyDefeatEffect(const Vector3& position) {
 
 	ParticleConfig ring{};
 	ring.position = position;
+	ring.rotate = tilt;
 	ring.scale = {0.35f, 0.35f, 1.0f};
 	ring.color = {1.0f, 0.65f, 0.1f, 1.0f};
 	ring.lifeTime = 0.4f;
@@ -600,6 +858,69 @@ void BattleController::ResolveAnchorInstantLanding(Anchor& anchor) {
 	}
 
 	anchor.SetInstantResolved(true);
+}
+
+void BattleController::StartClearPerformance() {
+	SetHudVisible(false);
+	hitStopTimer_ = 0.0f;
+	if (player_) {
+		player_->StartClearPerformance();
+	}
+}
+
+bool BattleController::UpdateClearPerformance(float deltaTime) {
+	if (!player_) {
+		return true;
+	}
+	player_->UpdateClearPerformance();
+	if (cameraController_) {
+		cameraController_->Update(player_->GetWorldPosition(), deltaTime);
+		cameraController_->SetCameraRadius(CalculateClearCameraRadius());
+		UpdateClearPulseEffects(); // 寄るタイミングでパーティクル
+	}
+	UpdateVisuals(deltaTime);
+	return player_->IsClearPerformanceFinished();
+}
+
+float BattleController::CalculateClearCameraRadius() const {
+	using ClearPhase = Player::ClearPhase;
+	const float defaultRadius = Camera::kDefaultRadius;
+	const float timer = player_->GetClearPhaseTimer();
+
+	switch (player_->GetClearPhase()) {
+	case ClearPhase::kStart: {
+		// Flair開始の長さをかけて、通常距離から寄りの距離へ (ease out)
+		const float length = player_->GetAnimationPlayLength(PlayerAnimator::State::kFlairStart);
+		float t = length > 0.0f ? (std::min)(timer / length, 1.0f) : 1.0f;
+		t = 1.0f - (1.0f - t) * (1.0f - t) * (1.0f - t);
+		return defaultRadius + (clearCameraCloseRadius_ - defaultRadius) * t;
+	}
+	case ClearPhase::kLoop: {
+		// 一定間隔で一瞬寄って戻る (間隔は1回転の長さ / 1回転あたりの回数 で回転と同期させる)
+		const float rotation = player_->GetAnimationPlayLength(PlayerAnimator::State::kFlairing);
+		const float cycle = clearCameraPulsesPerRotation_ > 0.0f ? rotation / clearCameraPulsesPerRotation_ : 0.0f;
+		if (cycle <= 0.0f) {
+			return clearCameraCloseRadius_;
+		}
+		float local = std::fmod(timer - clearCameraPulseOffset_ + cycle, cycle);
+		float pulse = 0.0f; // 0:寄りの距離 1:一番寄った距離
+		if (local < clearCameraPulseInTime_) {
+			pulse = clearCameraPulseInTime_ > 0.0f ? local / clearCameraPulseInTime_ : 1.0f;
+		} else if (local < clearCameraPulseInTime_ + clearCameraPulseOutTime_) {
+			float t = clearCameraPulseOutTime_ > 0.0f ? (local - clearCameraPulseInTime_) / clearCameraPulseOutTime_ : 1.0f;
+			pulse = (1.0f - t) * (1.0f - t); // すっと戻る
+		}
+		return clearCameraCloseRadius_ + (clearCameraPulseRadius_ - clearCameraCloseRadius_) * pulse;
+	}
+	case ClearPhase::kFinish:
+	case ClearPhase::kDone:
+		// Flair終了は何もしない (寄りの距離のまま)
+		return clearCameraCloseRadius_;
+	case ClearPhase::kLanding:
+	case ClearPhase::kNone:
+	default:
+		return defaultRadius;
+	}
 }
 
 void BattleController::UpdateVisuals(float deltaTime) {

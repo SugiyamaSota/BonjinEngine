@@ -159,6 +159,16 @@ void Particle::Clear() {
 	}
 }
 
+uint32_t Particle::GetActiveCount() const {
+	uint32_t count = 0;
+	for (uint32_t index = 0; index < kNumInstance_; ++index) {
+		if (particles_[index].lifeTime > 0.0f) {
+			++count;
+		}
+	}
+	return count;
+}
+
 void Particle::DrawImGui()
 {
 

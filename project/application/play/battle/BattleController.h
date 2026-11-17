@@ -41,6 +41,16 @@ public:
 	CameraController* GetCameraController() const { return cameraController_.get(); }
 	Camera* GetCamera() const { return camera_; }
 	void UpdateVisuals(float deltaTime);
+
+	/// <summary>
+	/// クリア演出を開始する (HUDを隠してプレイヤーのFlairを始める)
+	/// </summary>
+	void StartClearPerformance();
+
+	/// <summary>
+	/// クリア演出の更新。プレイヤーの演出が終わったらtrue
+	/// </summary>
+	bool UpdateClearPerformance(float deltaTime);
 	void SetHudVisible(bool visible) { isHudVisible_ = visible; }
 	void TriggerGoSignal();
 	bool IsGoSignalActive() const { return goSignalBanner_ && goSignalBanner_->IsActive(); }
@@ -76,10 +86,61 @@ private:
 	bool isGoalReached_ = false;
 	float hitStopTimer_ = 0.0f;
 
+	// --- クリア演出のカメラ ---
+	// Flair開始の間に通常距離からこの距離まで寄る
+	float clearCameraCloseRadius_ = 22.0f;
+	// Flairループ中、1回転ごとに一瞬この距離まで寄って戻る
+	float clearCameraPulseRadius_ = 15.0f;
+	// 寄る時間 / 戻る時間 (秒)
+	float clearCameraPulseInTime_ = 0.06f;
+	float clearCameraPulseOutTime_ = 0.35f;
+	// 1回転の何秒目で寄るか (回転の勢いに合わせる用)
+	float clearCameraPulseOffset_ = 0.0f;
+	// 1回転あたり何回寄るか (2なら半回転ごと、0.5なら2回転に1回)
+	float clearCameraPulsesPerRotation_ = 2.0f;
+
+	bool isClearCameraActive_ = false;
+
+	// カメラが寄るたびに、プレイヤーモデルを中心に敵撃破のパーティクルをランダムな角度に傾けて重ねて出す
+	int clearBurstCount_ = 4;            // 1回に出す数
+	float clearBurstMaxTiltDeg_ = 65.0f; // 傾ける最大角度(度)。90に近いと真横からになりリングが見えなくなる
+	int lastClearPulseIndex_ = -1;       // 何回目の寄りまで出したか
+
+	// 今が何回目の寄りか (Flairループ中以外は-1)
+	int GetClearPulseIndex() const;
+	// 新しい寄りが始まったらパーティクルを出す
+	void UpdateClearPulseEffects();
+	void EmitClearBurst();
+
+	// --- パーティクル確認用 (ImGui) ---
+	enum class PreviewEffect {
+		kAnchorHit,       // アンカー命中 (anchorHitRay + anchorHitFlash)
+		kEnemyDefeat,     // 敵撃破 (enemyDefeatSpark + enemyDefeatRing)
+		kLandingDust,     // 着地の砂ぼこり (landingDust)
+		kEnemyChargeRing, // 敵のチャージ (enemyChargeRing)
+		kCount,
+	};
+	int previewEffect_ = 0;
+	bool previewFollowPlayer_ = true;        // プレイヤー位置を基準にするか
+	Vector3 previewOffset_ = { 4.0f, 0.0f, 0.0f }; // 基準位置からのずらし
+	Vector3 previewPosition_ = {};           // 基準位置を固定するときの座標
+	bool previewAutoEmit_ = false;           // 一定間隔で出し続ける
+	float previewInterval_ = 0.5f;
+	float previewTimer_ = 0.0f;
+
+	Vector3 GetPreviewPosition() const;
+	void EmitPreviewEffect(PreviewEffect effect);
+	void UpdateParticlePreview(float deltaTime);
+	void DrawParticlePreviewImGui();
+
+	// クリア演出中のカメラ距離を計算する
+	float CalculateClearCameraRadius() const;
+
 	void GenerateBlocksAndGoal();
 	void ResolveAnchorInstantLanding(class Anchor& anchor);
 	void EmitAnchorHitEffect(const Vector3& position);
-	void EmitEnemyDefeatEffect(const Vector3& position);
+	// tilt: エフェクト全体の傾き(ラジアン, XYZ)。リングの面と火花の飛ぶ面が一緒に傾く
+	void EmitEnemyDefeatEffect(const Vector3& position, const Vector3& tilt = { 0.0f, 0.0f, 0.0f });
 	void EmitLandingDustEffect(const Vector3& position);
 };
 

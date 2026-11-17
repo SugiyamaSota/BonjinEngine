@@ -59,7 +59,7 @@ private:
 
 	// 調整パラメータ
 	bool enabled_ = true;
-	float worldOffsetY_ = 1.8f;  // プレイヤー中心からのワールド上方向オフセット
+	float worldOffsetY_ = 2.75f; // プレイヤー中心からのワールド上方向オフセット (頭(+1.9)から約0.85上)
 	float pipSpacing_ = 26.0f;
 	float pipSize_ = 16.0f;
 	float glowSize_ = 38.0f;

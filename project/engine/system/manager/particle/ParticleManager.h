@@ -2,6 +2,7 @@
 #include <map>
 #include <string>
 #include <memory>
+#include <vector>
 #include "../camera/Camera.h"
 #include "../srv/SrvManager.h"
 #include "Particle.h"
@@ -28,6 +29,14 @@ public:
     void Emit(const std::string& name, const ParticleConfig& config);
     void Clear(const std::string& name);
     void SetUVTransform(const std::string& name, const Matrix4x4& transform);
+
+    // --- デバッグ用 ---
+    // 登録されているグループ名の一覧
+    std::vector<std::string> GetGroupNames() const;
+    // グループの生存中パーティクル数 (グループが無ければ0)
+    uint32_t GetActiveCount(const std::string& name) const;
+    // 1グループあたりの最大数
+    uint32_t GetMaxCountPerGroup() const;
 
 private:
     ParticleManager() = default;

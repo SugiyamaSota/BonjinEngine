@@ -41,6 +41,10 @@ public:
 
 	void DrawImGui();
 
+	// 生存中のパーティクル数 (デバッグ表示用)
+	uint32_t GetActiveCount() const;
+	static uint32_t GetMaxCount() { return kNumInstance_; }
+
 private:
 	// BaseObject の SetupResources を実装
 	void SetupResources() override;

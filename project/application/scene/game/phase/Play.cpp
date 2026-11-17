@@ -28,8 +28,8 @@ void Play::Update(GameScene* scene, float deltaTime) {
 
 	if (bc->IsGoalReached()) {
 		ResultScene::SetIsClear(true);
+		// クリア演出(Flair)の後でGoalフェーズがリザルトへ遷移させる
 		scene->ChangePhase(std::make_unique<Goal>());
-		SceneManager::GetInstance()->RequestSceneChange("ResultScene");
 	} else if (bc->GetPlayer() && bc->GetPlayer()->GetStatus().IsDead()) {
 		ResultScene::SetIsClear(false);
 		scene->ChangePhase(std::make_unique<GameOver>());
