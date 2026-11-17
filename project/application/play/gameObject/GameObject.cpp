@@ -71,7 +71,7 @@ void GameObject::UpdatePhysicsAndMapCollision() {
 		return;
 	}
 
-	if (physicsType_ == PhysicsType::Gravity) {
+	if (physicsType_ == PhysicsType::Gravity && !isGravitySuspended_) {
 		// 重力適用
 		velocity_.y -= kGravityAcceleration;
 		if (velocity_.y < -kLimitFallSpeed) {

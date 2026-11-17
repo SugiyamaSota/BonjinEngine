@@ -2,6 +2,7 @@
 #include <cassert>
 #include <list>
 #include <memory>
+#include <numbers>
 
 #include "../anchor/anchor.h"
 #include "../../logic/Data.h"
@@ -13,6 +14,7 @@
 #include "FrayLine3D.h"
 
 #include "PlayerStatusComponent.h"
+#include "PlayerAnimator.h"
 
 class MapChipField;
 namespace Bonjin {
@@ -55,6 +57,9 @@ protected:
 	void OnMapCollision(const CollisionMapInfo& collisionMapinfo) override;
 
 public:
+	// モデル表示用の補正を加えて描画行列を更新
+	void UpdateModel() override;
+
 	Vector3 GetWorldPosition();
 	AABB GetAABB();
 	void OnCollision(Bonjin::BaseEnemy* enemy);
@@ -158,6 +163,18 @@ public:
 	void AddAnchorRechargeProgress(float seconds);
 	void RestoreAnchorStock(int count = 1);
 
+	/// <summary>
+	/// アンカー入力時のストック表示要求を取得して消費する
+	/// </summary>
+	/// <param name="outDenied">ストック不足で発射できなかった場合 true</param>
+	bool ConsumeAnchorIndicatorRequest(bool& outDenied) {
+		if (!anchorIndicatorRequested_) return false;
+		anchorIndicatorRequested_ = false;
+		outDenied = anchorShootDenied_;
+		anchorShootDenied_ = false;
+		return true;
+	}
+
 private:
 
 	static inline const float kAcceleration = 0.010f;
@@ -196,6 +213,21 @@ private:
 	static inline const float kWidth = 1.9f;
 	static inline const float kHeight = 1.9f;
 
+	// プレイヤーモデルの見た目補正 (モデルは足元原点・高さ約1.0)
+	// 見た目の大きさ倍率 (当たり判定kWidth/kHeightには影響しない)
+	static inline const float kModelSizeMultiplier = 2.0f;
+	float modelScale_ = kHeight * kModelSizeMultiplier;
+	// 足元を当たり判定の底に合わせる
+	float modelOffsetY_ = -kHeight / 2.0f;
+	// モデルは+Z(奥)向きなので、回転0で右(+X)を向くよう90度回す
+	float modelRotateYOffset_ = std::numbers::pi_v<float> / 2.0f;
+
+	// モデルのアニメーション
+	PlayerAnimator animator_;
+	bool hasAnimator_ = false;
+	// この速さ以上で走りアニメーションにする
+	float runAnimationSpeedThreshold_ = 0.01f;
+
 	// Padのデッドゾーン
 	long kPadDeadZone_ = 750;
 
@@ -213,6 +245,35 @@ private:
 	static inline const int kMaxAnchorStock = 3;
 	int anchorStock_ = kMaxAnchorStock;
 	float anchorRechargeTimer_ = 0.0f;
+
+	// アンカーストック表示（頭上インジケーター）要求
+	bool anchorIndicatorRequested_ = false;
+	bool anchorShootDenied_ = false;
+
+	// ストック回復時の光沢リング演出
+	void UpdateStockGainEffect();
+	int prevAnchorStockForFx_ = kMaxAnchorStock;
+	bool enableStockGainRing_ = true;
+	Vector4 stockGainRingColor_ = { 0.0f, 0.1f, 1.0f, 1.0f }; // 頭上インジケーターのグリーンに合わせる
+	float stockGainRingScale_ = 7.5f;
+	float stockGainRingLifeTime_ = 0.3f;
+	float stockGainRingIntensity_ = 10.0f;
+	float stockGainRingSpin_ = 20.0f;          // ハイライトが輪に沿って回る速さ
+
+	// ストック0時の「エンジンショート」演出
+	void UpdateShortCircuitEffect();
+	bool enableShortCircuit_ = true;
+	float shortCircuitTimer_ = 0.0f;           // 次のバチッまでの残り時間
+	float shortCircuitIntervalMin_ = 0.02f;
+	float shortCircuitIntervalMax_ = 0.12f;
+	float shortCircuitArcChance_ = 0.5f;       // 小さな放電アークを伴う確率
+	int shortCircuitSparkCount_ = 14;
+	float shortCircuitBodyBrightness_ = 0.3f;  // ショート中の本体の明るさ (1.0で通常)
+	float shortCircuitFadeSpeed_ = 6.0f;       // 暗転/復帰の速さ
+	float currentBodyBrightness_ = 1.0f;
+	float shortCircuitSparkSpeed_ = 4.5f;
+	Vector4 shortCircuitSparkColor_ = { 1.0f, 0.55f, 0.15f, 1.0f };  // オレンジの火花
+	Vector4 shortCircuitArcColor_ = { 1.0f, 0.25f, 0.2f, 1.0f };     // 赤い放電
 
 	// アンカー回収用（長押し判定・ほつれ演出）
 	float anchorHoldTimer_ = 0.0f;
@@ -239,6 +300,11 @@ private:
 	std::list<Vector3> teleportQueue_;
 	float teleportTimer_ = 0.0f;
 	float teleportInterval_ = 0.15f;
+
+	// テレポート直後の滞空（急落下防止）
+	void StartPostTeleportFloat();
+	float postTeleportFloatTimer_ = 0.0f;
+	float postTeleportFloatDuration_ = 0.2f;
 
 	// GPU雷霆テレポートエフェクト用
 	void EmitTeleportLightning(const Vector3& start, const Vector3& end);

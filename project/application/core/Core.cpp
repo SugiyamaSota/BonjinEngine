@@ -22,6 +22,7 @@ void Core::Initialize() {
 	// モデル
 	auto modelManager = ModelManager::GetInstance();
 	modelManager->LoadModel("human", "resources/models/human", "walk.gltf");
+	modelManager->LoadModel("player", "resources/models/player", "playerModel.gltf");
 	// テクスチャ
 	auto textureManager = TextureManager::GetInstance();
 	textureManager->LoadTexture("resources/textures/cube.jpg");

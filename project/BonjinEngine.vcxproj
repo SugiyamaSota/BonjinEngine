@@ -94,11 +94,6 @@
       <AdditionalLibraryDirectories>$(ProjectDir)externals\assimp\lib\Debug</AdditionalLibraryDirectories>
       <AdditionalDependencies>assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
-
-copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dxil.dll"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -125,11 +120,6 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
       <AdditionalLibraryDirectories>$(ProjectDir)externals\assimp\lib\Release</AdditionalLibraryDirectories>
       <AdditionalDependencies>assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
-
-copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dxil.dll"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Development|x64'">
     <ClCompile>
@@ -158,11 +148,6 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
       <AdditionalLibraryDirectories>$(ProjectDir)externals\assimp\lib\Release</AdditionalLibraryDirectories>
       <AdditionalDependencies>assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
-
-copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dxil.dll"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="application\play\battle\BattleController.cpp" />
@@ -175,9 +160,11 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClCompile Include="application\play\gameObject\GameObject.cpp" />
     <ClCompile Include="application\play\gameObject\player\Player.cpp" />
     <ClCompile Include="application\play\gameObject\player\PlayerStatusComponent.cpp" />
+    <ClCompile Include="application\play\gameObject\player\PlayerAnimator.cpp" />
     <ClCompile Include="application\play\gameObject\player\PlayerStatusRepository.cpp" />
     <ClCompile Include="application\play\hud\HUD.cpp" />
     <ClCompile Include="application\play\hud\GoSignalBanner.cpp" />
+    <ClCompile Include="application\play\hud\AnchorStockIndicator.cpp" />
     <ClCompile Include="application\play\logic\Collision.cpp" />
     <ClCompile Include="application\play\logic\CollisionManager.cpp" />
     <ClCompile Include="application\play\mapchip\MapChipField.cpp" />
@@ -298,9 +285,11 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
     <ClInclude Include="application\play\gameObject\GameObject.h" />
     <ClInclude Include="application\play\gameObject\player\Player.h" />
     <ClInclude Include="application\play\gameObject\player\PlayerStatusComponent.h" />
+    <ClInclude Include="application\play\gameObject\player\PlayerAnimator.h" />
     <ClInclude Include="application\play\gameObject\player\PlayerStatusRepository.h" />
     <ClInclude Include="application\play\hud\HUD.h" />
     <ClInclude Include="application\play\hud\GoSignalBanner.h" />
+    <ClInclude Include="application\play\hud\AnchorStockIndicator.h" />
     <ClInclude Include="application\play\logic\Collider.h" />
     <ClInclude Include="application\play\logic\Collision.h" />
     <ClInclude Include="application\play\logic\CollisionConfig.h" />
@@ -457,4 +446,8 @@ copy /Y "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <!-- DXCのDLLを出力フォルダへコピー (cmdを使わないので日本語パスでも動く) -->
+  <Target Name="CopyDxcDlls" AfterTargets="Build">
+    <Copy SourceFiles="$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxcompiler.dll;$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" ContinueOnError="WarnAndContinue" />
+  </Target>
 </Project>

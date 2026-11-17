@@ -46,9 +46,9 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	GenerateBlocksAndGoal();
 
 	playerModel_ = std::make_unique<Object3D>();
-	playerModel_->CreateModel(
-		ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
+	playerModel_->SetModel("player");
 	playerModel_->SetEnableEnableEnvironmentMap(false);
+	playerModel_->SetCullMode(CullMode::kFront);
 
 	player_ = std::make_unique<Player>();
 	const Vector2 pSpawn = mapChipField_->GetPlayerSpawn();
@@ -65,7 +65,7 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	const auto& enemySpawns = mapChipField_->GetEnemySpawns();
 	for (const auto& spawn : enemySpawns) {
 		enemyModels_.push_back(std::make_unique<Object3D>());
-		enemyModels_.back()->CopyModelResourceFrom(*playerModel_, false);
+		enemyModels_.back()->CreateModel(ModelBuilder::ModelType::kSphere, "resources/textures/default.png");
 		enemyModels_.back()->SetEnableEnableEnvironmentMap(false);
 
 		const Vector3 enemyPosition = mapChipField_->GetMapChipPosition(spawn.x, spawn.y);
@@ -123,6 +123,9 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	hud_ = std::make_unique<HUD>();
 	hud_->Initialize();
 
+	anchorStockIndicator_ = std::make_unique<AnchorStockIndicator>();
+	anchorStockIndicator_->Initialize();
+
 	goSignalBanner_ = std::make_unique<GoSignalBanner>();
 	goSignalBanner_->Initialize();
 
@@ -145,6 +148,7 @@ void BattleController::Unload() {
 	}
 	GpuParticleManager::GetInstance()->Clear();
 	hud_.reset();
+	anchorStockIndicator_.reset();
 	lockedOnEnemies_.clear();
 	enemies_.clear();
 	enemyModels_.clear();
@@ -251,6 +255,10 @@ void BattleController::Update(float deltaTime) {
 		hud_->Update(player_.get(), deltaTime);
 	}
 
+	if (anchorStockIndicator_) {
+		anchorStockIndicator_->Update(player_.get(), camera_, deltaTime);
+	}
+
 	if (goSignalBanner_) {
 		goSignalBanner_->Update(deltaTime);
 	}
@@ -293,6 +301,11 @@ void BattleController::Draw() {
 		hud_->Draw();
 	}
 
+	// プレイヤー頭上のアンカーストック表示
+	if (isHudVisible_ && anchorStockIndicator_) {
+		anchorStockIndicator_->Draw();
+	}
+
 	// 「GO!」演出バナー描画
 	if (goSignalBanner_) {
 		goSignalBanner_->Draw();
@@ -308,6 +321,9 @@ void BattleController::DrawImGui() {
 
 	if (hud_) {
 		hud_->DrawImGui();
+	}
+	if (anchorStockIndicator_) {
+		anchorStockIndicator_->DrawImGui();
 	}
 	if (player_) {
 		player_->DrawImGui();
@@ -615,6 +631,10 @@ void BattleController::UpdateVisuals(float deltaTime) {
 	}
 	if (player_) {
 		player_->UpdateModel();
+	}
+	// ヒットストップ中もカメラに合わせて頭上表示の位置を追従させる
+	if (anchorStockIndicator_ && player_) {
+		anchorStockIndicator_->Update(player_.get(), camera_, deltaTime);
 	}
 }
 

@@ -5,7 +5,7 @@
 namespace Bonjin::ResultPhase {
 
 /// <summary>
-/// 入場フェーズ（1フレーム待ってから操作フェーズへ）
+/// 入場フェーズ（入場トランジション終了後に操作フェーズへ）
 /// </summary>
 class FadeIn : public IResultPhase {
 public:
