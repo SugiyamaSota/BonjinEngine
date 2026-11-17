@@ -62,6 +62,11 @@ public:
 
 	// 描画モデルのワールド変換 (足元合わせ・向き補正込み)
 	WorldTransform GetModelWorldTransform() const;
+	// 演出用の倍率を掛ける前のモデルのワールド変換
+	WorldTransform GetModelBaseWorldTransform() const;
+	// 演出用の見た目の大きさの倍率 (当たり判定には影響しない。1.0で通常)
+	void SetVisualScale(float scale) { visualScaleMultiplier_ = scale; }
+	float GetVisualScale() const { return visualScaleMultiplier_; }
 	// 描画モデルの中心(腰のボーン)のワールド座標。スケルトンが無ければ当たり判定の中心
 	Vector3 GetModelCenterPosition() const;
 
@@ -161,6 +166,7 @@ public:
 		kStart,    // Flair開始
 		kLoop,     // Flairループ
 		kFinish,   // Flair終了
+		kVanish,   // 決めポーズ後、ふくらんでから縮んで消える
 		kDone,     // 演出終了 (最後のポーズで待機)
 	};
 	ClearPhase GetClearPhase() const { return clearPhase_; }
@@ -168,6 +174,10 @@ public:
 	float GetClearPhaseTimer() const { return clearPhaseTimer_; }
 	// アニメーションの再生長さ(秒)。カメラ演出の同期用
 	float GetAnimationPlayLength(PlayerAnimator::State state) const { return hasAnimator_ ? animator_.GetClipPlayLength(state) : 0.0f; }
+	// Flairループの回数 (カメラの寄りの回数を数える用)
+	int GetClearFlairLoopCount() const { return clearFlairLoopCount_; }
+	// テレポートの雷の色 (クリア演出で色を合わせる用)
+	const Vector4& GetLightningColor() const { return lightningColor_; }
 
 	// ロックオン中の敵をすべて削除する処理（入力判定を含む)
 	void HandleLockOnRemovalInput();
@@ -275,6 +285,16 @@ private:
 	int clearFlairLoopCount_ = 2;
 	// 着地待ちの最大時間 (落ち続けても演出を始める)
 	float clearLandingTimeout_ = 1.0f;
+	// 決めポーズ後の消える演出
+	float clearPoseHoldTime_ = 0.35f;     // 決めポーズのまま止まる時間
+	float clearVanishGrowTime_ = 0.12f;   // ふくらむ時間
+	float clearVanishGrowScale_ = 1.2f;   // ふくらむ大きさ
+	float clearVanishShrinkTime_ = 0.18f; // 縮んで消えるまでの時間
+	bool clearVanishLightning_ = true;    // 消えた瞬間に雷を出す
+	float clearVanishLightningHeight_ = 20.0f; // 雷を上へ伸ばす長さ
+
+	// 演出用の見た目の大きさの倍率 (当たり判定には影響しない)
+	float visualScaleMultiplier_ = 1.0f;
 	// この速さ以上で走りアニメーションにする
 	float runAnimationSpeedThreshold_ = 0.01f;
 

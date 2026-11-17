@@ -38,6 +38,12 @@ public:
     // 1グループあたりの最大数
     uint32_t GetMaxCountPerGroup() const;
 
+    // グループの描画設定
+    // カメラの方を向かせるか (初期値 true)
+    void SetUseBillboard(const std::string& name, bool useBillboard);
+    // 裏表の描き方 (初期値 kBack。両面を描くなら kNone)
+    void SetCullMode(const std::string& name, CullMode cullMode);
+
 private:
     ParticleManager() = default;
     ~ParticleManager() = default;

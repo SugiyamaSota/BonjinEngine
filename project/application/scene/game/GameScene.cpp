@@ -18,7 +18,8 @@ void GameScene::Initialize(Camera* camera)
 	PlayerStatusRepository::GetInstance()->Load("resources/data/player_status.json");
 
 	battleController_ = std::make_unique<BattleController>();
-	battleController_->Initialize(camera_, "resources/maps/stage1.json");
+	// TODO: 仮のテストステージ(ゴールのみ)。本番に戻すときは "resources/maps/stage1.json" にする
+	battleController_->Initialize(camera_, "resources/maps/test_goal.json");
 
 	// ハイライトデータが存在する場合は kHighlight フェーズを開始、なければ kPlay フェーズ
 	const auto& highlights = battleController_->GetMapChipField()->GetHighlights();

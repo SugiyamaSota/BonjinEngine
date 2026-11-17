@@ -33,6 +33,8 @@ void Core::Initialize() {
 	textureManager->LoadTexture("resources/textures/gradationLine.png");
 	textureManager->LoadTexture("resources/textures/circle.png");
 	textureManager->LoadTexture("resources/textures/noise0.png");
+	textureManager->LoadTexture("resources/textures/portalPillar.png");
+	textureManager->LoadTexture("resources/textures/portalRing.png");
 	// パーティクルグループ
 	auto particleManager = ParticleManager::GetInstance();
 	particleManager->Initialize();
@@ -42,6 +44,15 @@ void Core::Initialize() {
 	particleManager->CreateParticleGroup("enemyDefeatRing", ModelBuilder::ModelType::kRing, "resources/textures/gradationLine.png");
 	particleManager->CreateParticleGroup("enemyChargeRing", ModelBuilder::ModelType::kRing, "resources/textures/gradationLine.png");
 	particleManager->CreateParticleGroup("landingDust", ModelBuilder::ModelType::kPlane, "resources/textures/circle.png");
+	// ゴールのポータル (光の柱 + 昇るリング)
+	particleManager->CreateParticleGroup("goalPortalPillar", ModelBuilder::ModelType::kCylinder, "resources/textures/portalPillar.png");
+	particleManager->CreateParticleGroup("goalPortalRing", ModelBuilder::ModelType::kRing, "resources/textures/portalRing.png");
+	// ポータルはカメラの方を向かせず、ワールドの向きのまま置く (リングは床と水平、柱はまっすぐ立てる)。
+	// 水平なリングはカメラより上にあると裏側から見えるので両面を描く
+	particleManager->SetUseBillboard("goalPortalPillar", false);
+	particleManager->SetUseBillboard("goalPortalRing", false);
+	particleManager->SetCullMode("goalPortalPillar", CullMode::kNone);
+	particleManager->SetCullMode("goalPortalRing", CullMode::kNone);
 
 	Bonjin::WaitGPU();
 

@@ -190,9 +190,21 @@ void GpuParticleManager::GenerateSubdividedLine(
 }
 
 void GpuParticleManager::EmitLightning(const GpuLightningConfig& config) {
+    // 雷は節点ごとに光の粒を置いて線に見せているので、長い雷ほど粒の間隔が開いて点々に見える。
+    // 粒の間隔が太さに対して一定以下になるよう、長さに応じて分割数を自動で増やす。
+    const float boltLength = Length(Subtract(config.end, config.start));
+    const float maxSpacing = (std::max)(config.boltScale * 0.25f, 0.01f);
+    int subdivisions = config.subdivisions;
+    while (subdivisions < kMaxLightningSubdivisions &&
+           boltLength / static_cast<float>(1 << subdivisions) > maxSpacing) {
+        ++subdivisions;
+    }
+    // 増やした分だけ火花を出す節点を間引き、火花の総数は設定どおりに保つ
+    const size_t sparkStride = static_cast<size_t>(1) << (std::max)(0, subdivisions - config.subdivisions);
+
     std::vector<Vector3> mainPoints;
     mainPoints.push_back(config.start);
-    GenerateSubdividedLine(config.start, config.end, config.boltRadius, config.subdivisions, mainPoints);
+    GenerateSubdividedLine(config.start, config.end, config.boltRadius, subdivisions, mainPoints);
 
     // 1. メインボルトの節点パーティクル生成
     for (size_t i = 0; i < mainPoints.size(); ++i) {
@@ -211,6 +223,9 @@ void GpuParticleManager::EmitLightning(const GpuLightningConfig& config) {
         p.type = 0; // 雷ボルト
 
         // 節点から散るスパーク火花 (放電粒子)
+        if (i % sparkStride != 0) {
+            continue;
+        }
         for (int s = 0; s < config.sparksPerSegment; ++s) {
             int sparkIdx = AllocateParticle();
             if (sparkIdx < 0) break;
@@ -256,7 +271,15 @@ void GpuParticleManager::EmitLightning(const GpuLightningConfig& config) {
 
             std::vector<Vector3> branchPoints;
             branchPoints.push_back(bStart);
-            GenerateSubdividedLine(bStart, bEnd, config.boltRadius * 0.7f, (std::max)(2, config.subdivisions - 2), branchPoints);
+            // 枝も長さに応じて分割を増やす (粒の大きさは幹の0.65倍)
+            const float branchLength = Length(Subtract(bEnd, bStart));
+            const float branchSpacing = (std::max)(config.boltScale * 0.65f * 0.25f, 0.01f);
+            int branchSubdivisions = (std::max)(2, config.subdivisions - 2);
+            while (branchSubdivisions < kMaxLightningSubdivisions &&
+                   branchLength / static_cast<float>(1 << branchSubdivisions) > branchSpacing) {
+                ++branchSubdivisions;
+            }
+            GenerateSubdividedLine(bStart, bEnd, config.boltRadius * 0.7f, branchSubdivisions, branchPoints);
 
             for (const auto& pt : branchPoints) {
                 int idx = AllocateParticle();

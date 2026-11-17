@@ -80,3 +80,17 @@ void ParticleManager::SetUVTransform(const std::string& name, const Matrix4x4& t
 		particleGroups_[name]->SetUVTransform(transform);
 	}
 }
+
+void ParticleManager::SetUseBillboard(const std::string& name, bool useBillboard) {
+	auto it = particleGroups_.find(name);
+	if (it != particleGroups_.end() && it->second) {
+		it->second->SetUseBillboard(useBillboard);
+	}
+}
+
+void ParticleManager::SetCullMode(const std::string& name, CullMode cullMode) {
+	auto it = particleGroups_.find(name);
+	if (it != particleGroups_.end() && it->second) {
+		it->second->BaseObject::SetCullMode(cullMode);
+	}
+}

@@ -121,6 +121,11 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	particleManager_->Clear("enemyDefeatSpark");
 	particleManager_->Clear("enemyDefeatRing");
 	particleManager_->Clear("landingDust");
+	// ゴールのポータル (光の柱 + 昇るリング)。グループとテクスチャは Core.cpp で起動時に作成済み
+	particleManager_->Clear("goalPortalPillar");
+	particleManager_->Clear("goalPortalRing");
+	EmitGoalPortalPillar();
+
 
 	hud_ = std::make_unique<HUD>();
 	hud_->Initialize();
@@ -145,6 +150,11 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 }
 
 void BattleController::Unload() {
+	// 出しっぱなしのポータルの柱を次のシーンに持ち越さない
+	if (particleManager_) {
+		particleManager_->Clear("goalPortalPillar");
+		particleManager_->Clear("goalPortalRing");
+	}
 	// クリア演出で寄せたカメラ距離を次のシーンに持ち越さない
 	if (cameraController_) {
 		cameraController_->ResetCameraRadius();
@@ -212,6 +222,8 @@ void BattleController::Update(float deltaTime) {
 
 	if (goal_) {
 		goal_->Update();
+		UpdateGoalModel();
+		UpdateGoalPortal(deltaTime);
 	}
 
 	if (player_->ConsumeLandingEffectRequest()) {
@@ -359,6 +371,28 @@ void BattleController::DrawImGui() {
 		ImGui::TreePop();
 	}
 
+	if (ImGui::TreeNode("Goal Portal")) {
+		ImGui::ColorEdit3("Base Color", &goalPortalBaseColor_.x);
+		ImGui::ColorEdit3("Current Color", &goalPortalColor_.x, ImGuiColorEditFlags_NoInputs);
+		ImGui::DragFloat("Color Change Speed", &goalPortalColorChangeSpeed_, 0.1f, 0.1f, 60.0f);
+		ImGui::DragFloat("Pillar Radius", &goalPortalPillarRadius_, 0.01f, 0.05f, 5.0f);
+		ImGui::DragFloat("Pillar Height", &goalPortalPillarHeight_, 0.05f, 0.1f, 20.0f);
+		ImGui::DragFloat("Blink Speed", &goalPortalBlinkSpeed_, 0.05f, 0.0f, 10.0f, "%.2f /s");
+		ImGui::SliderFloat("Blink Min", &goalPortalBlinkMin_, 0.0f, 1.0f);
+		ImGui::DragFloat("Ring Interval", &goalPortalRingInterval_, 0.01f, 0.05f, 3.0f, "%.2f s");
+		ImGui::DragFloat("Ring Life Time", &goalPortalRingLifeTime_, 0.01f, 0.1f, 5.0f, "%.2f s");
+		ImGui::DragFloat("Ring Scale", &goalPortalRingScale_, 0.01f, 0.1f, 5.0f);
+		ImGui::SliderAngle("Ring Tilt", &goalPortalRingTilt_, 0.0f, 90.0f); // 90で床と水平
+		ImGui::Text("Pillar: %u  Ring: %u",
+			particleManager_ ? particleManager_->GetActiveCount("goalPortalPillar") : 0u,
+			particleManager_ ? particleManager_->GetActiveCount("goalPortalRing") : 0u);
+		if (ImGui::Button("Re-emit Pillar")) {
+			particleManager_->Clear("goalPortalPillar");
+			EmitGoalPortalPillar();
+		}
+		ImGui::TreePop();
+	}
+
 	if (ImGui::TreeNode("Clear Camera")) {
 		ImGui::Text("Default Radius: %.1f", Camera::kDefaultRadius);
 		ImGui::DragFloat("Close Radius (FlairStart)", &clearCameraCloseRadius_, 0.1f, 1.0f, 100.0f);
@@ -431,11 +465,11 @@ void BattleController::GenerateBlocksAndGoal() {
 				blockWorldTransforms_[i][j].translate =
 					mapChipField_->GetMapChipPositionByIndex(j, i);
 			} else if (type == MapChipType::kGoal) {
+				// ゴールの転送パッド (六角柱。テクスチャはmtlで指定した goalPad.png)
 				goalModel_ = std::make_unique<Object3D>();
-				goalModel_->CreateModel(
-					ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
+				goalModel_->LoadModel("goal", "goalPad.obj");
 				goalModel_->SetEnableEnableEnvironmentMap(false);
-				goalModel_->SetColor({0.0f, 1.0f, 0.0f, 1.0f}); // ゴールを緑色にする
+				goalModel_->SetCullMode(CullMode::kNone); // 閉じた立体なので両面描画でも見た目は同じ (面の向きの違いに左右されない)
 
 				goal_ = std::make_unique<GameObject>();
 				GameObjectInitConfig config;
@@ -449,6 +483,12 @@ void BattleController::GenerateBlocksAndGoal() {
 				goal_->Initialize(goalModel_.get(), camera_, goalPosition, config);
 				goal_->SetWidth(2.2f);
 				goal_->SetHeight(2.2f);
+
+				// 見た目はマスの中心ではなく床の上に置く (当たり判定はマスの中心のまま)
+				goalModelTransform_ = InitializeWorldTransform();
+				goalModelTransform_.scale = { kGoalPadScale, kGoalPadScale, kGoalPadScale };
+				goalModelTransform_.translate = goalPosition;
+				goalModelTransform_.translate.y += -kMapBlockHalfHeight + kGoalPadHalfHeight * kGoalPadScale;
 			}
 		}
 	}
@@ -913,6 +953,7 @@ float BattleController::CalculateClearCameraRadius() const {
 		return clearCameraCloseRadius_ + (clearCameraPulseRadius_ - clearCameraCloseRadius_) * pulse;
 	}
 	case ClearPhase::kFinish:
+	case ClearPhase::kVanish:
 	case ClearPhase::kDone:
 		// Flair終了は何もしない (寄りの距離のまま)
 		return clearCameraCloseRadius_;
@@ -929,6 +970,8 @@ void BattleController::UpdateVisuals(float deltaTime) {
 	}
 	if (goal_) {
 		goal_->Update();
+		UpdateGoalModel();
+		UpdateGoalPortal(deltaTime);
 	}
 	const uint32_t vertical = mapChipField_->GetNumBlockVirtical();
 	const uint32_t horizontal = mapChipField_->GetNumBlockHorizontal();
@@ -963,4 +1006,134 @@ void BattleController::TriggerGoSignal() {
 	if (goSignalBanner_) {
 		goSignalBanner_->Trigger(player_.get(), camera_);
 	}
+}
+
+void BattleController::UpdateGoalModel() {
+	if (goalModel_ && camera_) {
+		goalModel_->Update(goalModelTransform_, camera_);
+	}
+}
+
+Vector3 BattleController::GetGoalPortalBase() const {
+	// 台座(goalPad)の上面の中心
+	Vector3 base = goalModelTransform_.translate;
+	base.y += kGoalPadHalfHeight * kGoalPadScale;
+	return base;
+}
+
+void BattleController::EmitGoalPortalPillar() {
+	if (!particleManager_ || !goal_) {
+		return;
+	}
+	ParticleConfig pillar{};
+	pillar.position = GetGoalPortalBase(); // シリンダーは底が原点なので台座の上面に立つ
+	// シリンダーモデルは半径1・高さ2
+	pillar.scale = { goalPortalPillarRadius_, goalPortalPillarHeight_ / 2.0f, goalPortalPillarRadius_ };
+	pillar.color = goalPortalColor_;
+	// 透明度は寿命で自動的に下がるので、寿命をとても長くして出しっぱなしにする (シーンを抜けるときに消す)
+	pillar.lifeTime = 100000.0f;
+	pillar.updateFunc = [this](ParticleData& particle, float) {
+		// 明るさを sin で上下させて点滅させる (加算合成なので色の明るさ = 光の強さ)
+		const float wave = 0.5f + 0.5f * std::sin(goalPortalTime_ * goalPortalBlinkSpeed_ * 2.0f * std::numbers::pi_v<float>);
+		const float brightness = goalPortalBlinkMin_ + (1.0f - goalPortalBlinkMin_) * wave;
+		particle.color.x = goalPortalColor_.x * brightness;
+		particle.color.y = goalPortalColor_.y * brightness;
+		particle.color.z = goalPortalColor_.z * brightness;
+		particle.transform.scale = { goalPortalPillarRadius_, goalPortalPillarHeight_ / 2.0f, goalPortalPillarRadius_ };
+		particle.transform.translate = GetGoalPortalBase();
+	};
+	particleManager_->Emit("goalPortalPillar", pillar);
+}
+
+void BattleController::EmitGoalPortalRing() {
+	if (!particleManager_ || !goal_) {
+		return;
+	}
+	const Vector3 base = GetGoalPortalBase();
+	const float height = goalPortalPillarHeight_;
+	const float scale = goalPortalRingScale_;
+
+	ParticleConfig ring{};
+	ring.position = base;
+	ring.rotate = { goalPortalRingTilt_, 0.0f, 0.0f }; // ワールドの向きのまま置くグループなので、90度倒すと床と水平になる
+	ring.scale = { scale, scale, 1.0f };
+	ring.color = goalPortalColor_;
+	ring.lifeTime = goalPortalRingLifeTime_;
+	ring.updateFunc = [base, height, scale](ParticleData& particle, float) {
+		// 下から上へ (最初は速く、上に行くほどゆっくり)。透明度は寿命で自動的に下がる
+		const float t = particle.lifeTime > 0.0f ? (std::min)(particle.currentTime / particle.lifeTime, 1.0f) : 1.0f;
+		const float eased = 1.0f - (1.0f - t) * (1.0f - t);
+		particle.transform.translate = { base.x, base.y + height * eased, base.z };
+		// 上に行くほど少しすぼまる
+		const float s = scale * (1.0f - 0.25f * t);
+		particle.transform.scale = { s, s, 1.0f };
+	};
+	particleManager_->Emit("goalPortalRing", ring);
+}
+
+void BattleController::UpdateGoalPortal(float deltaTime) {
+	if (!goal_ || deltaTime <= 0.0f) {
+		return;
+	}
+	UpdateGoalPortalColor(deltaTime);
+	goalPortalTime_ += deltaTime;
+	goalPortalRingTimer_ -= deltaTime;
+	if (goalPortalRingTimer_ <= 0.0f) {
+		goalPortalRingTimer_ = (std::max)(goalPortalRingInterval_, 0.05f);
+		EmitGoalPortalRing();
+	}
+}
+
+int BattleController::GetClearPulseTotal() const {
+	if (!player_) {
+		return 0;
+	}
+	// CalculateClearCameraRadius / GetClearPulseIndex と同じ周期で数える
+	const float rotation = player_->GetAnimationPlayLength(PlayerAnimator::State::kFlairing);
+	const float cycle = clearCameraPulsesPerRotation_ > 0.0f ? rotation / clearCameraPulsesPerRotation_ : 0.0f;
+	if (cycle <= 0.0f) {
+		return 0;
+	}
+	const float loopTime = rotation * static_cast<float>(player_->GetClearFlairLoopCount());
+	const float span = loopTime - clearCameraPulseOffset_;
+	if (span <= 0.0f) {
+		return 0;
+	}
+	// ループ中に寄りが始まる回数 (誤差でちょうど割り切れる時に1回多く数えないよう少し引く)
+	return (std::max)(1, static_cast<int>(std::ceil(span / cycle - 1e-4f)));
+}
+
+void BattleController::UpdateGoalPortalColor(float deltaTime) {
+	auto lerp = [](const Vector4& a, const Vector4& b, float t) {
+		return Vector4{ a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t };
+	};
+
+	Vector4 target = goalPortalBaseColor_;
+	if (player_) {
+		const Vector4& lightning = player_->GetLightningColor();
+		switch (player_->GetClearPhase()) {
+		case Player::ClearPhase::kLoop: {
+			// n回目の寄りで 緑 -> 雷の色 へ n/合計 だけ近づける (最後の寄りでちょうど雷の色)
+			const int index = GetClearPulseIndex();
+			const int total = GetClearPulseTotal();
+			if (index >= 0 && total > 0) {
+				const float progress = (std::min)(static_cast<float>(index + 1) / static_cast<float>(total), 1.0f);
+				target = lerp(goalPortalBaseColor_, lightning, progress);
+			}
+			break;
+		}
+		case Player::ClearPhase::kFinish:
+		case Player::ClearPhase::kVanish:
+		case Player::ClearPhase::kDone:
+			target = lightning; // 決めポーズから消えるまでは雷の色のまま
+			break;
+		default:
+			break; // 演出していない・着地待ち・Flair開始中はふだんの色
+		}
+	}
+
+	// 一瞬で切り替えず、すっと目標の色へ近づける
+	const float t = 1.0f - std::exp(-goalPortalColorChangeSpeed_ * deltaTime);
+	goalPortalColor_ = lerp(goalPortalColor_, target, t);
+	goalPortalColor_.w = 1.0f;
 }

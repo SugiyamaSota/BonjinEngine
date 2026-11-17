@@ -73,6 +73,40 @@ private:
 	std::vector<std::vector<WorldTransform>> blockWorldTransforms_;
 	std::unique_ptr<GameObject> goal_;
 	std::unique_ptr<Object3D> goalModel_;
+	// ゴールの見た目の配置 (床の上に置くため当たり判定とは別に持つ)
+	WorldTransform goalModelTransform_{};
+	static inline const float kGoalPadScale = 0.85f;       // 幅約2.6 -> 約2.2 (ゴールの当たり判定と同じくらい)
+	static inline const float kGoalPadHalfHeight = 0.263f; // goalPad.obj の厚さの半分
+	static inline const float kMapBlockHalfHeight = 1.0f;  // マップの1マスの高さ(2.0)の半分
+	// goal_->Update() の後に呼んで、見た目の位置で描画行列を上書きする
+	void UpdateGoalModel();
+
+	// --- ゴールのポータル演出 (台座の上の光の柱 + 下から上へ昇るリング) ---
+	Vector4 goalPortalBaseColor_ = { 0.25f, 1.0f, 0.55f, 1.0f }; // ふだんの色 (緑)
+	Vector4 goalPortalColor_ = goalPortalBaseColor_;              // 今の色 (クリア演出で雷の色へ変わっていく)
+	float goalPortalColorChangeSpeed_ = 12.0f;                   // 色が目標に追いつく速さ (大きいほど早い)
+	float goalPortalPillarRadius_ = 0.8f;
+	float goalPortalPillarHeight_ = 4.5f;
+	float goalPortalBlinkSpeed_ = 2.0f;     // 点滅の速さ (回/秒)
+	float goalPortalBlinkMin_ = 0.35f;      // 点滅で一番暗いときの明るさ
+	float goalPortalRingInterval_ = 0.45f;  // リングを出す間隔 (秒)
+	float goalPortalRingLifeTime_ = 1.6f;   // 1つのリングが昇りきるまでの時間 (秒)
+	float goalPortalRingScale_ = 1.6f;      // リングの大きさ (光る輪の半径は約0.6倍)
+	float goalPortalRingTilt_ = 1.5707963f; // リングをX軸まわりに倒す角度 (ラジアン。90度で床と水平)
+	float goalPortalRingTimer_ = 0.0f;
+	float goalPortalTime_ = 0.0f;           // 点滅用の経過時間
+
+	// 台座の上面の中心
+	Vector3 GetGoalPortalBase() const;
+	// 光の柱を出す (寿命を長くして出しっぱなしにする)
+	void EmitGoalPortalPillar();
+	void EmitGoalPortalRing();
+	// リングを一定間隔で出す
+	void UpdateGoalPortal(float deltaTime);
+	// クリア演出中、カメラが寄るたびにポータルの色を雷の色へ近づける
+	void UpdateGoalPortalColor(float deltaTime);
+	// Flairループ中にカメラが寄る回数の合計
+	int GetClearPulseTotal() const;
 	std::unique_ptr<SkyBox> skyBox_;
 
 	ParticleManager* particleManager_ = nullptr;
