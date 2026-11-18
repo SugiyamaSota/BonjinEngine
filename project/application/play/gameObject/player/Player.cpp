@@ -6,6 +6,7 @@
 #include "SceneManager.h"
 #include "ImGuiManager.h"
 #include "ParticleManager.h"
+#include "../../mapchip/MapChipField.h"
 #include <algorithm>
 #include <numbers>
 #include <cmath>
@@ -56,11 +57,212 @@ void Player::UpdateModel() {
 	if (hasAnimator_) {
 		animator_.Apply(*model_->GetSkeleton());
 	}
+	model_->Update(GetModelWorldTransform(), camera_);
+}
+
+WorldTransform Player::GetModelBaseWorldTransform() const {
+	// 演出用の倍率を掛ける前のモデルの配置 (足元を当たり判定の底に合わせる・向き補正)
 	WorldTransform modelTransform = worldTransform_;
 	modelTransform.scale = { modelScale_, modelScale_, modelScale_ };
 	modelTransform.rotate.y += modelRotateYOffset_;
 	modelTransform.translate.y += modelOffsetY_;
-	model_->Update(modelTransform, camera_);
+	return modelTransform;
+}
+
+WorldTransform Player::GetModelWorldTransform() const {
+	WorldTransform modelTransform = GetModelBaseWorldTransform();
+	if (visualScaleMultiplier_ == 1.0f) {
+		return modelTransform;
+	}
+	// 演出用の倍率は見た目だけ。体の中央(腰)を基準点にして大きさを変える。
+	// 原点(足元)をOとすると、基準点Pまわりにk倍した原点は P + k*(O - P)
+	const float k = visualScaleMultiplier_;
+	const Vector3 pivot = GetModelCenterPosition(); // 倍率を掛ける前の腰の位置 (基準点なので倍率を掛けても動かない)
+	const Vector3 origin = modelTransform.translate;
+	modelTransform.translate = {
+		pivot.x + k * (origin.x - pivot.x),
+		pivot.y + k * (origin.y - pivot.y),
+		pivot.z + k * (origin.z - pivot.z),
+	};
+	const float scale = modelScale_ * k;
+	modelTransform.scale = { scale, scale, scale };
+	return modelTransform;
+}
+
+Vector3 Player::GetModelCenterPosition() const {
+	// アニメーション後の腰(Hips)のワールド座標。Flair中などは体が当たり判定の中心より低くなるため
+	// (演出の拡大縮小は腰を基準点にしているので、倍率を掛ける前の配置で求めても同じ位置になる)
+	if (model_ && model_->GetSkeleton().has_value()) {
+		const Skeleton& skeleton = *model_->GetSkeleton();
+		auto it = skeleton.jointMap.find("mixamorig:Hips");
+		if (it != skeleton.jointMap.end()) {
+			const Matrix4x4& joint = skeleton.joints[it->second].skeletonSpaceMatrix;
+			const WorldTransform t = GetModelBaseWorldTransform();
+			const Matrix4x4 world = MakeAffineMatrix(t.scale, t.rotate, t.translate);
+			const float x = joint.m[3][0], y = joint.m[3][1], z = joint.m[3][2];
+			return {
+				x * world.m[0][0] + y * world.m[1][0] + z * world.m[2][0] + world.m[3][0],
+				x * world.m[0][1] + y * world.m[1][1] + z * world.m[2][1] + world.m[3][1],
+				x * world.m[0][2] + y * world.m[1][2] + z * world.m[2][2] + world.m[3][2],
+			};
+		}
+	}
+	return worldTransform_.translate;
+}
+
+void Player::ResolveMapEmbedding() {
+	if (!mapChipField_) {
+		return;
+	}
+	constexpr float kInset = 0.01f;
+	auto isBlock = [&](float x, float y) {
+		const IndexSet index = mapChipField_->GetMapChipIndexSetByPosition({ x, y, 0.0f });
+		return mapChipField_->GetMapChipTypeByIndex(index.xIndex, index.yIndex) == MapChipType::kBlock;
+	};
+	auto rectAt = [&](float x, float y) {
+		const IndexSet index = mapChipField_->GetMapChipIndexSetByPosition({ x, y, 0.0f });
+		return mapChipField_->GetRectByIndex(index.xIndex, index.yIndex);
+	};
+
+	// 上下に押し出すと別のブロックに当たることもあるので数回繰り返す
+	for (int i = 0; i < 4; ++i) {
+		Vector3& pos = worldTransform_.translate;
+		const float leftX = pos.x - width_ / 2.0f + kInset;
+		const float rightX = pos.x + width_ / 2.0f - kInset;
+		const float bottomY = pos.y - height_ / 2.0f + kInset;
+		const float topY = pos.y + height_ / 2.0f - kInset;
+
+		// 足元がめり込んでいたら、そのブロックの上面に乗せる
+		if (isBlock(leftX, bottomY) || isBlock(rightX, bottomY)) {
+			const float x = isBlock(leftX, bottomY) ? leftX : rightX;
+			pos.y = rectAt(x, bottomY).top + height_ / 2.0f;
+			continue;
+		}
+		// 頭がめり込んでいたら、そのブロックの下面まで下げる
+		if (isBlock(leftX, topY) || isBlock(rightX, topY)) {
+			const float x = isBlock(leftX, topY) ? leftX : rightX;
+			pos.y = rectAt(x, topY).bottom - height_ / 2.0f;
+			continue;
+		}
+		break;
+	}
+}
+
+void Player::StartClearPerformance() {
+	if (clearPhase_ != ClearPhase::kNone) {
+		return;
+	}
+	clearPhase_ = ClearPhase::kLanding;
+	clearPhaseTimer_ = 0.0f;
+
+	// 演出の邪魔になるものを止める
+	anchor_ = nullptr;
+	isFrayActive_ = false;
+	teleportQueue_.clear();
+	isGravitySuspended_ = false;
+	isKnockedBack_ = false;
+	isInvincible_ = false; // 点滅で消えたまま止まらないように
+	visualScaleMultiplier_ = 1.0f;
+	invincibleTimer_ = 0.0f;
+
+	// 振り返り途中なら向きを確定させる
+	if (turnTimer_ > 0.0f) {
+		turnTimer_ = 0.0f;
+		worldTransform_.rotate.y = (lrDirection_ == LRDirection::kRight) ? 0.0f : std::numbers::pi_v<float>;
+	}
+}
+
+void Player::UpdateClearPerformance() {
+	if (clearPhase_ == ClearPhase::kNone) {
+		return;
+	}
+	const float deltaTime = 1.0f / 60.0f;
+	clearPhaseTimer_ += deltaTime;
+
+	// 入力は受け付けず、横の勢いだけ止めて重力と地形判定は続ける
+	velocity_.x *= 0.8f;
+	if (std::abs(velocity_.x) < 0.001f) {
+		velocity_.x = 0.0f;
+	}
+
+	// 演出の段階を進める
+	PlayerAnimator::State animState = PlayerAnimator::State::kIdle;
+	switch (clearPhase_) {
+	case ClearPhase::kLanding:
+		animState = onGround_ ? PlayerAnimator::State::kIdle : PlayerAnimator::State::kJump;
+		if (onGround_ || clearPhaseTimer_ >= clearLandingTimeout_) {
+			clearPhase_ = ClearPhase::kStart;
+			clearPhaseTimer_ = 0.0f;
+			animState = PlayerAnimator::State::kFlairStart;
+		}
+		break;
+	case ClearPhase::kStart:
+		animState = PlayerAnimator::State::kFlairStart;
+		if (clearPhaseTimer_ >= animator_.GetClipPlayLength(PlayerAnimator::State::kFlairStart)) {
+			clearPhase_ = ClearPhase::kLoop;
+			clearPhaseTimer_ = 0.0f;
+			animState = PlayerAnimator::State::kFlairing;
+		}
+		break;
+	case ClearPhase::kLoop:
+		animState = PlayerAnimator::State::kFlairing;
+		if (clearPhaseTimer_ >= animator_.GetClipPlayLength(PlayerAnimator::State::kFlairing) * static_cast<float>(clearFlairLoopCount_)) {
+			clearPhase_ = ClearPhase::kFinish;
+			clearPhaseTimer_ = 0.0f;
+			animState = PlayerAnimator::State::kFlairFinish;
+		}
+		break;
+	case ClearPhase::kFinish:
+		animState = PlayerAnimator::State::kFlairFinish;
+		if (clearPhaseTimer_ >= animator_.GetClipPlayLength(PlayerAnimator::State::kFlairFinish)) {
+			clearPhase_ = ClearPhase::kVanish;
+			clearPhaseTimer_ = 0.0f;
+		}
+		break;
+	case ClearPhase::kVanish: {
+		// 決めポーズで少し溜める -> ふくらむ -> 一気に縮んで消える (転移した風)
+		animState = PlayerAnimator::State::kFlairFinish; // 最後のポーズのまま
+		const float growStart = clearPoseHoldTime_;
+		const float shrinkStart = growStart + clearVanishGrowTime_;
+		const float end = shrinkStart + clearVanishShrinkTime_;
+		const float t = clearPhaseTimer_;
+		if (t < growStart) {
+			visualScaleMultiplier_ = 1.0f;
+		} else if (t < shrinkStart) {
+			// ease out でふくらむ
+			float r = clearVanishGrowTime_ > 0.0f ? (t - growStart) / clearVanishGrowTime_ : 1.0f;
+			r = 1.0f - (1.0f - r) * (1.0f - r);
+			visualScaleMultiplier_ = 1.0f + (clearVanishGrowScale_ - 1.0f) * r;
+		} else if (t < end) {
+			// ease in で一気に縮む
+			float r = clearVanishShrinkTime_ > 0.0f ? (t - shrinkStart) / clearVanishShrinkTime_ : 1.0f;
+			r = r * r * r;
+			visualScaleMultiplier_ = clearVanishGrowScale_ * (1.0f - r);
+		} else {
+			visualScaleMultiplier_ = 0.0f;
+			// 消えた瞬間に、テレポートと同じ雷を上へ走らせる
+			if (clearVanishLightning_) {
+				const Vector3 center = GetModelCenterPosition();
+				EmitTeleportLightning(center, { center.x, center.y + clearVanishLightningHeight_, center.z });
+			}
+			clearPhase_ = ClearPhase::kDone;
+		}
+		break;
+	}
+	case ClearPhase::kDone:
+	default:
+		animState = PlayerAnimator::State::kFlairFinish; // 最後のポーズのまま
+		break;
+	}
+
+	if (hasAnimator_) {
+		animator_.Update(deltaTime, animState);
+	} else if (clearPhase_ != ClearPhase::kLanding) {
+		clearPhase_ = ClearPhase::kDone; // アニメーションが無ければ即終了
+	}
+
+	// 物理・地形判定とモデル更新
+	GameObject::Update();
 }
 
 void Player::OnCollision(Bonjin::Collider* other) {
@@ -169,6 +371,18 @@ void Player::Move() {
 }
 
 void Player::Update() {
+	// クリア演出中は演出の更新だけ行う
+	if (clearPhase_ != ClearPhase::kNone) {
+		// ImGuiのテスト再生が終わったら通常操作に戻す (本番はゴール後なのでGoalフェーズ側が遷移させる)
+		if (clearPhase_ == ClearPhase::kDone && !isGoalReached_) {
+			clearPhase_ = ClearPhase::kNone;
+			visualScaleMultiplier_ = 1.0f; // テストで消えた見た目を元に戻す
+		} else {
+			UpdateClearPerformance();
+			return;
+		}
+	}
+
 	// ダメージVignette演出の更新
 	if (damageEffectTimer_ > 0.0f) {
 		damageEffectTimer_ -= 1.0f / 60.0f;
@@ -229,6 +443,7 @@ void Player::Update() {
 			worldTransform_.translate = teleportQueue_.front();
 			teleportQueue_.pop_front();
 			teleportTimer_ = teleportInterval_;
+			ResolveMapEmbedding(); // 背が高いので床・天井にめり込んだら押し出す
 			UpdateModel(); // テレポート先の位置で即座にモデル行列を更新
 
 			// GPU雷霆エフェクトの発生
@@ -467,6 +682,7 @@ void Player::Update() {
 				Vector3 startPos = worldTransform_.translate;
 				// プレイヤーを計算された座標にテレポート
 				worldTransform_.translate = teleportPosition;
+				ResolveMapEmbedding(); // 背が高いので床・天井にめり込んだら押し出す
 				UpdateModel(); // テレポート先の位置で即座にモデル行列を更新
 				StartPostTeleportFloat(); // 速度リセット＋滞空開始
 
@@ -643,6 +859,7 @@ void Player::RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies) {
 		worldTransform_.translate = teleportQueue_.front();
 		teleportQueue_.pop_front();
 		teleportTimer_ = teleportInterval_;
+		ResolveMapEmbedding(); // 背が高いので床・天井にめり込んだら押し出す
 		UpdateModel(); // テレポート先の位置で即座にモデル行列を更新
 
 		// GPU雷霆エフェクトの発生
@@ -730,6 +947,21 @@ void Player::DrawImGui() {
 		ImGui::DragFloat("Model Offset Y", &modelOffsetY_, 0.01f);
 		ImGui::SliderAngle("Model Rotate Y Offset", &modelRotateYOffset_);
 		ImGui::DragFloat("Run Anim Threshold", &runAnimationSpeedThreshold_, 0.001f, 0.0f, 1.0f);
+		ImGui::SliderInt("Clear Flair Loops", &clearFlairLoopCount_, 0, 10);
+		if (ImGui::TreeNode("Clear Vanish (決めポーズ後に消える)")) {
+			ImGui::DragFloat("Pose Hold Time", &clearPoseHoldTime_, 0.01f, 0.0f, 3.0f, "%.2f s");
+			ImGui::DragFloat("Grow Time", &clearVanishGrowTime_, 0.01f, 0.0f, 2.0f, "%.2f s");
+			ImGui::DragFloat("Grow Scale", &clearVanishGrowScale_, 0.01f, 1.0f, 3.0f);
+			ImGui::DragFloat("Shrink Time", &clearVanishShrinkTime_, 0.01f, 0.0f, 2.0f, "%.2f s");
+			ImGui::Checkbox("Lightning On Vanish", &clearVanishLightning_);
+			ImGui::DragFloat("Lightning Height", &clearVanishLightningHeight_, 0.1f, 0.0f, 50.0f);
+			ImGui::Text("Visual Scale: %.2f", visualScaleMultiplier_);
+			ImGui::TreePop();
+		}
+		if (ImGui::Button("Test Clear Performance")) {
+			clearPhase_ = ClearPhase::kNone;
+			StartClearPerformance();
+		}
 		if (hasAnimator_) {
 			animator_.DrawImGui();
 		}

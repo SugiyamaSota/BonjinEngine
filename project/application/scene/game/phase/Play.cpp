@@ -5,6 +5,7 @@
 
 #include "../../result/ResultScene.h"
 #include "SceneManager.h"
+#include "../../../demo/DemoManager.h"
 
 namespace Bonjin::GamePhase {
 
@@ -24,12 +25,14 @@ void Play::Update(GameScene* scene, float deltaTime) {
 		return;
 	}
 
+	// デモモードならゴールへ向かう入力を自動で入れる
+	DemoManager::GetInstance()->UpdateAutoPlay(bc, deltaTime);
 	bc->Update(deltaTime);
 
 	if (bc->IsGoalReached()) {
 		ResultScene::SetIsClear(true);
+		// クリア演出(Flair)の後でGoalフェーズがリザルトへ遷移させる
 		scene->ChangePhase(std::make_unique<Goal>());
-		SceneManager::GetInstance()->RequestSceneChange("ResultScene");
 	} else if (bc->GetPlayer() && bc->GetPlayer()->GetStatus().IsDead()) {
 		ResultScene::SetIsClear(false);
 		scene->ChangePhase(std::make_unique<GameOver>());

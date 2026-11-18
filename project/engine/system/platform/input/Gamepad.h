@@ -15,6 +15,9 @@ private:
     XINPUT_STATE prevGamepadStates_[kMaxGamepadCount]{};
     bool isGamepadConnected_[kMaxGamepadCount]{};
 
+    // trueの間はパッドの入力を全部無視する (デモの自動操作用)
+    bool isIgnoreInput_ = false;
+
 public:
     // シングルトンインスタンスを取得
     static Gamepad* GetInstance();
@@ -45,4 +48,7 @@ public:
 
     // ゲームパッドが接続されているか
     bool IsConnected(uint32_t userIndex = 0);
+
+    // パッドの入力を無視するか (デモの自動操作用)
+    void SetIgnoreInput(bool ignore);
 };

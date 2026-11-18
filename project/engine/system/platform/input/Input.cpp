@@ -68,6 +68,11 @@ void Input::Update() {
         ZeroMemory(&keyState_, sizeof(keyState_)); // エラー時は状態をクリア
     }
 
+    if (isVirtualMode_) {
+        // 仮想入力中は本物のキーを無視する (SetVirtualKeyで押したキーだけが見える)
+        ZeroMemory(&keyState_, sizeof(keyState_));
+    }
+
     // マウスの状態を更新
     prevMouseState_ = mouseState_; // 前のフレームの状態を保存
 
@@ -192,3 +197,20 @@ void Input::SetMouseLock(bool lock) {
     }
 }
 
+
+void Input::SetVirtualMode(bool enabled) {
+    if (isVirtualMode_ == enabled) {
+        return;
+    }
+    isVirtualMode_ = enabled;
+    // 切り替えた瞬間に押しっぱなしやトリガーが出ないようにする
+    ZeroMemory(&keyState_, sizeof(keyState_));
+    ZeroMemory(&prevKeyState_, sizeof(prevKeyState_));
+}
+
+void Input::SetVirtualKey(int DIK_KEY, bool pressed) {
+    if (!isVirtualMode_ || DIK_KEY < 0 || DIK_KEY >= 256) {
+        return;
+    }
+    keyState_[DIK_KEY] = pressed ? 0x80 : 0x00;
+}

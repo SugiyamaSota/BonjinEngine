@@ -73,7 +73,8 @@ void Particle::Update(Camera* camera) {
 
 		// ビルボード（カメラ向き）と自身の回転を合成
 		// ※順番は 自身の回転 -> ビルボード向き の順が一般的です
-		Matrix4x4 combinedRotation = Multiply(localRotationMatrix, billboardMatrix);
+		// ビルボードを使わないグループは、自身の回転だけでワールドに置く (床と水平なリングなど)
+		Matrix4x4 combinedRotation = useBillboard_ ? Multiply(localRotationMatrix, billboardMatrix) : localRotationMatrix;
 
 		Matrix4x4 worldMatrix = MakeAffineMatrix(
 			particles_[index].transform.scale,
@@ -97,7 +98,7 @@ void Particle::Draw() {
 			PrimitiveType::kParticle,
 			BlendMode::kAdd,
 			D3D12_FILL_MODE_SOLID,
-			D3D12_CULL_MODE_BACK
+			ToD3D12(cullMode_) // グループごとに設定可能 (初期値は背面カリング)
 		);
 
 	// PSOの設定
@@ -157,6 +158,16 @@ void Particle::Clear() {
 			instancingData_[index].color = {0.0f, 0.0f, 0.0f, 0.0f};
 		}
 	}
+}
+
+uint32_t Particle::GetActiveCount() const {
+	uint32_t count = 0;
+	for (uint32_t index = 0; index < kNumInstance_; ++index) {
+		if (particles_[index].lifeTime > 0.0f) {
+			++count;
+		}
+	}
+	return count;
 }
 
 void Particle::DrawImGui()

@@ -21,6 +21,11 @@ void Gamepad::Update() {
         ZeroMemory(&gamepadStates_[i], sizeof(XINPUT_STATE));
         DWORD dwResult = XInputGetState(i, &gamepadStates_[i]);
         isGamepadConnected_[i] = (dwResult == ERROR_SUCCESS);
+        if (isIgnoreInput_) {
+            // デモ中などはパッドがつながっていない扱いにする
+            ZeroMemory(&gamepadStates_[i], sizeof(XINPUT_STATE));
+            isGamepadConnected_[i] = false;
+        }
     }
 }
 
@@ -79,4 +84,15 @@ long Gamepad::GetPov(uint32_t userIndex) {
 bool Gamepad::IsConnected(uint32_t userIndex) {
     if (userIndex >= kMaxGamepadCount) return false;
     return isGamepadConnected_[userIndex];
+}
+
+void Gamepad::SetIgnoreInput(bool ignore) {
+    isIgnoreInput_ = ignore;
+    if (isIgnoreInput_) {
+        for (uint32_t i = 0; i < kMaxGamepadCount; ++i) {
+            ZeroMemory(&gamepadStates_[i], sizeof(XINPUT_STATE));
+            ZeroMemory(&prevGamepadStates_[i], sizeof(XINPUT_STATE));
+            isGamepadConnected_[i] = false;
+        }
+    }
 }

@@ -55,11 +55,13 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	const Vector3 playerPosition = mapChipField_->GetMapChipPosition(pSpawn.x, pSpawn.y);
 	player_->Initialize(playerModel_.get(), camera_, playerPosition);
 	player_->SetMapChipField(mapChipField_.get());
+	// プレイヤーは2マス分の高さがあり、マスの中心に置くと足が床に埋まるので押し出す
+	player_->ResolveMapEmbedding();
 	player_->SetLockedOnEnemiesList(&lockedOnEnemies_);
 	player_->Update();
 
 	cameraController_ = std::make_unique<CameraController>();
-	cameraController_->Initialize(camera_, playerPosition);
+	cameraController_->Initialize(camera_, player_->GetPosition());
 
 	// 敵の生成
 	const auto& enemySpawns = mapChipField_->GetEnemySpawns();
@@ -119,6 +121,11 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	particleManager_->Clear("enemyDefeatSpark");
 	particleManager_->Clear("enemyDefeatRing");
 	particleManager_->Clear("landingDust");
+	// ゴールのポータル (光の柱 + 昇るリング)。グループとテクスチャは Core.cpp で起動時に作成済み
+	particleManager_->Clear("goalPortalPillar");
+	particleManager_->Clear("goalPortalRing");
+	EmitGoalPortalPillar();
+
 
 	hud_ = std::make_unique<HUD>();
 	hud_->Initialize();
@@ -143,6 +150,15 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 }
 
 void BattleController::Unload() {
+	// 出しっぱなしのポータルの柱を次のシーンに持ち越さない
+	if (particleManager_) {
+		particleManager_->Clear("goalPortalPillar");
+		particleManager_->Clear("goalPortalRing");
+	}
+	// クリア演出で寄せたカメラ距離を次のシーンに持ち越さない
+	if (cameraController_) {
+		cameraController_->ResetCameraRadius();
+	}
 	if (goSignalBanner_) {
 		goSignalBanner_.reset();
 	}
@@ -206,11 +222,13 @@ void BattleController::Update(float deltaTime) {
 
 	if (goal_) {
 		goal_->Update();
+		UpdateGoalModel();
+		UpdateGoalPortal(deltaTime);
 	}
 
 	if (player_->ConsumeLandingEffectRequest()) {
 		Vector3 dustPosition = player_->GetPosition();
-		dustPosition.y -= 1.0f;
+		dustPosition.y -= player_->GetAABB().max.y - player_->GetPosition().y; // 足元 (高さの半分だけ下)
 		dustPosition.z = -0.1f;
 		EmitLandingDustEffect(dustPosition);
 	}
@@ -237,6 +255,19 @@ void BattleController::Update(float deltaTime) {
 
 	//const IndexSet centerIndex = mapChipField_->GetMapChipIndexSetByCenter();
 	cameraController_->Update(player_->GetWorldPosition(), deltaTime);
+
+	// ImGuiのパーティクル確認 (自動発生)
+	UpdateParticlePreview(deltaTime);
+
+	// ImGuiのテスト再生でクリア演出が動いている間もカメラ演出を付ける
+	if (player_->GetClearPhase() != Player::ClearPhase::kNone) {
+		cameraController_->SetCameraRadius(CalculateClearCameraRadius());
+		UpdateClearPulseEffects(); // 寄るタイミングでパーティクル
+		isClearCameraActive_ = true;
+	} else if (isClearCameraActive_) {
+		cameraController_->ResetCameraRadius();
+		isClearCameraActive_ = false;
+	}
 
 	const uint32_t vertical = mapChipField_->GetNumBlockVirtical();
 	const uint32_t horizontal = mapChipField_->GetNumBlockHorizontal();
@@ -330,12 +361,63 @@ void BattleController::DrawImGui() {
 	}
 
 	GpuParticleManager::GetInstance()->DrawImGui();
+	DrawParticlePreviewImGui();
 
 	if (ImGui::TreeNode("Enemies")) {
 		int index = 0;
 		for (const auto& enemy : enemies_) {
 			enemy->DrawImGui(index++);
 		}
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Goal Portal")) {
+		ImGui::ColorEdit3("Base Color", &goalPortalBaseColor_.x);
+		ImGui::ColorEdit3("Current Color", &goalPortalColor_.x, ImGuiColorEditFlags_NoInputs);
+		ImGui::DragFloat("Color Change Speed", &goalPortalColorChangeSpeed_, 0.1f, 0.1f, 60.0f);
+		ImGui::DragFloat("Pillar Radius", &goalPortalPillarRadius_, 0.01f, 0.05f, 5.0f);
+		ImGui::DragFloat("Pillar Height", &goalPortalPillarHeight_, 0.05f, 0.1f, 20.0f);
+		ImGui::DragFloat("Pillar Pulse Radius Scale", &goalPortalPillarPulseRadiusScale_, 0.01f, 1.0f, 5.0f, "x%.2f");
+		ImGui::DragFloat("Pillar Pulse Height Scale", &goalPortalPillarPulseHeightScale_, 0.01f, 1.0f, 5.0f, "x%.2f");
+		ImGui::DragFloat("Blink Speed", &goalPortalBlinkSpeed_, 0.05f, 0.0f, 10.0f, "%.2f /s");
+		ImGui::SliderFloat("Blink Min", &goalPortalBlinkMin_, 0.0f, 1.0f);
+		ImGui::DragFloat("Ring Interval", &goalPortalRingInterval_, 0.01f, 0.05f, 3.0f, "%.2f s");
+		ImGui::DragFloat("Ring Life Time", &goalPortalRingLifeTime_, 0.01f, 0.1f, 5.0f, "%.2f s");
+		ImGui::DragFloat("Ring Scale", &goalPortalRingScale_, 0.01f, 0.1f, 5.0f);
+		ImGui::SliderAngle("Ring Tilt", &goalPortalRingTilt_, 0.0f, 90.0f); // 90で床と水平
+		ImGui::Text("Pillar: %u  Ring: %u",
+			particleManager_ ? particleManager_->GetActiveCount("goalPortalPillar") : 0u,
+			particleManager_ ? particleManager_->GetActiveCount("goalPortalRing") : 0u);
+		if (ImGui::Button("Re-emit Pillar")) {
+			particleManager_->Clear("goalPortalPillar");
+			EmitGoalPortalPillar();
+		}
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Clear Camera")) {
+		ImGui::Text("Default Radius: %.1f", Camera::kDefaultRadius);
+		ImGui::DragFloat("Close Radius (FlairStart)", &clearCameraCloseRadius_, 0.1f, 1.0f, 100.0f);
+		ImGui::DragFloat("Pulse Radius (Flairing)", &clearCameraPulseRadius_, 0.1f, 1.0f, 100.0f);
+		ImGui::DragFloat("Pulse In Time", &clearCameraPulseInTime_, 0.005f, 0.0f, 1.0f);
+		ImGui::DragFloat("Pulse Out Time", &clearCameraPulseOutTime_, 0.005f, 0.0f, 2.0f);
+		ImGui::DragFloat("Pulse Offset", &clearCameraPulseOffset_, 0.01f, 0.0f, 2.0f);
+		ImGui::DragFloat("Pulses Per Rotation", &clearCameraPulsesPerRotation_, 0.05f, 0.0f, 8.0f);
+		ImGui::SameLine();
+		ImGui::TextDisabled("(0で寄らない)");
+		if (player_) {
+			const float rotation = player_->GetAnimationPlayLength(PlayerAnimator::State::kFlairing);
+			if (clearCameraPulsesPerRotation_ > 0.0f && rotation > 0.0f) {
+				ImGui::Text("Pulse Interval: %.2fs (1回転 %.2fs)", rotation / clearCameraPulsesPerRotation_, rotation);
+			}
+		}
+		ImGui::SeparatorText("Burst (寄るたびに出すパーティクル)");
+		ImGui::SliderInt("Burst Count", &clearBurstCount_, 0, 12);
+		ImGui::SliderFloat("Burst Max Tilt (deg)", &clearBurstMaxTiltDeg_, 0.0f, 89.0f, "%.0f");
+		if (ImGui::Button("Emit Burst Now")) {
+			EmitClearBurst();
+		}
+		ImGui::TextDisabled("Player > Test Clear Performance で確認できます");
 		ImGui::TreePop();
 	}
 
@@ -375,7 +457,7 @@ void BattleController::GenerateBlocksAndGoal() {
 				blockModels_[i][j] = std::make_unique<Object3D>();
 				if (!blockTemplate) {
 					blockModels_[i][j]->CreateModel(
-						ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
+						ModelBuilder::ModelType::kCube, "resources/textures/block_metal.png");
 					blockTemplate = blockModels_[i][j].get();
 				} else {
 					blockModels_[i][j]->CopyModelResourceFrom(*blockTemplate);
@@ -385,11 +467,11 @@ void BattleController::GenerateBlocksAndGoal() {
 				blockWorldTransforms_[i][j].translate =
 					mapChipField_->GetMapChipPositionByIndex(j, i);
 			} else if (type == MapChipType::kGoal) {
+				// ゴールの転送パッド (六角柱。テクスチャはmtlで指定した goalPad.png)
 				goalModel_ = std::make_unique<Object3D>();
-				goalModel_->CreateModel(
-					ModelBuilder::ModelType::kCube, "resources/textures/cube.jpg");
+				goalModel_->LoadModel("goal", "goalPad.obj");
 				goalModel_->SetEnableEnableEnvironmentMap(false);
-				goalModel_->SetColor({0.0f, 1.0f, 0.0f, 1.0f}); // ゴールを緑色にする
+				goalModel_->SetCullMode(CullMode::kNone); // 閉じた立体なので両面描画でも見た目は同じ (面の向きの違いに左右されない)
 
 				goal_ = std::make_unique<GameObject>();
 				GameObjectInitConfig config;
@@ -403,9 +485,162 @@ void BattleController::GenerateBlocksAndGoal() {
 				goal_->Initialize(goalModel_.get(), camera_, goalPosition, config);
 				goal_->SetWidth(2.2f);
 				goal_->SetHeight(2.2f);
+
+				// 見た目はマスの中心ではなく床の上に置く (当たり判定はマスの中心のまま)
+				goalModelTransform_ = InitializeWorldTransform();
+				goalModelTransform_.scale = { kGoalPadScale, kGoalPadScale, kGoalPadScale };
+				goalModelTransform_.translate = goalPosition;
+				goalModelTransform_.translate.y += -kMapBlockHalfHeight + kGoalPadHalfHeight * kGoalPadScale;
 			}
 		}
 	}
+}
+
+Vector3 BattleController::GetPreviewPosition() const {
+	Vector3 base = previewPosition_;
+	if (previewFollowPlayer_ && player_) {
+		base = player_->GetPosition();
+		// プレイヤーの向いている側にずらす
+		const bool facingLeft = std::cos(player_->GetWorldTransform().rotate.y) < 0.0f;
+		base.x += facingLeft ? -previewOffset_.x : previewOffset_.x;
+		base.y += previewOffset_.y;
+		base.z += previewOffset_.z;
+		return base;
+	}
+	return { base.x + previewOffset_.x, base.y + previewOffset_.y, base.z + previewOffset_.z };
+}
+
+void BattleController::EmitPreviewEffect(PreviewEffect effect) {
+	if (!particleManager_) {
+		return;
+	}
+	const Vector3 position = GetPreviewPosition();
+	switch (effect) {
+	case PreviewEffect::kAnchorHit:
+		EmitAnchorHitEffect(position);
+		break;
+	case PreviewEffect::kEnemyDefeat:
+		EmitEnemyDefeatEffect(position);
+		break;
+	case PreviewEffect::kLandingDust:
+		EmitLandingDustEffect(position);
+		break;
+	case PreviewEffect::kEnemyChargeRing: {
+		// Enemy::ChaseBehavior と同じ設定 (敵の代わりに固定位置で縮む)
+		constexpr float kChargeTime = 0.75f;
+		constexpr float kMaxScale = 3.0f;
+		ParticleConfig config;
+		config.position = position;
+		config.scale = { kMaxScale, kMaxScale, 1.0f };
+		config.color = { 1.0f, 0.0f, 0.0f, 0.5f };
+		config.lifeTime = kChargeTime;
+		config.updateFunc = [position](ParticleData& data, float) {
+			float ratio = (data.lifeTime - data.currentTime) / data.lifeTime;
+			ratio = (std::clamp)(ratio, 0.0f, 1.0f);
+			data.transform.scale = { ratio * kMaxScale, ratio * kMaxScale, 1.0f };
+			data.transform.translate = { position.x, position.y, position.z - 0.05f };
+		};
+		particleManager_->Emit("enemyChargeRing", config);
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+void BattleController::UpdateParticlePreview(float deltaTime) {
+	if (!previewAutoEmit_) {
+		previewTimer_ = 0.0f;
+		return;
+	}
+	previewTimer_ -= deltaTime;
+	if (previewTimer_ <= 0.0f) {
+		previewTimer_ = (std::max)(previewInterval_, 0.05f);
+		EmitPreviewEffect(static_cast<PreviewEffect>(previewEffect_));
+	}
+}
+
+void BattleController::DrawParticlePreviewImGui() {
+#ifdef USE_IMGUI
+	if (!ImGui::TreeNode("Particle Preview")) {
+		return;
+	}
+	if (!particleManager_) {
+		ImGui::TextDisabled("ParticleManager がありません");
+		ImGui::TreePop();
+		return;
+	}
+
+	// 登録グループと使用数
+	const uint32_t maxCount = particleManager_->GetMaxCountPerGroup();
+	if (ImGui::BeginTable("ParticleGroups", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+		ImGui::TableSetupColumn("Group");
+		ImGui::TableSetupColumn("Active");
+		ImGui::TableSetupColumn("");
+		ImGui::TableHeadersRow();
+		for (const std::string& name : particleManager_->GetGroupNames()) {
+			const uint32_t active = particleManager_->GetActiveCount(name);
+			ImGui::TableNextRow();
+			ImGui::TableSetColumnIndex(0);
+			ImGui::TextUnformatted(name.c_str());
+			ImGui::TableSetColumnIndex(1);
+			ImGui::ProgressBar(static_cast<float>(active) / static_cast<float>(maxCount), ImVec2(-1.0f, 0.0f),
+				(std::to_string(active) + " / " + std::to_string(maxCount)).c_str());
+			ImGui::TableSetColumnIndex(2);
+			ImGui::PushID(name.c_str());
+			if (ImGui::SmallButton("Clear")) {
+				particleManager_->Clear(name);
+			}
+			ImGui::PopID();
+		}
+		ImGui::EndTable();
+	}
+
+	ImGui::SeparatorText("Emit");
+	// 発生位置
+	ImGui::Checkbox("Follow Player", &previewFollowPlayer_);
+	if (!previewFollowPlayer_) {
+		ImGui::DragFloat3("Base Position", &previewPosition_.x, 0.1f);
+		if (player_ && ImGui::SmallButton("Set To Player")) {
+			previewPosition_ = player_->GetPosition();
+		}
+	}
+	ImGui::DragFloat3("Offset", &previewOffset_.x, 0.1f);
+	const Vector3 position = GetPreviewPosition();
+	ImGui::Text("Emit Position: (%.2f, %.2f, %.2f)", position.x, position.y, position.z);
+
+	// 演出ごとの発生ボタン
+	static const char* kEffectNames[] = {
+		"Anchor Hit (anchorHitRay + anchorHitFlash)",
+		"Enemy Defeat (enemyDefeatSpark + enemyDefeatRing)",
+		"Landing Dust (landingDust)",
+		"Enemy Charge Ring (enemyChargeRing)",
+	};
+	for (int i = 0; i < static_cast<int>(PreviewEffect::kCount); ++i) {
+		ImGui::PushID(i);
+		if (ImGui::Button("Emit")) {
+			EmitPreviewEffect(static_cast<PreviewEffect>(i));
+		}
+		ImGui::SameLine();
+		ImGui::RadioButton(kEffectNames[i], &previewEffect_, i);
+		ImGui::PopID();
+	}
+
+	// 自動で出し続ける
+	ImGui::Checkbox("Auto Emit (selected)", &previewAutoEmit_);
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(120.0f);
+	ImGui::DragFloat("Interval", &previewInterval_, 0.01f, 0.05f, 5.0f, "%.2f s");
+
+	if (ImGui::Button("Clear All")) {
+		for (const std::string& name : particleManager_->GetGroupNames()) {
+			particleManager_->Clear(name);
+		}
+	}
+	ImGui::TextDisabled("※ヒットストップ中やクリア演出中は自動発生しません");
+
+	ImGui::TreePop();
+#endif
 }
 
 void BattleController::EmitAnchorHitEffect(const Vector3& position) {
@@ -445,8 +680,71 @@ void BattleController::EmitAnchorHitEffect(const Vector3& position) {
 	particleManager_->Emit("anchorHitFlash", flash);
 }
 
-void BattleController::EmitEnemyDefeatEffect(const Vector3& position) {
+int BattleController::GetClearPulseIndex() const {
+	if (!player_ || player_->GetClearPhase() != Player::ClearPhase::kLoop) {
+		return -1;
+	}
+	// CalculateClearCameraRadius の寄りと同じ周期で数える
+	const float rotation = player_->GetAnimationPlayLength(PlayerAnimator::State::kFlairing);
+	const float cycle = clearCameraPulsesPerRotation_ > 0.0f ? rotation / clearCameraPulsesPerRotation_ : 0.0f;
+	if (cycle <= 0.0f) {
+		return -1;
+	}
+	const float time = player_->GetClearPhaseTimer() - clearCameraPulseOffset_;
+	return time < 0.0f ? -1 : static_cast<int>(std::floor(time / cycle));
+}
+
+void BattleController::UpdateClearPulseEffects() {
+	const int index = GetClearPulseIndex();
+	if (index < 0) {
+		lastClearPulseIndex_ = -1;
+		return;
+	}
+	if (index != lastClearPulseIndex_) {
+		lastClearPulseIndex_ = index;
+		EmitClearBurst();
+	}
+}
+
+void BattleController::EmitClearBurst() {
+	if (!player_ || !particleManager_) {
+		return;
+	}
+	const float maxTilt = (std::clamp)(clearBurstMaxTiltDeg_, 0.0f, 89.0f) * std::numbers::pi_v<float> / 180.0f;
+	std::uniform_real_distribution<float> tiltDistribution(-maxTilt, maxTilt);
+	std::uniform_real_distribution<float> rollDistribution(0.0f, std::numbers::pi_v<float> * 2.0f);
+
+	// プレイヤーモデルの中心(腰)。少し手前に出して体に隠れないようにする
+	Vector3 center = player_->GetModelCenterPosition();
+	center.z -= 0.5f;
+	for (int i = 0; i < clearBurstCount_; ++i) {
+		const Vector3 tilt{ tiltDistribution(randomEngine_), tiltDistribution(randomEngine_), rollDistribution(randomEngine_) };
+		EmitEnemyDefeatEffect(center, tilt);
+	}
+}
+
+void BattleController::EmitEnemyDefeatEffect(const Vector3& position, const Vector3& tilt) {
 	constexpr uint32_t kSparkCount = 16;
+
+	// パーティクルの回転と同じ順(X->Y->Z, 行ベクトル)で方向を傾ける。
+	// リングはビルボードで画面向きに裏返る(Y軸180度)ので、火花も同じく左右を反転して面を揃える
+	const bool hasTilt = tilt.x != 0.0f || tilt.y != 0.0f || tilt.z != 0.0f;
+	auto tiltDirection = [&tilt, hasTilt](float x, float y) {
+		if (!hasTilt) {
+			return Vector3{ x, y, 0.0f };
+		}
+		float z = 0.0f;
+		// X
+		float cx = std::cos(tilt.x), sx = std::sin(tilt.x);
+		float y1 = y * cx - z * sx, z1 = y * sx + z * cx;
+		// Y
+		float cy = std::cos(tilt.y), sy = std::sin(tilt.y);
+		float x2 = x * cy + z1 * sy, z2 = -x * sy + z1 * cy;
+		// Z
+		float cz = std::cos(tilt.z), sz = std::sin(tilt.z);
+		float x3 = x2 * cz - y1 * sz, y3 = x2 * sz + y1 * cz;
+		return Vector3{ -x3, y3, -z2 };
+	};
 	std::uniform_real_distribution<float> angleDistribution(
 		0.0f, std::numbers::pi_v<float> * 2.0f);
 	std::uniform_real_distribution<float> speedDistribution(3.0f, 6.0f);
@@ -458,10 +756,11 @@ void BattleController::EmitEnemyDefeatEffect(const Vector3& position) {
 
 		ParticleConfig spark{};
 		spark.position = position;
+		const Vector3 direction = tiltDirection(std::cos(angle), std::sin(angle));
 		spark.velocity = {
-			std::cos(angle) * speed,
-			std::sin(angle) * speed,
-			0.0f
+			direction.x * speed,
+			direction.y * speed,
+			0.0f // 奥行き方向は画面上ほぼ見えないので使わない
 		};
 		const float size = sizeDistribution(randomEngine_);
 		spark.scale = {size, size, 1.0f};
@@ -487,6 +786,7 @@ void BattleController::EmitEnemyDefeatEffect(const Vector3& position) {
 
 	ParticleConfig ring{};
 	ring.position = position;
+	ring.rotate = tilt;
 	ring.scale = {0.35f, 0.35f, 1.0f};
 	ring.color = {1.0f, 0.65f, 0.1f, 1.0f};
 	ring.lifeTime = 0.4f;
@@ -602,12 +902,88 @@ void BattleController::ResolveAnchorInstantLanding(Anchor& anchor) {
 	anchor.SetInstantResolved(true);
 }
 
+void BattleController::StartClearPerformance() {
+	SetHudVisible(false);
+	hitStopTimer_ = 0.0f;
+	if (player_) {
+		player_->StartClearPerformance();
+	}
+}
+
+bool BattleController::UpdateClearPerformance(float deltaTime) {
+	if (!player_) {
+		return true;
+	}
+	player_->UpdateClearPerformance();
+	if (cameraController_) {
+		cameraController_->Update(player_->GetWorldPosition(), deltaTime);
+		cameraController_->SetCameraRadius(CalculateClearCameraRadius());
+		UpdateClearPulseEffects(); // 寄るタイミングでパーティクル
+	}
+	UpdateVisuals(deltaTime);
+	return player_->IsClearPerformanceFinished();
+}
+
+float BattleController::CalculateClearCameraRadius() const {
+	using ClearPhase = Player::ClearPhase;
+	const float defaultRadius = Camera::kDefaultRadius;
+	const float timer = player_->GetClearPhaseTimer();
+
+	switch (player_->GetClearPhase()) {
+	case ClearPhase::kStart: {
+		// Flair開始の長さをかけて、通常距離から寄りの距離へ (ease out)
+		const float length = player_->GetAnimationPlayLength(PlayerAnimator::State::kFlairStart);
+		float t = length > 0.0f ? (std::min)(timer / length, 1.0f) : 1.0f;
+		t = 1.0f - (1.0f - t) * (1.0f - t) * (1.0f - t);
+		return defaultRadius + (clearCameraCloseRadius_ - defaultRadius) * t;
+	}
+	case ClearPhase::kLoop: {
+		// 一定間隔で一瞬寄って戻る (0:寄りの距離 1:一番寄った距離)
+		const float pulse = GetClearCameraPulse();
+		return clearCameraCloseRadius_ + (clearCameraPulseRadius_ - clearCameraCloseRadius_) * pulse;
+	}
+	case ClearPhase::kFinish:
+	case ClearPhase::kVanish:
+	case ClearPhase::kDone:
+		// Flair終了は何もしない (寄りの距離のまま)
+		return clearCameraCloseRadius_;
+	case ClearPhase::kLanding:
+	case ClearPhase::kNone:
+	default:
+		return defaultRadius;
+	}
+}
+
+float BattleController::GetClearCameraPulse() const {
+	if (!player_ || player_->GetClearPhase() != Player::ClearPhase::kLoop) {
+		return 0.0f;
+	}
+	// 間隔は 1回転の長さ / 1回転あたりの回数 で回転と同期させる
+	const float rotation = player_->GetAnimationPlayLength(PlayerAnimator::State::kFlairing);
+	const float cycle = clearCameraPulsesPerRotation_ > 0.0f ? rotation / clearCameraPulsesPerRotation_ : 0.0f;
+	if (cycle <= 0.0f) {
+		return 0.0f;
+	}
+	const float timer = player_->GetClearPhaseTimer();
+	const float local = std::fmod(timer - clearCameraPulseOffset_ + cycle, cycle);
+	if (local < clearCameraPulseInTime_) {
+		return clearCameraPulseInTime_ > 0.0f ? local / clearCameraPulseInTime_ : 1.0f;
+	}
+	if (local < clearCameraPulseInTime_ + clearCameraPulseOutTime_) {
+		const float t = clearCameraPulseOutTime_ > 0.0f ? (local - clearCameraPulseInTime_) / clearCameraPulseOutTime_ : 1.0f;
+		return (1.0f - t) * (1.0f - t); // すっと戻る
+	}
+	return 0.0f;
+}
+
 void BattleController::UpdateVisuals(float deltaTime) {
 	if (skyBox_) {
 		skyBox_->Update(InitializeWorldTransform(), camera_);
 	}
 	if (goal_) {
 		goal_->Update();
+		UpdateGoalModel();
+		UpdateGoalPortal(deltaTime);
 	}
 	const uint32_t vertical = mapChipField_->GetNumBlockVirtical();
 	const uint32_t horizontal = mapChipField_->GetNumBlockHorizontal();
@@ -642,4 +1018,138 @@ void BattleController::TriggerGoSignal() {
 	if (goSignalBanner_) {
 		goSignalBanner_->Trigger(player_.get(), camera_);
 	}
+}
+
+void BattleController::UpdateGoalModel() {
+	if (goalModel_ && camera_) {
+		goalModel_->Update(goalModelTransform_, camera_);
+	}
+}
+
+Vector3 BattleController::GetGoalPortalBase() const {
+	// 台座(goalPad)の上面の中心
+	Vector3 base = goalModelTransform_.translate;
+	base.y += kGoalPadHalfHeight * kGoalPadScale;
+	return base;
+}
+
+void BattleController::EmitGoalPortalPillar() {
+	if (!particleManager_ || !goal_) {
+		return;
+	}
+	ParticleConfig pillar{};
+	pillar.position = GetGoalPortalBase(); // シリンダーは底が原点なので台座の上面に立つ
+	// シリンダーモデルは半径1・高さ2
+	pillar.scale = { goalPortalPillarRadius_, goalPortalPillarHeight_ / 2.0f, goalPortalPillarRadius_ };
+	pillar.color = goalPortalColor_;
+	// 透明度は寿命で自動的に下がるので、寿命をとても長くして出しっぱなしにする (シーンを抜けるときに消す)
+	pillar.lifeTime = 100000.0f;
+	pillar.updateFunc = [this](ParticleData& particle, float) {
+		// 明るさを sin で上下させて点滅させる (加算合成なので色の明るさ = 光の強さ)
+		const float wave = 0.5f + 0.5f * std::sin(goalPortalTime_ * goalPortalBlinkSpeed_ * 2.0f * std::numbers::pi_v<float>);
+		const float brightness = goalPortalBlinkMin_ + (1.0f - goalPortalBlinkMin_) * wave;
+		particle.color.x = goalPortalColor_.x * brightness;
+		particle.color.y = goalPortalColor_.y * brightness;
+		particle.color.z = goalPortalColor_.z * brightness;
+		// クリア演出でカメラが寄るのに合わせて、太く・少し高くなって戻る
+		const float pulse = GetClearCameraPulse();
+		const float radius = goalPortalPillarRadius_ * (1.0f + (goalPortalPillarPulseRadiusScale_ - 1.0f) * pulse);
+		const float height = goalPortalPillarHeight_ * (1.0f + (goalPortalPillarPulseHeightScale_ - 1.0f) * pulse);
+		particle.transform.scale = { radius, height / 2.0f, radius };
+		particle.transform.translate = GetGoalPortalBase();
+	};
+	particleManager_->Emit("goalPortalPillar", pillar);
+}
+
+void BattleController::EmitGoalPortalRing() {
+	if (!particleManager_ || !goal_) {
+		return;
+	}
+	const Vector3 base = GetGoalPortalBase();
+	const float height = goalPortalPillarHeight_;
+	const float scale = goalPortalRingScale_;
+
+	ParticleConfig ring{};
+	ring.position = base;
+	ring.rotate = { goalPortalRingTilt_, 0.0f, 0.0f }; // ワールドの向きのまま置くグループなので、90度倒すと床と水平になる
+	ring.scale = { scale, scale, 1.0f };
+	ring.color = goalPortalColor_;
+	ring.lifeTime = goalPortalRingLifeTime_;
+	ring.updateFunc = [base, height, scale](ParticleData& particle, float) {
+		// 下から上へ (最初は速く、上に行くほどゆっくり)。透明度は寿命で自動的に下がる
+		const float t = particle.lifeTime > 0.0f ? (std::min)(particle.currentTime / particle.lifeTime, 1.0f) : 1.0f;
+		const float eased = 1.0f - (1.0f - t) * (1.0f - t);
+		particle.transform.translate = { base.x, base.y + height * eased, base.z };
+		// 上に行くほど少しすぼまる
+		const float s = scale * (1.0f - 0.25f * t);
+		particle.transform.scale = { s, s, 1.0f };
+	};
+	particleManager_->Emit("goalPortalRing", ring);
+}
+
+void BattleController::UpdateGoalPortal(float deltaTime) {
+	if (!goal_ || deltaTime <= 0.0f) {
+		return;
+	}
+	UpdateGoalPortalColor(deltaTime);
+	goalPortalTime_ += deltaTime;
+	goalPortalRingTimer_ -= deltaTime;
+	if (goalPortalRingTimer_ <= 0.0f) {
+		goalPortalRingTimer_ = (std::max)(goalPortalRingInterval_, 0.05f);
+		EmitGoalPortalRing();
+	}
+}
+
+int BattleController::GetClearPulseTotal() const {
+	if (!player_) {
+		return 0;
+	}
+	// CalculateClearCameraRadius / GetClearPulseIndex と同じ周期で数える
+	const float rotation = player_->GetAnimationPlayLength(PlayerAnimator::State::kFlairing);
+	const float cycle = clearCameraPulsesPerRotation_ > 0.0f ? rotation / clearCameraPulsesPerRotation_ : 0.0f;
+	if (cycle <= 0.0f) {
+		return 0;
+	}
+	const float loopTime = rotation * static_cast<float>(player_->GetClearFlairLoopCount());
+	const float span = loopTime - clearCameraPulseOffset_;
+	if (span <= 0.0f) {
+		return 0;
+	}
+	// ループ中に寄りが始まる回数 (誤差でちょうど割り切れる時に1回多く数えないよう少し引く)
+	return (std::max)(1, static_cast<int>(std::ceil(span / cycle - 1e-4f)));
+}
+
+void BattleController::UpdateGoalPortalColor(float deltaTime) {
+	auto lerp = [](const Vector4& a, const Vector4& b, float t) {
+		return Vector4{ a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t };
+	};
+
+	Vector4 target = goalPortalBaseColor_;
+	if (player_) {
+		const Vector4& lightning = player_->GetLightningColor();
+		switch (player_->GetClearPhase()) {
+		case Player::ClearPhase::kLoop: {
+			// n回目の寄りで 緑 -> 雷の色 へ n/合計 だけ近づける (最後の寄りでちょうど雷の色)
+			const int index = GetClearPulseIndex();
+			const int total = GetClearPulseTotal();
+			if (index >= 0 && total > 0) {
+				const float progress = (std::min)(static_cast<float>(index + 1) / static_cast<float>(total), 1.0f);
+				target = lerp(goalPortalBaseColor_, lightning, progress);
+			}
+			break;
+		}
+		case Player::ClearPhase::kFinish:
+		case Player::ClearPhase::kVanish:
+		case Player::ClearPhase::kDone:
+			target = lightning; // 決めポーズから消えるまでは雷の色のまま
+			break;
+		default:
+			break; // 演出していない・着地待ち・Flair開始中はふだんの色
+		}
+	}
+
+	// 一瞬で切り替えず、すっと目標の色へ近づける
+	const float t = 1.0f - std::exp(-goalPortalColorChangeSpeed_ * deltaTime);
+	goalPortalColor_ = lerp(goalPortalColor_, target, t);
+	goalPortalColor_.w = 1.0f;
 }

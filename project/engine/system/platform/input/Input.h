@@ -18,6 +18,9 @@ private:
     BYTE keyState_[256];
     BYTE prevKeyState_[256];
 
+    // 仮想入力 (デモの自動操作用)。有効な間は本物のキーを無視し、SetVirtualKeyで押したキーだけが見える
+    bool isVirtualMode_ = false;
+
     // マウス入力
     Microsoft::WRL::ComPtr<IDirectInputDevice8> mouse_; // マウスデバイス
     DIMOUSESTATE2 mouseState_; // 現在のマウス状態
@@ -63,4 +66,10 @@ public:
 
     // マウスの固定状態の変更
     void SetMouseLock(bool lock);
+
+    /// --- 仮想入力 (デモの自動操作用) ---
+    void SetVirtualMode(bool enabled);
+    bool IsVirtualMode() const { return isVirtualMode_; }
+    // 今のフレームの仮想キーを設定する (Updateの後に呼ぶ。毎フレーム離した状態に戻る)
+    void SetVirtualKey(int DIK_KEY, bool pressed);
 };

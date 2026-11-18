@@ -24,6 +24,9 @@ public:
 		kIdle,
 		kRun,
 		kJump,
+		kFlairStart,  // クリア演出: Flair開始
+		kFlairing,    // クリア演出: Flairループ
+		kFlairFinish, // クリア演出: Flair終了
 		kCount,
 	};
 
@@ -43,6 +46,13 @@ public:
 	void Apply(Skeleton& skeleton) const;
 
 	void DrawImGui();
+
+	/// <summary>
+	/// クリップの再生範囲の長さ(秒, 再生速度込み)
+	/// </summary>
+	float GetClipPlayLength(State state) const;
+
+	bool IsClipLoaded(State state) const { return clips_[static_cast<size_t>(state)].isLoaded; }
 
 private:
 	// ワールド(スケルトン空間)での姿勢
@@ -69,6 +79,7 @@ private:
 		float heightRatio = 0.0f;                    // プレイヤーの腰の高さ / 元データの腰の高さ
 		bool loop = true;
 		bool applyRootTranslation = true; // Hipsの上下移動を使うか
+		bool applyHorizontalTranslation = false; // Hipsの前後左右の移動も使うか (In Placeのデータ用)
 		float speed = 1.0f;
 		// 再生範囲(秒)。endTime<0 ならクリップの最後まで
 		float startTime = 0.0f;
@@ -81,7 +92,7 @@ private:
 		float time = 0.0f;
 	};
 
-	static Clip LoadClip(const std::string& directoryPath, const std::string& filename, bool loop, bool applyRootTranslation);
+	static Clip LoadClip(const std::string& directoryPath, const std::string& filename, bool loop, bool applyRootTranslation, bool applyHorizontalTranslation = false);
 
 	// プレイヤーのスケルトンとの対応付け・補正の計算
 	void BindClip(Clip& clip) const;

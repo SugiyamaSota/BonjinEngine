@@ -41,6 +41,13 @@ public:
 
 	void DrawImGui();
 
+	// 生存中のパーティクル数 (デバッグ表示用)
+	uint32_t GetActiveCount() const;
+	static uint32_t GetMaxCount() { return kNumInstance_; }
+
+	// カメラの方を向かせるか (false ならワールドの向きのまま。初期値 true)
+	void SetUseBillboard(bool useBillboard) { useBillboard_ = useBillboard; }
+
 private:
 	// BaseObject の SetupResources を実装
 	void SetupResources() override;
@@ -56,4 +63,5 @@ private:
 	int srvIndex_ = 0;
 
 	ParticleData particles_[kNumInstance_];
+	bool useBillboard_ = true;
 };

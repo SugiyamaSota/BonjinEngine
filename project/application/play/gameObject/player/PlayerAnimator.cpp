@@ -13,7 +13,7 @@
 namespace {
 
 const char* const kHipsName = "mixamorig:Hips";
-const char* const kDirectory = "resources/models/player";
+const char* const kDirectory = "resources/models/player/animation";
 
 const Quaternion kIdentity{ 0.0f, 0.0f, 0.0f, 1.0f };
 
@@ -127,16 +127,20 @@ const char* StateName(PlayerAnimator::State state) {
 	case PlayerAnimator::State::kIdle: return "Idle";
 	case PlayerAnimator::State::kRun: return "Run";
 	case PlayerAnimator::State::kJump: return "Jump";
+	case PlayerAnimator::State::kFlairStart: return "FlairStart";
+	case PlayerAnimator::State::kFlairing: return "Flairing";
+	case PlayerAnimator::State::kFlairFinish: return "FlairFinish";
 	default: return "-";
 	}
 }
 
 } // namespace
 
-PlayerAnimator::Clip PlayerAnimator::LoadClip(const std::string& directoryPath, const std::string& filename, bool loop, bool applyRootTranslation) {
+PlayerAnimator::Clip PlayerAnimator::LoadClip(const std::string& directoryPath, const std::string& filename, bool loop, bool applyRootTranslation, bool applyHorizontalTranslation) {
 	Clip clip;
 	clip.loop = loop;
 	clip.applyRootTranslation = applyRootTranslation;
+	clip.applyHorizontalTranslation = applyHorizontalTranslation;
 
 	Assimp::Importer importer;
 	const std::string fullPath = directoryPath + '/' + filename;
@@ -281,14 +285,21 @@ void PlayerAnimator::Initialize(const Skeleton& skeleton) {
 		targetRestGlobal_[j] = Compose(parent, joint.transform);
 	}
 
-	clips_[static_cast<size_t>(State::kIdle)] = LoadClip(kDirectory, "Idle.gltf", true, true);
-	clips_[static_cast<size_t>(State::kRun)] = LoadClip(kDirectory, "run.gltf", true, true);
+	clips_[static_cast<size_t>(State::kIdle)] = LoadClip(std::string(kDirectory) + "/idle", "Idle.gltf", true, true);
+	clips_[static_cast<size_t>(State::kRun)] = LoadClip(std::string(kDirectory) + "/run", "run.gltf", true, true);
 	// ジャンプの上下移動は物理側で行うので、Hipsの移動は使わない
-	clips_[static_cast<size_t>(State::kJump)] = LoadClip(kDirectory, "Jump.gltf", false, false);
+	clips_[static_cast<size_t>(State::kJump)] = LoadClip(std::string(kDirectory) + "/jump", "Jump.gltf", false, false);
 	// Jump.gltfは 0～0.73秒が溜め、0.73秒で踏み切り、1.03秒が頂点、1.33秒で着地。
 	// 空中に出てから使うので、踏み切り～着地直前だけ再生して最後のポーズで止める
 	clips_[static_cast<size_t>(State::kJump)].startTime = 0.75f;
 	clips_[static_cast<size_t>(State::kJump)].endTime = 1.25f;
+
+	// クリア演出のFlair (開始 -> ループ -> 終了)
+	// 床に手をついて回る動きなので、腰の上下に加えてループと終了は前後左右の移動も使う。
+	// 開始は横に約0.9m流れてループの開始位置とずれるため、上下のみにしてつなぎ目を揃える
+	clips_[static_cast<size_t>(State::kFlairStart)] = LoadClip(std::string(kDirectory) + "/flairStart", "flairStart.gltf", false, true, false);
+	clips_[static_cast<size_t>(State::kFlairing)] = LoadClip(std::string(kDirectory) + "/flairing", "flairing.gltf", true, true, true);
+	clips_[static_cast<size_t>(State::kFlairFinish)] = LoadClip(std::string(kDirectory) + "/flairFinish", "flairFinish.gltf", false, true, true);
 
 	for (Clip& clip : clips_) {
 		if (clip.isLoaded) {
@@ -314,6 +325,16 @@ void PlayerAnimator::AdvanceTime(Playback& playback, float deltaTime) const {
 	} else {
 		playback.time = (std::min)(playback.time, end);
 	}
+}
+
+float PlayerAnimator::GetClipPlayLength(State state) const {
+	const Clip& clip = clips_[static_cast<size_t>(state)];
+	if (!clip.isLoaded || clip.speed <= 0.0f) {
+		return 0.0f;
+	}
+	const float start = (std::clamp)(clip.startTime, 0.0f, clip.animation.duration);
+	const float end = (std::max)(GetEndTime(clip), start);
+	return (end - start) / clip.speed;
 }
 
 float PlayerAnimator::GetEndTime(const Clip& clip) {
@@ -392,10 +413,12 @@ void PlayerAnimator::SamplePose(const Playback& playback, std::vector<Quaternion
 
 		// Hipsの移動 (ワールドでの移動量を腰の高さ比でスケールし、親の空間に戻す)
 		if (targetNames_[j] == kHipsName && clip.applyRootTranslation) {
-			// 上下の揺れだけ使う（前後左右の移動はプレイヤーの移動処理に任せる。In Placeでないデータ対策）
 			Vector3 worldDelta = Scale(Sub(sourceGlobal[source].position, clip.restGlobal[source].position), clip.heightRatio);
-			worldDelta.x = 0.0f;
-			worldDelta.z = 0.0f;
+			if (!clip.applyHorizontalTranslation) {
+				// 上下の揺れだけ使う（前後左右の移動はプレイヤーの移動処理に任せる。In Placeでないデータ対策）
+				worldDelta.x = 0.0f;
+				worldDelta.z = 0.0f;
+			}
 			const float parentScale = parent >= 0 ? targetRestGlobal_[parent].scale : 1.0f;
 			const Vector3 localDelta = Scale(Rotate(Conjugate(parentRotate), worldDelta), parentScale > 1e-6f ? 1.0f / parentScale : 1.0f);
 			outLocal[j].translate = Add(targetRestLocal_[j].translate, localDelta);
@@ -438,6 +461,8 @@ void PlayerAnimator::DrawImGui() {
 			ImGui::DragFloat("Start Time", &clip.startTime, 0.01f, 0.0f, clip.animation.duration);
 			ImGui::DragFloat("End Time", &clip.endTime, 0.01f, -1.0f, clip.animation.duration);
 			ImGui::Checkbox("Hips Translation", &clip.applyRootTranslation);
+			ImGui::SameLine();
+			ImGui::Checkbox("Horizontal", &clip.applyHorizontalTranslation);
 			ImGui::PopID();
 		}
 		ImGui::TreePop();

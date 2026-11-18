@@ -41,6 +41,8 @@ private:
 
 private:
     static constexpr uint32_t kMaxParticles = 16384;
+    // 雷の分割数の上限 (2^10 = 1024節点)。長い雷で粒が足りなくなるのを防ぎつつ、使いすぎを抑える
+    static constexpr int kMaxLightningSubdivisions = 10;
     static constexpr uint32_t kVertexCount = 4;
     static constexpr uint32_t kIndexCount = 6;
 

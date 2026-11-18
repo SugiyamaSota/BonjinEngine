@@ -51,6 +51,24 @@ void ParticleManager::Emit(const std::string& name, const ParticleConfig& config
 	}
 }
 
+std::vector<std::string> ParticleManager::GetGroupNames() const {
+	std::vector<std::string> names;
+	names.reserve(particleGroups_.size());
+	for (const auto& [name, group] : particleGroups_) {
+		names.push_back(name);
+	}
+	return names;
+}
+
+uint32_t ParticleManager::GetActiveCount(const std::string& name) const {
+	auto it = particleGroups_.find(name);
+	return (it != particleGroups_.end() && it->second) ? it->second->GetActiveCount() : 0;
+}
+
+uint32_t ParticleManager::GetMaxCountPerGroup() const {
+	return Particle::GetMaxCount();
+}
+
 void ParticleManager::Clear(const std::string& name) {
 	if (particleGroups_.contains(name)) {
 		particleGroups_[name]->Clear();
@@ -60,5 +78,19 @@ void ParticleManager::Clear(const std::string& name) {
 void ParticleManager::SetUVTransform(const std::string& name, const Matrix4x4& transform) {
 	if (particleGroups_.contains(name)) {
 		particleGroups_[name]->SetUVTransform(transform);
+	}
+}
+
+void ParticleManager::SetUseBillboard(const std::string& name, bool useBillboard) {
+	auto it = particleGroups_.find(name);
+	if (it != particleGroups_.end() && it->second) {
+		it->second->SetUseBillboard(useBillboard);
+	}
+}
+
+void ParticleManager::SetCullMode(const std::string& name, CullMode cullMode) {
+	auto it = particleGroups_.find(name);
+	if (it != particleGroups_.end() && it->second) {
+		it->second->BaseObject::SetCullMode(cullMode);
 	}
 }
