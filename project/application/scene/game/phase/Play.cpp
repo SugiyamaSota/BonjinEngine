@@ -5,6 +5,7 @@
 
 #include "../../result/ResultScene.h"
 #include "SceneManager.h"
+#include "../../../demo/DemoManager.h"
 
 namespace Bonjin::GamePhase {
 
@@ -24,6 +25,8 @@ void Play::Update(GameScene* scene, float deltaTime) {
 		return;
 	}
 
+	// デモモードならゴールへ向かう入力を自動で入れる
+	DemoManager::GetInstance()->UpdateAutoPlay(bc, deltaTime);
 	bc->Update(deltaTime);
 
 	if (bc->IsGoalReached()) {

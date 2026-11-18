@@ -3,6 +3,7 @@
 #include "phase/Play.h"
 
 #include "gameObject/player/PlayerStatusRepository.h"
+#include "../../demo/DemoManager.h"
 
 using namespace Bonjin;
 
@@ -21,9 +22,12 @@ void GameScene::Initialize(Camera* camera)
 	// TODO: 仮のテストステージ(ゴールのみ)。本番に戻すときは "resources/maps/stage1.json" にする
 	battleController_->Initialize(camera_, "resources/maps/test_goal.json");
 
+	// デモモードなら自動操作に切り替える
+	DemoManager::GetInstance()->BeginGame();
+
 	// ハイライトデータが存在する場合は kHighlight フェーズを開始、なければ kPlay フェーズ
 	const auto& highlights = battleController_->GetMapChipField()->GetHighlights();
-	if (!highlights.empty()) {
+	if (!highlights.empty() && !DemoManager::GetInstance()->IsDemoMode()) {
 		ChangePhase(std::make_unique<GamePhase::Highlight>());
 	} else {
 		ChangePhase(std::make_unique<GamePhase::Play>());
@@ -39,6 +43,8 @@ void GameScene::Unload() {
 		battleController_->Unload();
 		battleController_.reset();
 	}
+	// 本物の入力に戻す
+	DemoManager::GetInstance()->EndGame();
 }
 
 void GameScene::Update(float deltaTime) {
@@ -69,5 +75,7 @@ void GameScene::DrawSceneImGui() {
 	if (battleController_) {
 		battleController_->DrawImGui();
 	}
+
+	DemoManager::GetInstance()->DrawImGui();
 #endif
 }

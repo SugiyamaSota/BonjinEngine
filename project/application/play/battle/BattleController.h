@@ -37,6 +37,8 @@ public:
 	void SetEnemyRespawnEnabled(bool enabled) { isEnemyRespawnEnabled_ = enabled; }
 	bool IsEnemyRespawnEnabled() const { return isEnemyRespawnEnabled_; }
 	bool IsGoalReached() const { return isGoalReached_; }
+	// ゴールの位置 (ゴールが無ければ原点)
+	Vector3 GetGoalPosition() const { return goal_ ? goal_->GetPosition() : Vector3{}; }
 
 	CameraController* GetCameraController() const { return cameraController_.get(); }
 	Camera* GetCamera() const { return camera_; }
@@ -87,6 +89,9 @@ private:
 	float goalPortalColorChangeSpeed_ = 12.0f;                   // 色が目標に追いつく速さ (大きいほど早い)
 	float goalPortalPillarRadius_ = 0.8f;
 	float goalPortalPillarHeight_ = 4.5f;
+	// クリア演出でカメラが一番寄った瞬間の柱の大きさ (倍率)
+	float goalPortalPillarPulseRadiusScale_ = 1.6f;
+	float goalPortalPillarPulseHeightScale_ = 1.2f;
 	float goalPortalBlinkSpeed_ = 2.0f;     // 点滅の速さ (回/秒)
 	float goalPortalBlinkMin_ = 0.35f;      // 点滅で一番暗いときの明るさ
 	float goalPortalRingInterval_ = 0.45f;  // リングを出す間隔 (秒)
@@ -169,6 +174,8 @@ private:
 
 	// クリア演出中のカメラ距離を計算する
 	float CalculateClearCameraRadius() const;
+	// Flairループ中のカメラの寄り具合 (0:ふだん 1:一番寄った瞬間)。ループ中以外は0
+	float GetClearCameraPulse() const;
 
 	void GenerateBlocksAndGoal();
 	void ResolveAnchorInstantLanding(class Anchor& anchor);

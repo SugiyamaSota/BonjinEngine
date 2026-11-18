@@ -2,6 +2,7 @@
 #include "../GameScene.h"
 
 #include "SceneManager.h"
+#include "../../../demo/DemoManager.h"
 
 #include <algorithm>
 #include <cmath>
@@ -152,7 +153,7 @@ void GameOver::Update(GameScene* scene, float deltaTime) {
 		desc.waitDuration = kShutDownWaitDuration;
 		desc.inType      = TransitionType::kFadeBlack;
 		desc.inDuration  = 0.6f;
-		SceneManager::GetInstance()->RequestSceneChange("ResultScene", desc);
+		SceneManager::GetInstance()->RequestSceneChange(DemoManager::GetInstance()->IsDemoMode() ? "TitleScene" : "ResultScene", desc); // デモモードはタイトルへ戻る
 	}
 }
 

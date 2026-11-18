@@ -171,6 +171,7 @@
     <ClCompile Include="application\scene\game\GameScene.cpp" />
     <ClCompile Include="application\scene\game\phase\GameOver.cpp" />
     <ClCompile Include="application\scene\game\phase\Goal.cpp" />
+    <ClCompile Include="application\demo\DemoManager.cpp" />
     <ClCompile Include="application\scene\game\phase\Highlight.cpp" />
     <ClCompile Include="application\scene\game\phase\Play.cpp" />
     <ClCompile Include="application\scene\result\phase\Active.cpp" />
@@ -318,6 +319,7 @@
     <ClInclude Include="application\scene\game\GameScene.h" />
     <ClInclude Include="application\scene\game\phase\GameOver.h" />
     <ClInclude Include="application\scene\game\phase\Goal.h" />
+    <ClInclude Include="application\demo\DemoManager.h" />
     <ClInclude Include="application\scene\game\phase\Highlight.h" />
     <ClInclude Include="application\scene\game\phase\Play.h" />
     <ClInclude Include="application\scene\game\phase\IGamePhase.h" />

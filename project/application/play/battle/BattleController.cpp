@@ -377,6 +377,8 @@ void BattleController::DrawImGui() {
 		ImGui::DragFloat("Color Change Speed", &goalPortalColorChangeSpeed_, 0.1f, 0.1f, 60.0f);
 		ImGui::DragFloat("Pillar Radius", &goalPortalPillarRadius_, 0.01f, 0.05f, 5.0f);
 		ImGui::DragFloat("Pillar Height", &goalPortalPillarHeight_, 0.05f, 0.1f, 20.0f);
+		ImGui::DragFloat("Pillar Pulse Radius Scale", &goalPortalPillarPulseRadiusScale_, 0.01f, 1.0f, 5.0f, "x%.2f");
+		ImGui::DragFloat("Pillar Pulse Height Scale", &goalPortalPillarPulseHeightScale_, 0.01f, 1.0f, 5.0f, "x%.2f");
 		ImGui::DragFloat("Blink Speed", &goalPortalBlinkSpeed_, 0.05f, 0.0f, 10.0f, "%.2f /s");
 		ImGui::SliderFloat("Blink Min", &goalPortalBlinkMin_, 0.0f, 1.0f);
 		ImGui::DragFloat("Ring Interval", &goalPortalRingInterval_, 0.01f, 0.05f, 3.0f, "%.2f s");
@@ -936,20 +938,8 @@ float BattleController::CalculateClearCameraRadius() const {
 		return defaultRadius + (clearCameraCloseRadius_ - defaultRadius) * t;
 	}
 	case ClearPhase::kLoop: {
-		// 一定間隔で一瞬寄って戻る (間隔は1回転の長さ / 1回転あたりの回数 で回転と同期させる)
-		const float rotation = player_->GetAnimationPlayLength(PlayerAnimator::State::kFlairing);
-		const float cycle = clearCameraPulsesPerRotation_ > 0.0f ? rotation / clearCameraPulsesPerRotation_ : 0.0f;
-		if (cycle <= 0.0f) {
-			return clearCameraCloseRadius_;
-		}
-		float local = std::fmod(timer - clearCameraPulseOffset_ + cycle, cycle);
-		float pulse = 0.0f; // 0:寄りの距離 1:一番寄った距離
-		if (local < clearCameraPulseInTime_) {
-			pulse = clearCameraPulseInTime_ > 0.0f ? local / clearCameraPulseInTime_ : 1.0f;
-		} else if (local < clearCameraPulseInTime_ + clearCameraPulseOutTime_) {
-			float t = clearCameraPulseOutTime_ > 0.0f ? (local - clearCameraPulseInTime_) / clearCameraPulseOutTime_ : 1.0f;
-			pulse = (1.0f - t) * (1.0f - t); // すっと戻る
-		}
+		// 一定間隔で一瞬寄って戻る (0:寄りの距離 1:一番寄った距離)
+		const float pulse = GetClearCameraPulse();
 		return clearCameraCloseRadius_ + (clearCameraPulseRadius_ - clearCameraCloseRadius_) * pulse;
 	}
 	case ClearPhase::kFinish:
@@ -962,6 +952,28 @@ float BattleController::CalculateClearCameraRadius() const {
 	default:
 		return defaultRadius;
 	}
+}
+
+float BattleController::GetClearCameraPulse() const {
+	if (!player_ || player_->GetClearPhase() != Player::ClearPhase::kLoop) {
+		return 0.0f;
+	}
+	// 間隔は 1回転の長さ / 1回転あたりの回数 で回転と同期させる
+	const float rotation = player_->GetAnimationPlayLength(PlayerAnimator::State::kFlairing);
+	const float cycle = clearCameraPulsesPerRotation_ > 0.0f ? rotation / clearCameraPulsesPerRotation_ : 0.0f;
+	if (cycle <= 0.0f) {
+		return 0.0f;
+	}
+	const float timer = player_->GetClearPhaseTimer();
+	const float local = std::fmod(timer - clearCameraPulseOffset_ + cycle, cycle);
+	if (local < clearCameraPulseInTime_) {
+		return clearCameraPulseInTime_ > 0.0f ? local / clearCameraPulseInTime_ : 1.0f;
+	}
+	if (local < clearCameraPulseInTime_ + clearCameraPulseOutTime_) {
+		const float t = clearCameraPulseOutTime_ > 0.0f ? (local - clearCameraPulseInTime_) / clearCameraPulseOutTime_ : 1.0f;
+		return (1.0f - t) * (1.0f - t); // すっと戻る
+	}
+	return 0.0f;
 }
 
 void BattleController::UpdateVisuals(float deltaTime) {
@@ -1039,7 +1051,11 @@ void BattleController::EmitGoalPortalPillar() {
 		particle.color.x = goalPortalColor_.x * brightness;
 		particle.color.y = goalPortalColor_.y * brightness;
 		particle.color.z = goalPortalColor_.z * brightness;
-		particle.transform.scale = { goalPortalPillarRadius_, goalPortalPillarHeight_ / 2.0f, goalPortalPillarRadius_ };
+		// クリア演出でカメラが寄るのに合わせて、太く・少し高くなって戻る
+		const float pulse = GetClearCameraPulse();
+		const float radius = goalPortalPillarRadius_ * (1.0f + (goalPortalPillarPulseRadiusScale_ - 1.0f) * pulse);
+		const float height = goalPortalPillarHeight_ * (1.0f + (goalPortalPillarPulseHeightScale_ - 1.0f) * pulse);
+		particle.transform.scale = { radius, height / 2.0f, radius };
 		particle.transform.translate = GetGoalPortalBase();
 	};
 	particleManager_->Emit("goalPortalPillar", pillar);

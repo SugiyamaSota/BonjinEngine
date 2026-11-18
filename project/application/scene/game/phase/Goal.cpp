@@ -2,6 +2,7 @@
 #include "../GameScene.h"
 
 #include "SceneManager.h"
+#include "../../../demo/DemoManager.h"
 
 namespace Bonjin::GamePhase {
 
@@ -22,7 +23,8 @@ void Goal::Update(GameScene* scene, float deltaTime) {
 
 	if (!isSceneChangeRequested_ && (isFinished || elapsedTime_ >= kMaxPerformanceTime)) {
 		isSceneChangeRequested_ = true;
-		SceneManager::GetInstance()->RequestSceneChange("ResultScene");
+		// デモモードはリザルトを出さずにタイトルへ戻ってループする
+		SceneManager::GetInstance()->RequestSceneChange(DemoManager::GetInstance()->IsDemoMode() ? "TitleScene" : "ResultScene");
 	}
 }
 

@@ -86,6 +86,12 @@ void SceneTransition::EnterPhase(TransitionPhase nextPhase) {
         } else if (desc_.inType == TransitionType::kFadeBlack) {
             AddPostEffectOnce(PostEffect::kSimpleFade);
             sm->SetFadeAmount(0.0f);
+        } else if (desc_.inType == TransitionType::kCustom || desc_.inType == TransitionType::kNone) {
+            // イン演出がカスタム/なしでも、待機中にクリア色(青)が出ないよう黒で覆っておく
+            // (ハイライトの無いGameSceneのように、シーン側が暗転を用意しない場合があるため)
+            AddPostEffectOnce(PostEffect::kSimpleFade);
+            sm->SetFadeAmount(0.0f);
+            isWaitBlackoutAdded_ = true;
         }
         break;
 
@@ -110,6 +116,12 @@ void SceneTransition::EnterPhase(TransitionPhase nextPhase) {
         break;
 
     case TransitionPhase::kIdle:
+        // 待機中だけ付けた黒のフェードを外す (シーンが自分で外していても問題ない)
+        if (isWaitBlackoutAdded_) {
+            isWaitBlackoutAdded_ = false;
+            sm->RemovePostEffect(DirectXCommon::PostEffect::kSimpleFade);
+            sm->SetFadeAmount(1.0f);
+        }
         CleanupEffects();
         break;
     }

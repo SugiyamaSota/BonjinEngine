@@ -84,6 +84,8 @@ namespace Bonjin {
         float timer_ = 0.0f;
         float progress_ = 0.0f;
         bool shouldSwitchScene_ = false;
+        // 暗転ウェイト中に黒を保つためのフェードを付けたか (イン演出がカスタム/なしのとき)
+        bool isWaitBlackoutAdded_ = false;
 
     private:
         void EnterPhase(TransitionPhase nextPhase);

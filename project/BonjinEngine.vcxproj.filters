@@ -186,6 +186,9 @@
     <ClCompile Include="application\scene\game\phase\GameOver.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="application\demo\DemoManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="application\scene\game\phase\Goal.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -513,6 +516,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\game\phase\GameOver.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\demo\DemoManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\game\phase\Goal.h">
