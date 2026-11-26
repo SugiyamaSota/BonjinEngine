@@ -16,6 +16,7 @@
 #include "PlayerStatusComponent.h"
 #include "PlayerAnimator.h"
 #include "PlayerClearPerformance.h"
+#include "PlayerCommand.h"
 
 class MapChipField;
 namespace Bonjin {
@@ -34,9 +35,24 @@ public:
 	void Initialize(Object3D* model, Camera* camera, const Vector3& position);
 
 	/// <summary>
-	/// 更新処理
+	/// このフレームの命令を受け取る (Update の前に呼ぶ)
+	/// 前のフレームの命令は消してから、渡された命令を順に実行する
+	/// </summary>
+	void ApplyCommands(const PlayerCommandList& commands);
+
+	/// <summary>
+	/// 更新処理 (ApplyCommands で受け取った命令どおりに動く)
 	/// </summary>
 	void Update();
+
+	// --- 命令の受け口 (IPlayerCommand から呼ばれる) ---
+	void RequestMove(LRDirection direction);
+	void RequestJump() { request_.jump = true; }
+	void RequestAnchorTrigger() { request_.anchorTrigger = true; }
+	void RequestAnchorHold() { request_.anchorHold = true; }
+	void RequestAnchorAim(AnchorAim aim) { request_.anchorAim = aim; }
+	void RequestTeleport() { request_.teleport = true; }
+	void RequestDefeatLockedOn() { request_.defeatLockedOn = true; }
 
 
 	/// <summary>
@@ -176,8 +192,8 @@ public:
 	// テレポートの雷の色 (クリア演出で色を合わせる用)
 	const Vector4& GetLightningColor() const { return lightningColor_; }
 
-	// ロックオン中の敵をすべて削除する処理（入力判定を含む)
-	void HandleLockOnRemovalInput();
+	// 撃破の命令が来ていたら、ロックオン中の敵をすべて倒す
+	void HandleDefeatLockedOnRequest();
 
 	// ロックオン中の敵をすべて倒す
 	void RemoveLockedOnEnemies(std::list<Bonjin::BaseEnemy*>& enemies);
@@ -283,12 +299,21 @@ private:
 	// この速さ以上で走りアニメーションにする
 	float runAnimationSpeedThreshold_ = 0.01f;
 
-	// Padのデッドゾーン
-	long kPadDeadZone_ = 750;
+	// このフレームに受け取った命令 (どのボタンかではなく、何をしたいか)
+	struct ActionRequest {
+		bool moveRight = false;
+		bool moveLeft = false;
+		bool jump = false;
+		bool anchorTrigger = false;
+		bool anchorHold = false;
+		AnchorAim anchorAim = AnchorAim::kStraight;
+		bool teleport = false;
+		bool defeatLockedOn = false;
+	};
+	ActionRequest request_;
 
 	// --- アンカー関連 ---
 	float kAnchorSpeed = 0.1f; // アンカーの初速の大きさ
-	static inline const long kAnchorDeadZone = 750; // アンカー発射時のスティック入力のデッドゾーン
 
 	// --- アンカー ---
 	std::unique_ptr<Anchor> anchor_;

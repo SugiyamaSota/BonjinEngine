@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>UMLクラス図 GameScene のフェーズ管理</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #ffffff; }
+  svg { display: block; }
+  .box { fill: #ffffff; stroke: #222222; stroke-width: 1.5; }
+  .sep { stroke: #222222; stroke-width: 1.2; }
+  .name { font-family: "Meiryo", "Yu Gothic UI", sans-serif; font-size: 16px; font-weight: bold; text-anchor: middle; fill: #111; }
+  .abs { font-style: italic; }
+  .prop { font-family: "Meiryo", "Yu Gothic UI", sans-serif; font-size: 12px; text-anchor: middle; fill: #444; }
+  .m { font-family: "Consolas", "Meiryo", monospace; font-size: 13px; fill: #111; }
+  .ms { font-family: "Consolas", "Meiryo", monospace; font-size: 12.5px; fill: #111; }
+  .i { font-style: italic; }
+  .edge { stroke: #222222; stroke-width: 1.5; fill: none; }
+  .dash { stroke-dasharray: 7 5; }
+  .lbl { font-family: "Consolas", "Meiryo", monospace; font-size: 12.5px; fill: #222; }
+  .lblj { font-family: "Meiryo", "Yu Gothic UI", sans-serif; font-size: 12.5px; fill: #222; }
+  .tmpl { fill: #ffffff; stroke: #222222; stroke-width: 1.2; stroke-dasharray: 4 3; }
+  .note { fill: #fffbe6; stroke: #222222; stroke-width: 1.2; }
+  .notet { font-family: "Meiryo", "Yu Gothic UI", sans-serif; font-size: 14px; fill: #111; }
+  .title { font-family: "Meiryo", "Yu Gothic UI", sans-serif; font-size: 19px; font-weight: bold; fill: #111; }
+  .leg { font-family: "Meiryo", "Yu Gothic UI", sans-serif; font-size: 13.5px; fill: #222; }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" width="1620" height="1130" viewBox="0 0 1620 1130">
+  <defs>
+    <!-- 継承 (汎化): 親の側に白抜きの三角 -->
+    <marker id="gen" viewBox="0 0 16 16" refX="15" refY="8" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M1,1 L15,8 L1,15 z" fill="#ffffff" stroke="#222222" stroke-width="1.5"/>
+    </marker>
+    <!-- コンポジション: 持ち主の側に黒塗りのひし形 -->
+    <marker id="comp" viewBox="0 0 20 14" refX="1" refY="7" markerWidth="20" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M1,7 L10,1 L19,7 L10,13 z" fill="#222222" stroke="#222222" stroke-width="1"/>
+    </marker>
+    <!-- 依存・束縛: 開いた矢印 -->
+    <marker id="open" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M1,1 L13,7 L1,13" fill="none" stroke="#222222" stroke-width="1.5"/>
+    </marker>
+  </defs>
+
+  <!-- ===== SceneManager ===== -->
+  <rect class="box" x="20" y="60" width="330" height="160"/>
+  <text class="name" x="185" y="84">SceneManager</text>
+  <line class="sep" x1="20" y1="96" x2="350" y2="96"/>
+  <text class="m" x="30" y="116">- currentScene_ : IScene*</text>
+  <line class="sep" x1="20" y1="128" x2="350" y2="128"/>
+  <text class="m" x="30" y="148">+ AddScene(type, scene)</text>
+  <text class="m" x="30" y="168">+ RequestSceneChange(name)</text>
+  <text class="m" x="30" y="188">+ Update(deltaTime : float)</text>
+  <text class="m" x="30" y="208">+ Draw()</text>
+
+  <!-- ===== IScene (abstract) ===== -->
+  <rect class="box" x="480" y="40" width="380" height="172"/>
+  <text class="name abs" x="670" y="62">IScene</text>
+  <text class="prop" x="670" y="80">{abstract}</text>
+  <line class="sep" x1="480" y1="88" x2="860" y2="88"/>
+  <line class="sep" x1="480" y1="100" x2="860" y2="100"/>
+  <text class="m" x="490" y="120">+ Initialize(camera : Camera*)</text>
+  <text class="m i" x="490" y="140">+ Update(deltaTime : float)</text>
+  <text class="m i" x="490" y="160">+ Draw()</text>
+  <text class="m i" x="490" y="180">+ Unload()</text>
+  <text class="m i" x="490" y="200">+ GetNextScene() : SceneType</text>
+
+  <!-- SceneManager ◆— IScene -->
+  <line class="edge" x1="350" y1="140" x2="480" y2="140" marker-start="url(#comp)"/>
+  <text class="lbl" x="376" y="131">1</text>
+  <text class="lbl" x="466" y="131">*</text>
+  <text class="lbl" x="415" y="160" text-anchor="middle">-scenes_</text>
+
+  <!-- ===== BaseScene<TScene> (abstract, template) ===== -->
+  <rect class="box" x="480" y="360" width="380" height="112"/>
+  <rect class="tmpl" x="800" y="346" width="80" height="24"/>
+  <text class="lbl" x="840" y="363" text-anchor="middle">TScene</text>
+  <text class="name abs" x="670" y="382">BaseScene</text>
+  <text class="prop" x="670" y="400">{abstract}</text>
+  <line class="sep" x1="480" y1="408" x2="860" y2="408"/>
+  <line class="sep" x1="480" y1="420" x2="860" y2="420"/>
+  <text class="m" x="490" y="440">+ ChangePhase(nextPhase)</text>
+  <text class="m" x="490" y="460">+ GetCurrentPhase() : IScenePhase&lt;TScene&gt;*</text>
+
+  <!-- BaseScene —▷ IScene -->
+  <line class="edge" x1="670" y1="360" x2="670" y2="213" marker-end="url(#gen)"/>
+
+  <!-- ===== IScenePhase<TScene> (abstract, template) ===== -->
+  <rect class="box" x="1040" y="360" width="440" height="172"/>
+  <rect class="tmpl" x="1420" y="346" width="80" height="24"/>
+  <text class="lbl" x="1460" y="363" text-anchor="middle">TScene</text>
+  <text class="name abs" x="1260" y="382">IScenePhase</text>
+  <text class="prop" x="1260" y="400">{abstract}</text>
+  <line class="sep" x1="1040" y1="408" x2="1480" y2="408"/>
+  <line class="sep" x1="1040" y1="420" x2="1480" y2="420"/>
+  <text class="m" x="1050" y="440">+ Enter(scene : TScene*)</text>
+  <text class="m i" x="1050" y="460">+ Update(scene : TScene*, deltaTime : float)</text>
+  <text class="m" x="1050" y="480">+ Draw(scene : TScene*)</text>
+  <text class="m" x="1050" y="500">+ DrawImGui(scene : TScene*)</text>
+  <text class="m" x="1050" y="520">+ Exit(scene : TScene*)</text>
+
+  <!-- BaseScene ◆— IScenePhase -->
+  <line class="edge" x1="860" y1="416" x2="1040" y2="416" marker-start="url(#comp)"/>
+  <text class="lbl" x="886" y="406">1</text>
+  <text class="lbl" x="1002" y="406">0..1</text>
+  <text class="lbl" x="950" y="438" text-anchor="middle">#currentPhase_</text>
+
+  <!-- ===== GameScene ===== -->
+  <rect class="box" x="480" y="640" width="380" height="180"/>
+  <text class="name" x="670" y="664">GameScene</text>
+  <line class="sep" x1="480" y1="676" x2="860" y2="676"/>
+  <line class="sep" x1="480" y1="688" x2="860" y2="688"/>
+  <text class="m" x="490" y="708">+ Initialize(camera : Camera*)</text>
+  <text class="m" x="490" y="728">+ Update(deltaTime : float)</text>
+  <text class="m" x="490" y="748">+ Draw()</text>
+  <text class="m" x="490" y="768">+ Unload()</text>
+  <text class="m" x="490" y="788">+ GetNextScene() : SceneType</text>
+  <text class="m" x="490" y="808">+ GetBattleController() : BattleController*</text>
+
+  <!-- GameScene —▷ BaseScene -->
+  <line class="edge" x1="670" y1="640" x2="670" y2="473" marker-end="url(#gen)"/>
+  <text class="lbl" x="682" y="562">TScene = GameScene</text>
+
+  <!-- ===== BattleController ===== -->
+  <rect class="box" x="20" y="680" width="320" height="140"/>
+  <text class="name" x="180" y="704">BattleController</text>
+  <line class="sep" x1="20" y1="716" x2="340" y2="716"/>
+  <line class="sep" x1="20" y1="728" x2="340" y2="728"/>
+  <text class="m" x="30" y="748">+ Initialize(camera, mapFilePath)</text>
+  <text class="m" x="30" y="768">+ Update(deltaTime : float)</text>
+  <text class="m" x="30" y="788">+ Draw()</text>
+  <text class="m" x="30" y="808">+ GetPlayer() : Player*</text>
+
+  <!-- GameScene ◆— BattleController -->
+  <line class="edge" x1="480" y1="750" x2="340" y2="750" marker-start="url(#comp)"/>
+  <text class="lbl" x="350" y="741">1</text>
+  <text class="lbl" x="410" y="770" text-anchor="middle">-battleController_</text>
+
+  <!-- ===== IGamePhase (bound: IScenePhase<GameScene>) ===== -->
+  <rect class="box" x="1110" y="640" width="300" height="72"/>
+  <text class="name abs" x="1260" y="662">IGamePhase</text>
+  <text class="prop" x="1260" y="680">{abstract}</text>
+  <line class="sep" x1="1110" y1="690" x2="1410" y2="690"/>
+  <line class="sep" x1="1110" y1="701" x2="1410" y2="701"/>
+
+  <!-- IGamePhase ⇢ IScenePhase «bind» -->
+  <line class="edge dash" x1="1260" y1="640" x2="1260" y2="533" marker-end="url(#open)"/>
+  <text class="lbl" x="1272" y="584">«bind»</text>
+  <text class="lbl" x="1272" y="602">&lt;TScene → GameScene&gt;</text>
+
+  <!-- IGamePhase ⇢ GameScene «use» -->
+  <line class="edge dash" x1="1110" y1="676" x2="861" y2="676" marker-end="url(#open)"/>
+  <text class="lbl" x="985" y="667" text-anchor="middle">«use»</text>
+
+  <!-- ===== Phases ===== -->
+  <!-- Play -->
+  <rect class="box" x="520" y="900" width="260" height="120"/>
+  <text class="name" x="650" y="924">Play</text>
+  <line class="sep" x1="520" y1="936" x2="780" y2="936"/>
+  <line class="sep" x1="520" y1="948" x2="780" y2="948"/>
+  <text class="ms" x="530" y="968">+ Enter(scene : GameScene*)</text>
+  <text class="ms" x="530" y="988">+ Update(scene, deltaTime)</text>
+  <text class="ms" x="530" y="1008">+ Exit(scene : GameScene*)</text>
+
+  <!-- Goal -->
+  <rect class="box" x="790" y="900" width="260" height="160"/>
+  <text class="name" x="920" y="924">Goal</text>
+  <line class="sep" x1="790" y1="936" x2="1050" y2="936"/>
+  <text class="ms" x="800" y="956">- isSceneChangeRequested_ : bool</text>
+  <text class="ms" x="800" y="976">- elapsedTime_ : float</text>
+  <line class="sep" x1="790" y1="988" x2="1050" y2="988"/>
+  <text class="ms" x="800" y="1008">+ Enter(scene : GameScene*)</text>
+  <text class="ms" x="800" y="1028">+ Update(scene, deltaTime)</text>
+  <text class="ms" x="800" y="1048">+ Exit(scene : GameScene*)</text>
+
+  <!-- GameOver -->
+  <rect class="box" x="1060" y="900" width="260" height="140"/>
+  <text class="name" x="1190" y="924">GameOver</text>
+  <line class="sep" x1="1060" y1="936" x2="1320" y2="936"/>
+  <line class="sep" x1="1060" y1="948" x2="1320" y2="948"/>
+  <text class="ms" x="1070" y="968">+ Enter(scene : GameScene*)</text>
+  <text class="ms" x="1070" y="988">+ Update(scene, deltaTime)</text>
+  <text class="ms" x="1070" y="1008">+ Draw(scene : GameScene*)</text>
+  <text class="ms" x="1070" y="1028">+ Exit(scene : GameScene*)</text>
+
+  <!-- Highlight -->
+  <rect class="box" x="1330" y="900" width="270" height="200"/>
+  <text class="name" x="1465" y="924">Highlight</text>
+  <line class="sep" x1="1330" y1="936" x2="1600" y2="936"/>
+  <text class="ms" x="1340" y="956">- step_ : unique_ptr&lt;IHighlightStep&gt;</text>
+  <text class="ms" x="1340" y="976">- timer_ : float</text>
+  <line class="sep" x1="1330" y1="988" x2="1600" y2="988"/>
+  <text class="ms" x="1340" y="1008">+ Enter(scene : GameScene*)</text>
+  <text class="ms" x="1340" y="1028">+ Update(scene, deltaTime)</text>
+  <text class="ms" x="1340" y="1048">+ DrawImGui(scene : GameScene*)</text>
+  <text class="ms" x="1340" y="1068">+ Exit(scene : GameScene*)</text>
+  <text class="ms" x="1340" y="1088">+ FinishHighlight(scene)</text>
+
+  <!-- Phases —▷ IGamePhase (まとめて1つの三角へ) -->
+  <polyline class="edge" points="650,900 650,850"/>
+  <polyline class="edge" points="920,900 920,850"/>
+  <polyline class="edge" points="1190,900 1190,850"/>
+  <polyline class="edge" points="1465,900 1465,850"/>
+  <line class="edge" x1="650" y1="850" x2="1465" y2="850"/>
+  <line class="edge" x1="1260" y1="850" x2="1260" y2="713" marker-end="url(#gen)"/>
+
+  <!-- ===== Note ===== -->
+  <polygon class="note" points="930,40 1470,40 1490,60 1490,190 930,190"/>
+  <polyline class="edge" points="1470,40 1470,60 1490,60" style="stroke-width:1.2"/>
+  <text class="notet" x="945" y="66" style="font-weight:bold">State パターン</text>
+  <text class="notet" x="945" y="94">・GameScene（Context）は今のフェーズ（State）を1つだけ持つ</text>
+  <text class="notet" x="945" y="120">・ChangePhase() で 今のフェーズの Exit() → 差し替え → Enter()</text>
+  <text class="notet" x="945" y="146">・フェーズごとの処理は各サブクラスの Update() が持つ</text>
+  <text class="notet" x="945" y="172">・フェーズは GameScene を引数で受け取って操作する</text>
+  <line class="edge dash" x1="975" y1="190" x2="955" y2="410" style="stroke-width:1.2"/>
+
+  <!-- ===== Title & Legend ===== -->
+  <text class="title" x="20" y="885">UMLクラス図：GameScene のフェーズ管理</text>
+  <text class="title" x="20" y="912" style="font-size:16px;font-weight:normal">（State パターン）</text>
+
+  <line class="edge" x1="30" y1="955" x2="105" y2="955" marker-end="url(#gen)"/>
+  <text class="leg" x="120" y="960">継承（汎化）：三角の側が親クラス</text>
+
+  <line class="edge" x1="30" y1="990" x2="105" y2="990" marker-start="url(#comp)"/>
+  <text class="leg" x="120" y="995">コンポジション：◆の側が持ち主（一緒に破棄）</text>
+
+  <line class="edge dash" x1="30" y1="1025" x2="105" y2="1025" marker-end="url(#open)"/>
+  <text class="leg" x="120" y="1030">依存 «use» / テンプレートの束縛 «bind»</text>
+
+  <rect class="tmpl" x="40" y="1048" width="58" height="20"/>
+  <text class="lbl" x="69" y="1063" text-anchor="middle" style="font-size:11px">T</text>
+  <text class="leg" x="120" y="1063">点線の四角：テンプレート引数</text>
+
+  <text class="leg" x="30" y="1096" style="font-style:italic">Italic</text>
+  <text class="leg" x="120" y="1096">斜体：抽象クラス / 純粋仮想関数</text>
+</svg>
+</body>
+</html>

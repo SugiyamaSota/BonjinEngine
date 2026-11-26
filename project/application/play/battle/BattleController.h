@@ -7,6 +7,7 @@
 
 #include "gameObject/enemy/BaseEnemy.h"
 #include "gameObject/player/Player.h"
+#include "gameObject/player/PlayerController.h"
 #include "mapchip/MapChipField.h"
 #include "Object3D.h"
 #include "ParticleManager.h"
@@ -32,6 +33,8 @@ public:
 	void DrawImGui();
 
 	Player* GetPlayer() const { return player_.get(); }
+	// プレイヤーへ命令を出す側を差し替える (ふだんは人の入力。デモではAI)
+	void SetPlayerController(std::unique_ptr<IPlayerController> controller) { playerController_ = std::move(controller); }
 	MapChipField* GetMapChipField() const { return mapChipField_.get(); }
 	HUD* GetHUD() const { return hud_.get(); }
 	const std::list<std::unique_ptr<BaseEnemy>>& GetEnemies() const { return enemies_; }
@@ -66,6 +69,8 @@ private:
 	std::unique_ptr<GoSignalBanner> goSignalBanner_;
 
 	std::unique_ptr<Player> player_;
+	std::unique_ptr<IPlayerController> playerController_; // プレイヤーへの命令を出す側
+	PlayerCommandList playerCommands_;                    // このフレームの命令
 	std::unique_ptr<Object3D> playerModel_;
 
 	std::list<std::unique_ptr<BaseEnemy>> enemies_;
