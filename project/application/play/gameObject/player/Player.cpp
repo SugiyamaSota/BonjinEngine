@@ -149,11 +149,10 @@ void Player::ResolveMapEmbedding() {
 }
 
 void Player::StartClearPerformance() {
-	if (clearPhase_ != ClearPhase::kNone) {
+	if (clearPerformance_.IsActive()) {
 		return;
 	}
-	clearPhase_ = ClearPhase::kLanding;
-	clearPhaseTimer_ = 0.0f;
+	clearPerformance_.Start();
 
 	// 演出の邪魔になるものを止める
 	anchor_ = nullptr;
@@ -173,11 +172,10 @@ void Player::StartClearPerformance() {
 }
 
 void Player::UpdateClearPerformance() {
-	if (clearPhase_ == ClearPhase::kNone) {
+	if (!clearPerformance_.IsActive()) {
 		return;
 	}
 	const float deltaTime = 1.0f / 60.0f;
-	clearPhaseTimer_ += deltaTime;
 
 	// 入力は受け付けず、横の勢いだけ止めて重力と地形判定は続ける
 	velocity_.x *= 0.8f;
@@ -185,80 +183,25 @@ void Player::UpdateClearPerformance() {
 		velocity_.x = 0.0f;
 	}
 
-	// 演出の段階を進める
-	PlayerAnimator::State animState = PlayerAnimator::State::kIdle;
-	switch (clearPhase_) {
-	case ClearPhase::kLanding:
-		animState = onGround_ ? PlayerAnimator::State::kIdle : PlayerAnimator::State::kJump;
-		if (onGround_ || clearPhaseTimer_ >= clearLandingTimeout_) {
-			clearPhase_ = ClearPhase::kStart;
-			clearPhaseTimer_ = 0.0f;
-			animState = PlayerAnimator::State::kFlairStart;
-		}
-		break;
-	case ClearPhase::kStart:
-		animState = PlayerAnimator::State::kFlairStart;
-		if (clearPhaseTimer_ >= animator_.GetClipPlayLength(PlayerAnimator::State::kFlairStart)) {
-			clearPhase_ = ClearPhase::kLoop;
-			clearPhaseTimer_ = 0.0f;
-			animState = PlayerAnimator::State::kFlairing;
-		}
-		break;
-	case ClearPhase::kLoop:
-		animState = PlayerAnimator::State::kFlairing;
-		if (clearPhaseTimer_ >= animator_.GetClipPlayLength(PlayerAnimator::State::kFlairing) * static_cast<float>(clearFlairLoopCount_)) {
-			clearPhase_ = ClearPhase::kFinish;
-			clearPhaseTimer_ = 0.0f;
-			animState = PlayerAnimator::State::kFlairFinish;
-		}
-		break;
-	case ClearPhase::kFinish:
-		animState = PlayerAnimator::State::kFlairFinish;
-		if (clearPhaseTimer_ >= animator_.GetClipPlayLength(PlayerAnimator::State::kFlairFinish)) {
-			clearPhase_ = ClearPhase::kVanish;
-			clearPhaseTimer_ = 0.0f;
-		}
-		break;
-	case ClearPhase::kVanish: {
-		// 決めポーズで少し溜める -> ふくらむ -> 一気に縮んで消える (転移した風)
-		animState = PlayerAnimator::State::kFlairFinish; // 最後のポーズのまま
-		const float growStart = clearPoseHoldTime_;
-		const float shrinkStart = growStart + clearVanishGrowTime_;
-		const float end = shrinkStart + clearVanishShrinkTime_;
-		const float t = clearPhaseTimer_;
-		if (t < growStart) {
-			visualScaleMultiplier_ = 1.0f;
-		} else if (t < shrinkStart) {
-			// ease out でふくらむ
-			float r = clearVanishGrowTime_ > 0.0f ? (t - growStart) / clearVanishGrowTime_ : 1.0f;
-			r = 1.0f - (1.0f - r) * (1.0f - r);
-			visualScaleMultiplier_ = 1.0f + (clearVanishGrowScale_ - 1.0f) * r;
-		} else if (t < end) {
-			// ease in で一気に縮む
-			float r = clearVanishShrinkTime_ > 0.0f ? (t - shrinkStart) / clearVanishShrinkTime_ : 1.0f;
-			r = r * r * r;
-			visualScaleMultiplier_ = clearVanishGrowScale_ * (1.0f - r);
-		} else {
-			visualScaleMultiplier_ = 0.0f;
-			// 消えた瞬間に、テレポートと同じ雷を上へ走らせる
-			if (clearVanishLightning_) {
-				const Vector3 center = GetModelCenterPosition();
-				EmitTeleportLightning(center, { center.x, center.y + clearVanishLightningHeight_, center.z });
-			}
-			clearPhase_ = ClearPhase::kDone;
-		}
-		break;
-	}
-	case ClearPhase::kDone:
-	default:
-		animState = PlayerAnimator::State::kFlairFinish; // 最後のポーズのまま
-		break;
+	// 演出の段階を進める (段階ごとの処理は PlayerClearPerformance の各段階のクラスが持つ)
+	ClearPerformanceInput input;
+	input.isOnGround = onGround_;
+	input.flairStartLength = GetAnimationPlayLength(PlayerAnimator::State::kFlairStart);
+	input.flairingLength = GetAnimationPlayLength(PlayerAnimator::State::kFlairing);
+	input.flairFinishLength = GetAnimationPlayLength(PlayerAnimator::State::kFlairFinish);
+	clearPerformance_.Update(input, deltaTime);
+
+	visualScaleMultiplier_ = clearPerformance_.GetVisualScale();
+	if (clearPerformance_.ConsumeVanishLightningRequest()) {
+		const Vector3 center = GetModelCenterPosition();
+		const float height = clearPerformance_.GetSettings().vanishLightningHeight;
+		EmitTeleportLightning(center, { center.x, center.y + height, center.z });
 	}
 
 	if (hasAnimator_) {
-		animator_.Update(deltaTime, animState);
-	} else if (clearPhase_ != ClearPhase::kLanding) {
-		clearPhase_ = ClearPhase::kDone; // アニメーションが無ければ即終了
+		animator_.Update(deltaTime, clearPerformance_.GetAnimation());
+	} else if (clearPerformance_.GetPhase() != ClearPhase::kLanding) {
+		clearPerformance_.Skip(); // アニメーションが無ければ即終了
 	}
 
 	// 物理・地形判定とモデル更新
@@ -372,10 +315,10 @@ void Player::Move() {
 
 void Player::Update() {
 	// クリア演出中は演出の更新だけ行う
-	if (clearPhase_ != ClearPhase::kNone) {
+	if (clearPerformance_.IsActive()) {
 		// ImGuiのテスト再生が終わったら通常操作に戻す (本番はゴール後なのでGoalフェーズ側が遷移させる)
-		if (clearPhase_ == ClearPhase::kDone && !isGoalReached_) {
-			clearPhase_ = ClearPhase::kNone;
+		if (clearPerformance_.IsFinished() && !isGoalReached_) {
+			clearPerformance_.Stop();
 			visualScaleMultiplier_ = 1.0f; // テストで消えた見た目を元に戻す
 		} else {
 			UpdateClearPerformance();
@@ -947,19 +890,20 @@ void Player::DrawImGui() {
 		ImGui::DragFloat("Model Offset Y", &modelOffsetY_, 0.01f);
 		ImGui::SliderAngle("Model Rotate Y Offset", &modelRotateYOffset_);
 		ImGui::DragFloat("Run Anim Threshold", &runAnimationSpeedThreshold_, 0.001f, 0.0f, 1.0f);
-		ImGui::SliderInt("Clear Flair Loops", &clearFlairLoopCount_, 0, 10);
+		ClearPerformanceSettings& clearSettings = clearPerformance_.GetSettings();
+		ImGui::SliderInt("Clear Flair Loops", &clearSettings.flairLoopCount, 0, 10);
 		if (ImGui::TreeNode("Clear Vanish (決めポーズ後に消える)")) {
-			ImGui::DragFloat("Pose Hold Time", &clearPoseHoldTime_, 0.01f, 0.0f, 3.0f, "%.2f s");
-			ImGui::DragFloat("Grow Time", &clearVanishGrowTime_, 0.01f, 0.0f, 2.0f, "%.2f s");
-			ImGui::DragFloat("Grow Scale", &clearVanishGrowScale_, 0.01f, 1.0f, 3.0f);
-			ImGui::DragFloat("Shrink Time", &clearVanishShrinkTime_, 0.01f, 0.0f, 2.0f, "%.2f s");
-			ImGui::Checkbox("Lightning On Vanish", &clearVanishLightning_);
-			ImGui::DragFloat("Lightning Height", &clearVanishLightningHeight_, 0.1f, 0.0f, 50.0f);
+			ImGui::DragFloat("Pose Hold Time", &clearSettings.poseHoldTime, 0.01f, 0.0f, 3.0f, "%.2f s");
+			ImGui::DragFloat("Grow Time", &clearSettings.vanishGrowTime, 0.01f, 0.0f, 2.0f, "%.2f s");
+			ImGui::DragFloat("Grow Scale", &clearSettings.vanishGrowScale, 0.01f, 1.0f, 3.0f);
+			ImGui::DragFloat("Shrink Time", &clearSettings.vanishShrinkTime, 0.01f, 0.0f, 2.0f, "%.2f s");
+			ImGui::Checkbox("Lightning On Vanish", &clearSettings.vanishLightning);
+			ImGui::DragFloat("Lightning Height", &clearSettings.vanishLightningHeight, 0.1f, 0.0f, 50.0f);
 			ImGui::Text("Visual Scale: %.2f", visualScaleMultiplier_);
 			ImGui::TreePop();
 		}
 		if (ImGui::Button("Test Clear Performance")) {
-			clearPhase_ = ClearPhase::kNone;
+			clearPerformance_.Stop();
 			StartClearPerformance();
 		}
 		if (hasAnimator_) {

@@ -860,33 +860,14 @@ bool BattleController::UpdateClearPerformance(float deltaTime) {
 }
 
 float BattleController::CalculateClearCameraRadius() const {
-	using ClearPhase = Player::ClearPhase;
 	const float defaultRadius = Camera::kDefaultRadius;
-	const float timer = player_->GetClearPhaseTimer();
-
-	switch (player_->GetClearPhase()) {
-	case ClearPhase::kStart: {
-		// Flair開始の長さをかけて、通常距離から寄りの距離へ (ease out)
-		const float length = player_->GetAnimationPlayLength(PlayerAnimator::State::kFlairStart);
-		float t = length > 0.0f ? (std::min)(timer / length, 1.0f) : 1.0f;
-		t = 1.0f - (1.0f - t) * (1.0f - t) * (1.0f - t);
-		return defaultRadius + (clearCameraCloseRadius_ - defaultRadius) * t;
-	}
-	case ClearPhase::kLoop: {
-		// 一定間隔で一瞬寄って戻る (0:寄りの距離 1:一番寄った距離)
-		const float pulse = GetClearCameraPulse();
-		return clearCameraCloseRadius_ + (clearCameraPulseRadius_ - clearCameraCloseRadius_) * pulse;
-	}
-	case ClearPhase::kFinish:
-	case ClearPhase::kVanish:
-	case ClearPhase::kDone:
-		// Flair終了は何もしない (寄りの距離のまま)
-		return clearCameraCloseRadius_;
-	case ClearPhase::kLanding:
-	case ClearPhase::kNone:
-	default:
-		return defaultRadius;
-	}
+	// 寄り具合 (0:ふだんの距離 1:寄りの距離) はクリア演出の各段階が決める
+	const float zoom = player_->GetClearCameraZoom();
+	// Flairループ中だけ、一定間隔で一瞬さらに寄って戻る (ループ以外は0)
+	const float pulse = GetClearCameraPulse();
+	return defaultRadius
+		+ (clearCameraCloseRadius_ - defaultRadius) * zoom
+		+ (clearCameraPulseRadius_ - clearCameraCloseRadius_) * pulse;
 }
 
 float BattleController::GetClearCameraPulse() const {
@@ -986,21 +967,13 @@ float BattleController::GetGoalLightningBlend() const {
 	if (!player_) {
 		return 0.0f;
 	}
-	switch (player_->GetClearPhase()) {
-	case Player::ClearPhase::kLoop: {
-		// n回目の寄りで 緑 -> 雷の色 へ n/合計 だけ近づける (最後の寄りでちょうど雷の色)
-		const int index = GetClearPulseIndex();
-		const int total = GetClearPulseTotal();
-		if (index >= 0 && total > 0) {
-			return (std::min)(static_cast<float>(index + 1) / static_cast<float>(total), 1.0f);
-		}
-		return 0.0f;
+	// Flairループで寄った回数の進み具合 (n回目の寄りで n/合計。最後の寄りでちょうど1)
+	float loopProgress = 0.0f;
+	const int index = GetClearPulseIndex(); // ループ中でなければ -1
+	const int total = GetClearPulseTotal();
+	if (index >= 0 && total > 0) {
+		loopProgress = (std::min)(static_cast<float>(index + 1) / static_cast<float>(total), 1.0f);
 	}
-	case Player::ClearPhase::kFinish:
-	case Player::ClearPhase::kVanish:
-	case Player::ClearPhase::kDone:
-		return 1.0f; // 決めポーズから消えるまでは雷の色のまま
-	default:
-		return 0.0f; // 演出していない・着地待ち・Flair開始中はふだんの色
-	}
+	// 段階ごとにどれだけ雷の色に近づけるかは、クリア演出の各段階が決める
+	return player_->GetClearLightningBlend(loopProgress);
 }

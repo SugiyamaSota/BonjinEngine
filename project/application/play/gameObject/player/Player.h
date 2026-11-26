@@ -15,6 +15,7 @@
 
 #include "PlayerStatusComponent.h"
 #include "PlayerAnimator.h"
+#include "PlayerClearPerformance.h"
 
 class MapChipField;
 namespace Bonjin {
@@ -157,25 +158,21 @@ public:
 	/// <summary>
 	/// クリア演出のFlairが最後まで終わったか
 	/// </summary>
-	bool IsClearPerformanceFinished() const { return clearPhase_ == ClearPhase::kDone; }
+	bool IsClearPerformanceFinished() const { return clearPerformance_.IsFinished(); }
 
 	// クリア演出の段階
-	enum class ClearPhase {
-		kNone,     // 演出していない
-		kLanding,  // 着地待ち
-		kStart,    // Flair開始
-		kLoop,     // Flairループ
-		kFinish,   // Flair終了
-		kVanish,   // 決めポーズ後、ふくらんでから縮んで消える
-		kDone,     // 演出終了 (最後のポーズで待機)
-	};
-	ClearPhase GetClearPhase() const { return clearPhase_; }
+	using ClearPhase = PlayerClearPhase;
+	ClearPhase GetClearPhase() const { return clearPerformance_.GetPhase(); }
 	// 今の段階に入ってからの経過時間(秒)
-	float GetClearPhaseTimer() const { return clearPhaseTimer_; }
+	float GetClearPhaseTimer() const { return clearPerformance_.GetTimer(); }
+	// クリア演出のカメラの寄り具合 (0:ふだんの距離 1:寄りの距離)。段階ごとの違いは各段階のクラスが決める
+	float GetClearCameraZoom() const { return clearPerformance_.GetCameraZoom(); }
+	// ゴールのポータルを雷の色へ近づける割合 (loopProgress: Flairループで寄った回数の進み具合 0~1)
+	float GetClearLightningBlend(float loopProgress) const { return clearPerformance_.GetLightningBlend(loopProgress); }
 	// アニメーションの再生長さ(秒)。カメラ演出の同期用
 	float GetAnimationPlayLength(PlayerAnimator::State state) const { return hasAnimator_ ? animator_.GetClipPlayLength(state) : 0.0f; }
 	// Flairループの回数 (カメラの寄りの回数を数える用)
-	int GetClearFlairLoopCount() const { return clearFlairLoopCount_; }
+	int GetClearFlairLoopCount() const { return clearPerformance_.GetSettings().flairLoopCount; }
 	// テレポートの雷の色 (クリア演出で色を合わせる用)
 	const Vector4& GetLightningColor() const { return lightningColor_; }
 
@@ -278,20 +275,8 @@ private:
 	PlayerAnimator animator_;
 	bool hasAnimator_ = false;
 
-	// --- クリア演出 ---
-	ClearPhase clearPhase_ = ClearPhase::kNone;
-	float clearPhaseTimer_ = 0.0f;
-	// Flairのループ回数
-	int clearFlairLoopCount_ = 2;
-	// 着地待ちの最大時間 (落ち続けても演出を始める)
-	float clearLandingTimeout_ = 1.0f;
-	// 決めポーズ後の消える演出
-	float clearPoseHoldTime_ = 0.35f;     // 決めポーズのまま止まる時間
-	float clearVanishGrowTime_ = 0.12f;   // ふくらむ時間
-	float clearVanishGrowScale_ = 1.2f;   // ふくらむ大きさ
-	float clearVanishShrinkTime_ = 0.18f; // 縮んで消えるまでの時間
-	bool clearVanishLightning_ = true;    // 消えた瞬間に雷を出す
-	float clearVanishLightningHeight_ = 20.0f; // 雷を上へ伸ばす長さ
+	// --- クリア演出 (段階ごとの振る舞いは PlayerClearPerformance の各段階のクラスが持つ) ---
+	PlayerClearPerformance clearPerformance_;
 
 	// 演出用の見た目の大きさの倍率 (当たり判定には影響しない)
 	float visualScaleMultiplier_ = 1.0f;
