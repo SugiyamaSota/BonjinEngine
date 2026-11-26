@@ -157,6 +157,7 @@
     <ClCompile Include="application\play\gameObject\enemy\Enemy.cpp" />
     <ClCompile Include="application\play\gameObject\enemy\EnemyBullet.cpp" />
     <ClCompile Include="application\play\gameObject\enemy\NoGravityEnemy.cpp" />
+    <ClCompile Include="application\play\gameObject\goal\Goal.cpp" />
     <ClCompile Include="application\play\gameObject\GameObject.cpp" />
     <ClCompile Include="application\play\gameObject\player\Player.cpp" />
     <ClCompile Include="application\play\gameObject\player\PlayerStatusComponent.cpp" />
@@ -283,6 +284,7 @@
     <ClInclude Include="application\play\gameObject\enemy\Enemy.h" />
     <ClInclude Include="application\play\gameObject\enemy\EnemyBullet.h" />
     <ClInclude Include="application\play\gameObject\enemy\NoGravityEnemy.h" />
+    <ClInclude Include="application\play\gameObject\goal\Goal.h" />
     <ClInclude Include="application\play\gameObject\GameObject.h" />
     <ClInclude Include="application\play\gameObject\player\Player.h" />
     <ClInclude Include="application\play\gameObject\player\PlayerStatusComponent.h" />
