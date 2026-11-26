@@ -161,6 +161,8 @@
     <ClCompile Include="application\play\gameObject\goal\Goal.cpp" />
     <ClCompile Include="application\play\gameObject\GameObject.cpp" />
     <ClCompile Include="application\play\gameObject\player\Player.cpp" />
+    <ClCompile Include="application\play\gameObject\player\PlayerCommand.cpp" />
+    <ClCompile Include="application\play\gameObject\player\PlayerController.cpp" />
     <ClCompile Include="application\play\gameObject\player\PlayerClearPerformance.cpp" />
     <ClCompile Include="application\play\gameObject\player\PlayerStatusComponent.cpp" />
     <ClCompile Include="application\play\gameObject\player\PlayerAnimator.cpp" />
@@ -175,6 +177,7 @@
     <ClCompile Include="application\scene\game\phase\GameOver.cpp" />
     <ClCompile Include="application\scene\game\phase\Goal.cpp" />
     <ClCompile Include="application\demo\DemoManager.cpp" />
+    <ClCompile Include="application\demo\DemoPlayerController.cpp" />
     <ClCompile Include="application\scene\game\phase\Highlight.cpp" />
     <ClCompile Include="application\scene\game\phase\Play.cpp" />
     <ClCompile Include="application\scene\result\phase\Active.cpp" />
@@ -290,6 +293,8 @@
     <ClInclude Include="application\play\gameObject\goal\Goal.h" />
     <ClInclude Include="application\play\gameObject\GameObject.h" />
     <ClInclude Include="application\play\gameObject\player\Player.h" />
+    <ClInclude Include="application\play\gameObject\player\PlayerCommand.h" />
+    <ClInclude Include="application\play\gameObject\player\PlayerController.h" />
     <ClInclude Include="application\play\gameObject\player\PlayerClearPerformance.h" />
     <ClInclude Include="application\play\gameObject\player\PlayerStatusComponent.h" />
     <ClInclude Include="application\play\gameObject\player\PlayerAnimator.h" />
@@ -326,6 +331,7 @@
     <ClInclude Include="application\scene\game\phase\GameOver.h" />
     <ClInclude Include="application\scene\game\phase\Goal.h" />
     <ClInclude Include="application\demo\DemoManager.h" />
+    <ClInclude Include="application\demo\DemoPlayerController.h" />
     <ClInclude Include="application\scene\game\phase\Highlight.h" />
     <ClInclude Include="application\scene\game\phase\Play.h" />
     <ClInclude Include="application\scene\game\phase\IGamePhase.h" />

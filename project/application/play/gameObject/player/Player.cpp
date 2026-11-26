@@ -1,6 +1,5 @@
 #define NOMINMAX
 #include "Player.h"
-#include "input/Gamepad.h"
 #include "GpuParticleManager.h"
 #include "../enemy/BaseEnemy.h"
 #include "SceneManager.h"
@@ -224,13 +223,9 @@ void Player::Move() {
 	// 移動入力
 	// 接地状態
 	if (onGround_) {
-		// ゲームパッドの左スティックのX軸の値を取得
-		long lStickX = Gamepad::GetInstance()->GetLStickX();
-
-		// 💡 キーボードとスティックの入力を統合して左右の移動フラグを作成
-		// 💡 キーボードの移動には、押し続けている間反応するIsPress()を使用します
-		bool isMovingRight = (lStickX > kPadDeadZone_) || Input::GetInstance()->IsPress(DIK_D);
-		bool isMovingLeft = (lStickX < -kPadDeadZone_) || Input::GetInstance()->IsPress(DIK_A);
+		// 左右の移動の命令
+		bool isMovingRight = request_.moveRight;
+		bool isMovingLeft = request_.moveLeft;
 
 		Vector3 acceleration = {};
 
@@ -273,18 +268,16 @@ void Player::Move() {
 			velocity_.x *= (1.0f - kAttenuation);
 		}
 
-		// Aボタンでジャンプ (DIK_SPACEはIsTriggerのままでOK)
-		if (Gamepad::GetInstance()->IsPress(XINPUT_GAMEPAD_A) || Input::GetInstance()->IsTrigger(DIK_SPACE)) {
+		// ジャンプの命令
+		if (request_.jump) {
 			velocity_ = Add(velocity_, Vector3(0, kJumpAcceleration, 0));
 		}
 	} else {
 		// 空中
 		// === ここから空中での移動処理を修正 ===
-		long lStickX = Gamepad::GetInstance()->GetLStickX();
-
-		// 💡 空中でのキーボード入力とスティック入力を統合
-		bool isMovingRightInAir = (lStickX > kPadDeadZone_) || Input::GetInstance()->IsPress(DIK_D);
-		bool isMovingLeftInAir = (lStickX < -kPadDeadZone_) || Input::GetInstance()->IsPress(DIK_A);
+		// 空中での左右の移動の命令
+		bool isMovingRightInAir = request_.moveRight;
+		bool isMovingLeftInAir = request_.moveLeft;
 
 		// 左右移動操作 (空中での左右入力)
 		if (isMovingRightInAir || isMovingLeftInAir) {
@@ -310,6 +303,22 @@ void Player::Move() {
 			velocity_.x = std::clamp(velocity_.x, -kLimitRunSpeed, kLimitRunSpeed);
 		}
 		// === ここまで空中での移動処理を修正 ===
+	}
+}
+
+void Player::ApplyCommands(const PlayerCommandList& commands) {
+	// 命令は1フレームだけ有効 (押し続けているものは毎フレーム届く)
+	request_ = ActionRequest{};
+	for (const auto& command : commands) {
+		command->Execute(*this);
+	}
+}
+
+void Player::RequestMove(LRDirection direction) {
+	if (direction == LRDirection::kRight) {
+		request_.moveRight = true;
+	} else {
+		request_.moveLeft = true;
 	}
 }
 
@@ -374,7 +383,7 @@ void Player::Update() {
 		}
 	}
 
-	HandleLockOnRemovalInput();
+	HandleDefeatLockedOnRequest();
 	const bool wasOnGround = onGround_;
 
 	// テレポートキューの更新
@@ -499,8 +508,8 @@ void Player::Update() {
 	UpdateShortCircuitEffect();
 
 	// アンカー操作（発射 / 長押し回収）
-	bool isAnchorKeyPressed = Gamepad::GetInstance()->IsPress(XINPUT_GAMEPAD_X) || Input::GetInstance()->IsPress(DIK_J);
-	bool isAnchorKeyTriggered = Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_X) || Input::GetInstance()->IsTrigger(DIK_J);
+	bool isAnchorKeyPressed = request_.anchorHold;
+	bool isAnchorKeyTriggered = request_.anchorTrigger;
 
 	// 頭上のストック表示を要求（ストック切れで撃てない場合は拒否演出）
 	if (isAnchorKeyTriggered) {
@@ -594,8 +603,8 @@ void Player::Update() {
 		anchorLine_->Update(GetPosition(), anchor_->GetPosition(), camera_, lineColor_);
 	}
 
-	// BボタンまたはKキーでテレポート
-	if (Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_B) || Input::GetInstance()->IsTrigger(DIK_K)) {
+	// テレポートの命令
+	if (request_.teleport) {
 		if (!isKnockedBack_) {
 			// アンカーが存在し、isStandByがtrueの場合
 			if (anchor_ && anchor_->GetStandBy()) {
@@ -691,10 +700,6 @@ void Player::shootAnchor() {
 	// ストックを1消費
 	anchorStock_--;
 
-	// ゲームパッドの左スティックのX軸とY軸の値を取得
-	long lStickX = Gamepad::GetInstance()->GetLStickX();
-	long lStickY = Gamepad::GetInstance()->GetLStickY();
-
 	// プレイヤーが向いている方向を考慮してアンカーを生成
 	Vector3 initialVelocity;
 
@@ -702,16 +707,16 @@ void Player::shootAnchor() {
 	float xVelocity = (lrDirection_ == LRDirection::kRight) ? kAnchorSpeed : -kAnchorSpeed;
 
 	// 上下の傾き具合で初速のY軸成分を決定
-	if (lStickY > kAnchorDeadZone||Input::GetInstance()->IsPress(DIK_S)) {
-		// 上に傾いている場合は45度上向き
+	if (request_.anchorAim == AnchorAim::kDown) {
+		// 斜め下 (45度)
 		xVelocity = (lrDirection_ == LRDirection::kRight) ? kAnchorSpeed * 0.7071f : -kAnchorSpeed * 0.7071f; // cos(45)
 		initialVelocity.y = -kAnchorSpeed * 0.7071f; // sin(45)
-	} else if (lStickY < -kAnchorDeadZone || Input::GetInstance()->IsPress(DIK_W)) {
-		// 下に傾いている場合は45度下向き
+	} else if (request_.anchorAim == AnchorAim::kUp) {
+		// 斜め上 (45度)
 		xVelocity = (lrDirection_ == LRDirection::kRight) ? kAnchorSpeed * 0.7071f : -kAnchorSpeed * 0.7071f; // cos(45)
 		initialVelocity.y = kAnchorSpeed * 0.7071f; // -sin(45)
 	} else {
-		// 上下に傾いていない場合は水平
+		// 向きの指定が無ければ水平
 		initialVelocity.y = 0.0f;
 	}
 
@@ -859,15 +864,14 @@ void Player::RestoreAnchorStock(int count) {
 	}
 }
 
-void Player::HandleLockOnRemovalInput() {
+void Player::HandleDefeatLockedOnRequest() {
 	// リストへのポインタが設定されているか確認
 	if (lockedOnEnemies_ == nullptr) {
 		return;
 	}
 
-	// Lキーまたは対応するパッドボタンが押されたら、ロックオン中の敵をすべて削除する
-	// GameSceneで使われていた入力判定をそのまま使用
-	if (Gamepad::GetInstance()->IsTrigger(XINPUT_GAMEPAD_Y) || Input::GetInstance()->IsTrigger(DIK_L)) {
+	// 撃破の命令が来ていたら、ロックオン中の敵をすべて倒す
+	if (request_.defeatLockedOn) {
 		RemoveLockedOnEnemies(*lockedOnEnemies_);
 	}
 }

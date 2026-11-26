@@ -25,8 +25,8 @@ void Play::Update(GameScene* scene, float deltaTime) {
 		return;
 	}
 
-	// デモモードならゴールへ向かう入力を自動で入れる
-	DemoManager::GetInstance()->UpdateAutoPlay(bc, deltaTime);
+	// デモモードで長くかかりすぎたらタイトルへ戻る (自動操作は DemoPlayerController が命令を出す)
+	DemoManager::GetInstance()->UpdatePlayTimer(deltaTime);
 	bc->Update(deltaTime);
 
 	if (bc->IsGoalReached()) {

@@ -23,7 +23,11 @@ void GameScene::Initialize(Camera* camera)
 	const bool isDemoMode = DemoManager::GetInstance()->IsDemoMode();
 	battleController_->Initialize(camera_, isDemoMode ? "resources/maps/demo_stage.json" : "resources/maps/stage1.json");
 
-	// デモモードなら自動操作に切り替える
+	// デモモードなら、プレイヤーへ命令を出す側を人の入力からデモのAIに差し替える
+	if (isDemoMode) {
+		battleController_->SetPlayerController(
+			std::make_unique<DemoPlayerController>(DemoManager::GetInstance()->GetAutoPlaySettings()));
+	}
 	DemoManager::GetInstance()->BeginGame();
 
 	// ハイライトデータが存在する場合は kHighlight フェーズを開始、なければ kPlay フェーズ

@@ -50,6 +50,7 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 	playerModel_->SetCullMode(CullMode::kFront);
 
 	player_ = std::make_unique<Player>();
+	playerController_ = std::make_unique<HumanPlayerController>();
 	const Vector2 pSpawn = mapChipField_->GetPlayerSpawn();
 	const Vector3 playerPosition = mapChipField_->GetMapChipPosition(pSpawn.x, pSpawn.y);
 	player_->Initialize(playerModel_.get(), camera_, playerPosition);
@@ -178,6 +179,13 @@ void BattleController::Update(float deltaTime) {
 
 	(void)deltaTime;
 	skyBox_->Update(InitializeWorldTransform(), camera_);
+
+	// プレイヤーへの命令を集めて渡す (誰が出した命令かは Player は気にしない)
+	playerCommands_.clear();
+	if (playerController_) {
+		playerController_->Update(*this, deltaTime, playerCommands_);
+	}
+	player_->ApplyCommands(playerCommands_);
 
 	// プレイヤー更新（テレポート実行）
 	player_->Update();
