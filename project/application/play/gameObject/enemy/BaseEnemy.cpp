@@ -10,6 +10,139 @@
 namespace Bonjin {
 
 void BaseEnemy::Update() {
+	if (player_) {
+		UpdateStateTransition();
+	}
+
+	// 状態ごとの行動 (中身は敵の種類ごとに違う)
+	switch (state_) {
+	case State::kPatrol:
+		PatrolBehavior();
+		break;
+	case State::kChase:
+		ChaseBehavior();
+		break;
+	}
+
+	UpdateChargeAndBullets();
+	GameObject::Update();
+	TurningControl();
+	UpdateMotion();
+}
+
+void BaseEnemy::UpdateStateTransition() {
+	const float distance = Length(Subtract(player_->GetWorldPosition(), GetWorldPosition()));
+
+	if (state_ == State::kPatrol) {
+		if (distance <= searchRadius_ && IsPlayerVisible()) {
+			chasingDirection_ = lrDirection_;
+			state_ = State::kChase;
+			OnStartChase();
+		}
+	} else if (state_ == State::kChase) {
+		if (distance > loseRadius_ || !IsPlayerVisible()) {
+			state_ = State::kPatrol;
+			lrDirection_ = chasingDirection_;
+			OnLoseChase();
+		}
+	}
+}
+
+bool BaseEnemy::IsPlayerVisible() const {
+	if (!mapChipField_ || !player_) {
+		return false;
+	}
+
+	Vector3 start = GetWorldPosition();
+	Vector3 end = player_->GetWorldPosition();
+
+	Vector3 direction = Subtract(end, start);
+	float distance = Length(direction);
+	if (distance <= 0.05f) {
+		return true;
+	}
+
+	Vector3 dirNorm = Normalize(direction);
+
+	const float step = 0.5f;
+	float currentDistance = step;
+
+	while (currentDistance < distance) {
+		Vector3 currentPos = Add(start, Multiply(currentDistance, dirNorm));
+		IndexSet index = mapChipField_->GetMapChipIndexSetByPosition(currentPos);
+		MapChipType type = mapChipField_->GetMapChipTypeByIndex(index.xIndex, index.yIndex);
+
+		if (type == MapChipType::kBlock) {
+			return false;
+		}
+
+		currentDistance += step;
+	}
+
+	return true;
+}
+
+void BaseEnemy::TurningControl() {
+	const float destinationRotationYTable[] = {
+		std::numbers::pi_v<float> * -4.0f / 2.0f,
+		std::numbers::pi_v<float> * 2.0f / 2.0f,
+	};
+	worldTransform_.rotate.y = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
+}
+
+void BaseEnemy::UpdateChaseAttack() {
+	const Vector3 playerPos = player_->GetWorldPosition();
+	const Vector3 myPos = GetWorldPosition();
+
+	// プレイヤーの方を向く
+	lrDirection_ = (playerPos.x < myPos.x) ? LRDirection::kLeft : LRDirection::kRight;
+
+	// 一定間隔でチャージを開始
+	if (isCharging_) {
+		return;
+	}
+	shootTimer_ -= 1.0f / 60.0f; // 60fps想定
+	if (shootTimer_ > 0.0f) {
+		return;
+	}
+	isCharging_ = true;
+	chargeTimer_ = kChargeTime;
+
+	// チャージ用のパーティクルをエミット
+	uvScrollTimer_ = 0.0f;
+	ParticleConfig config;
+	config.position = myPos;
+	config.scale = { kMaxChargeRingScale, kMaxChargeRingScale, 1.0f };
+	config.rotate = { 0.0f, 0.0f, 0.0f };
+	config.color = GetChargeRingColor();
+	config.lifeTime = kChargeTime;
+
+	// 毎フレーム敵の現在位置に追従しながら収縮する
+	config.updateFunc = [this](ParticleData& data, float) {
+		float ratio = (data.lifeTime - data.currentTime) / data.lifeTime;
+		ratio = (ratio < 0.0f) ? 0.0f : (ratio > 1.0f ? 1.0f : ratio);
+
+		float currentScale = ratio * kMaxChargeRingScale;
+		data.transform.scale = { currentScale, currentScale, 1.0f };
+
+		Vector3 pos = this->GetWorldPosition();
+		data.transform.translate = { pos.x, pos.y, pos.z - 0.05f };
+	};
+
+	ParticleManager::GetInstance()->Emit("enemyChargeRing", config);
+}
+
+std::string BaseEnemy::MakeImGuiNodeName(const char* name, int index) const {
+	std::string nodeName = std::string(name) + " " + std::to_string(index);
+	if (isDead_) {
+		nodeName += " [DEAD]";
+	} else {
+		nodeName += (state_ == State::kPatrol) ? " [Patrol]" : " [CHASE]";
+	}
+	return nodeName;
+}
+
+void BaseEnemy::UpdateChargeAndBullets() {
 	// チャージ更新
 	if (isCharging_ && player_) {
 		chargeTimer_ -= 1.0f / 60.0f; // 60fps想定
@@ -72,12 +205,17 @@ void BaseEnemy::Initialize(Object3D* model, Camera* camera, const Vector3& posit
 	chargeTimer_ = 0.0f;
 	uvScrollTimer_ = 0.0f;
 	expReward_ = 30;
+	state_ = State::kPatrol;
+
+	if (model_) {
+		model_->SetColor(GetBaseColor());
+	}
 
 	searchRangeCircle_ = std::make_unique<DebugCircle3D>();
 	searchRangeCircle_->Initialize();
 }
 
-void BaseEnemy::Draw() {
+void BaseEnemy::Draw() const {
 	if (model_ && !isDead_) {
 		model_->Draw();
 
@@ -136,7 +274,7 @@ void BaseEnemy::UpdateRespawn(float deltaTime, float respawnTime, bool isEnemyRe
 
 	velocity_ = Vector3(-0.05f, 0.0f, 0.0f);
 
-	model_->SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+	model_->SetColor(GetBaseColor());
 	model_->Update(worldTransform_, camera_);
 }
 
@@ -145,7 +283,7 @@ void BaseEnemy::SetIsLockedOn(bool flag) {
 	if (flag) {
 		model_->SetColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
 	} else {
-		model_->SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+		model_->SetColor(GetBaseColor());
 	}
 }
 

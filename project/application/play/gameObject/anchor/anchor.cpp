@@ -1,6 +1,6 @@
 #include "Anchor.h"
 #include "../player/Player.h"
-#include "../enemy/Enemy.h"
+#include "../enemy/BaseEnemy.h"
 #include <array>
 #include <numbers>
 
@@ -59,8 +59,8 @@ void Anchor::Update() {
 
 void Anchor::OnCollision(Bonjin::Collider* other) {
 	if (other->GetCategoryAttr() == kAttributeEnemy) {
-		Enemy* enemy = static_cast<Enemy*>(other->GetOwner());
-		enemy->OnCollision();
+		BaseEnemy* enemy = static_cast<BaseEnemy*>(other->GetOwner());
+		enemy->OnAnchorHit();
 		if (player_) {
 			player_->AddLockedOnEnemy(enemy);
 		}

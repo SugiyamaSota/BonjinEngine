@@ -390,6 +390,9 @@
     <ClCompile Include="application\play\gameObject\enemy\NoGravityEnemy.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="application\play\gameObject\enemy\EnemyFactory.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="application\play\gameObject\camera\CameraController.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -744,6 +747,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\play\gameObject\enemy\NoGravityEnemy.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\gameObject\enemy\EnemyFactory.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\play\gameObject\camera\CameraController.h">

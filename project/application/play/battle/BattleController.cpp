@@ -4,8 +4,7 @@
 #include "logic/Collision.h"
 #include "logic/CollisionManager.h"
 #include "gameObject/anchor/anchor.h"
-#include "gameObject/enemy/Enemy.h"
-#include "gameObject/enemy/NoGravityEnemy.h"
+#include "gameObject/enemy/EnemyFactory.h"
 #include "GpuParticleManager.h"
 #include "SceneManager.h"
 #include "input/Input.h"
@@ -72,30 +71,13 @@ void BattleController::Initialize(Camera* camera, const char* mapFilePath) {
 
 		const Vector3 enemyPosition = mapChipField_->GetMapChipPosition(spawn.x, spawn.y);
 
-		if (spawn.type == "nogravityenemy" || spawn.type == "E2") {
-			// 空中敵は青みがかった色にする
-			enemyModels_.back()->SetColor({0.2f, 0.3f, 0.5f, 1.0f});
-			
-			Vector3 spawnPos = enemyPosition;
-			spawnPos.y += 1.0f; // 少し高めに出現させる
-
-			auto enemy = std::make_unique<NoGravityEnemy>();
-			enemy->Initialize(enemyModels_.back().get(), camera_, spawnPos);
-			enemy->SetMapChipField(mapChipField_.get());
-			enemy->SetPlayer(player_.get());
-			enemy->Update();
-			enemies_.push_back(std::move(enemy));
-		} else {
-			// 地上敵はグレーがかった赤色にする
-			enemyModels_.back()->SetColor({0.3f, 0.2f, 0.2f, 1.0f});
-
-			auto enemy = std::make_unique<Enemy>();
-			enemy->Initialize(enemyModels_.back().get(), camera_, enemyPosition);
-			enemy->SetMapChipField(mapChipField_.get());
-			enemy->SetPlayer(player_.get());
-			enemy->Update();
-			enemies_.push_back(std::move(enemy));
-		}
+		// 種類ごとの違い (色・出現する高さ・動き) はそれぞれの敵クラスが持っている
+		std::unique_ptr<BaseEnemy> enemy = EnemyFactory::Create(spawn.type);
+		enemy->Initialize(enemyModels_.back().get(), camera_, enemyPosition);
+		enemy->SetMapChipField(mapChipField_.get());
+		enemy->SetPlayer(player_.get());
+		enemy->Update();
+		enemies_.push_back(std::move(enemy));
 	}
 
 	skyBox_ = std::make_unique<SkyBox>();
@@ -837,7 +819,7 @@ void BattleController::ResolveAnchorInstantLanding(Anchor& anchor) {
 		if (hitEnemy) {
 			anchor.SetPosition(currentPos);
 			anchor.OnCollision();
-			hitEnemy->OnCollision();
+			hitEnemy->OnAnchorHit();
 			lockedOnEnemies_.push_back(hitEnemy);
 			EmitAnchorHitEffect(currentPos);
 			hit = true;
