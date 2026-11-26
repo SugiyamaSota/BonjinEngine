@@ -161,6 +161,7 @@
     <ClCompile Include="application\play\gameObject\goal\Goal.cpp" />
     <ClCompile Include="application\play\gameObject\GameObject.cpp" />
     <ClCompile Include="application\play\gameObject\player\Player.cpp" />
+    <ClCompile Include="application\play\gameObject\player\PlayerClearPerformance.cpp" />
     <ClCompile Include="application\play\gameObject\player\PlayerStatusComponent.cpp" />
     <ClCompile Include="application\play\gameObject\player\PlayerAnimator.cpp" />
     <ClCompile Include="application\play\gameObject\player\PlayerStatusRepository.cpp" />
@@ -289,6 +290,7 @@
     <ClInclude Include="application\play\gameObject\goal\Goal.h" />
     <ClInclude Include="application\play\gameObject\GameObject.h" />
     <ClInclude Include="application\play\gameObject\player\Player.h" />
+    <ClInclude Include="application\play\gameObject\player\PlayerClearPerformance.h" />
     <ClInclude Include="application\play\gameObject\player\PlayerStatusComponent.h" />
     <ClInclude Include="application\play\gameObject\player\PlayerAnimator.h" />
     <ClInclude Include="application\play\gameObject\player\PlayerStatusRepository.h" />

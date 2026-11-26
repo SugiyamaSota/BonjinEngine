@@ -366,6 +366,9 @@
     <ClCompile Include="application\play\gameObject\player\Player.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="application\play\gameObject\player\PlayerClearPerformance.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="application\play\gameObject\player\PlayerAnimator.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -723,6 +726,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\play\gameObject\player\Player.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="application\play\gameObject\player\PlayerClearPerformance.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="application\play\gameObject\player\PlayerAnimator.h">
