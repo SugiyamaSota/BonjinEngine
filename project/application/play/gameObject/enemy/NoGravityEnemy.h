@@ -3,44 +3,35 @@
 
 namespace Bonjin {
 
-enum class NoGravityEnemyState {
-	kPatrol, // 巡回
-	kChase,  // 追跡
-};
-
+/// <summary>
+/// 空中の敵 (重力なし。巡回中はふわふわ飛び、追跡中はプレイヤーのまわりを円を描いて回りながら撃つ)
+/// </summary>
 class NoGravityEnemy : public BaseEnemy {
 public:
     /// <summary>
-    /// 初期化
+    /// 初期化 (positionはマップチップの中心。少し高めに出現する)
     /// </summary>
-    void Initialize(Object3D* model, Camera* camera, const Vector3& position);
-
-    /// <summary>
-    /// 更新処理
-    /// </summary>
-    void Update() override;
+    void Initialize(Object3D* model, Camera* camera, const Vector3& position) override;
 
     /// <summary>
     /// ImGui描画処理
     /// </summary>
     void DrawImGui(int index) override;
 
-    /// <summary>
-    /// 当たり判定時の処理
-    /// </summary>
-    void OnCollision() override;
-
-    bool IsChasing() const override;
-
 protected:
     void OnMapCollision(const CollisionMapInfo& collisionMapinfo) override;
 
-private:
-    // --- メンバー変数 ---
+    void PatrolBehavior() override;
+    void ChaseBehavior() override;
+    void UpdateMotion() override;
+    void OnStartChase() override;
+    void OnLoseChase() override;
+    Vector4 GetBaseColor() const override { return { 0.2f, 0.3f, 0.5f, 1.0f }; }        // 青みがかった色
+    Vector4 GetChargeRingColor() const override { return { 0.0f, 0.5f, 1.0f, 0.5f }; }  // 青の半透明
 
-    // 状態
-    NoGravityEnemyState state_ = NoGravityEnemyState::kPatrol; // 行動状態
-    static inline const float kFlySpeed = 0.04f; // 飛行速度
+private:
+    static inline const float kFlySpeed = 0.04f;     // 飛行速度
+    static inline const float kSpawnHeight = 1.0f;   // マップチップの中心からどれだけ高く出現するか
 
     // ふわふわ浮遊運動用
     float floatingTimer_ = 0.0f;
@@ -58,34 +49,6 @@ private:
     float orbitSpeed_ = 1.2f;          // 速度
     float minOrbitAngle_ = 0.0f;       // 最小角度制限 (真右)
     float maxOrbitAngle_ = 3.14159f;   // 最大角度制限 (真左)
-
-private:
-    // --- プライベート関数 ---
-
-    /// <summary>
-    /// モデルの向きを制御
-    /// </summary>
-    void TurningControl();
-
-    /// <summary>
-    /// プレイヤーが直視できる位置にいるか判定 (壁越しの場合はfalse)
-    /// </summary>
-    bool IsPlayerVisible() const;
-
-    /// <summary>
-    /// 状態遷移の更新
-    /// </summary>
-    void UpdateStateTransition();
-
-    /// <summary>
-    /// 巡回行動
-    /// </summary>
-    void PatrolBehavior();
-
-    /// <summary>
-    /// 追跡行動
-    /// </summary>
-    void ChaseBehavior();
 };
 
 }
