@@ -41,7 +41,7 @@ private:
 	DemoManager& operator=(const DemoManager&) = delete;
 
 	// 起動したときにデモモードにするか (展示ではtrueにする)
-	static inline const bool kDefaultDemoMode = true;
+	static inline const bool kDefaultDemoMode = false;
 
 	bool isDemoMode_ = kDefaultDemoMode;
 	bool isInGame_ = false;
