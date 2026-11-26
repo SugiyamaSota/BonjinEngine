@@ -19,15 +19,16 @@ void GameScene::Initialize(Camera* camera)
 	PlayerStatusRepository::GetInstance()->Load("resources/data/player_status.json");
 
 	battleController_ = std::make_unique<BattleController>();
-	// TODO: 仮のテストステージ(ゴールのみ)。本番に戻すときは "resources/maps/stage1.json" にする
-	battleController_->Initialize(camera_, "resources/maps/test_goal.json");
+	// デモモードのときはデモ用のステージにする
+	const bool isDemoMode = DemoManager::GetInstance()->IsDemoMode();
+	battleController_->Initialize(camera_, isDemoMode ? "resources/maps/demo_stage.json" : "resources/maps/stage1.json");
 
 	// デモモードなら自動操作に切り替える
 	DemoManager::GetInstance()->BeginGame();
 
 	// ハイライトデータが存在する場合は kHighlight フェーズを開始、なければ kPlay フェーズ
 	const auto& highlights = battleController_->GetMapChipField()->GetHighlights();
-	if (!highlights.empty() && !DemoManager::GetInstance()->IsDemoMode()) {
+	if (!highlights.empty() && !isDemoMode) {
 		ChangePhase(std::make_unique<GamePhase::Highlight>());
 	} else {
 		ChangePhase(std::make_unique<GamePhase::Play>());

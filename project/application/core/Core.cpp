@@ -6,6 +6,7 @@
 #include "../scene/tutorial/TutorialScene.h"
 #include "../scene/result/ResultScene.h"
 #include "gameObject/player/PlayerStatusRepository.h"
+#include "gameObject/goal/Goal.h"
 #include "TestScene.h"
 
 #include "ParticleManager.h"
@@ -45,14 +46,7 @@ void Core::Initialize() {
 	particleManager->CreateParticleGroup("enemyChargeRing", ModelBuilder::ModelType::kRing, "resources/textures/gradationLine.png");
 	particleManager->CreateParticleGroup("landingDust", ModelBuilder::ModelType::kPlane, "resources/textures/circle.png");
 	// ゴールのポータル (光の柱 + 昇るリング)
-	particleManager->CreateParticleGroup("goalPortalPillar", ModelBuilder::ModelType::kCylinder, "resources/textures/portalPillar.png");
-	particleManager->CreateParticleGroup("goalPortalRing", ModelBuilder::ModelType::kRing, "resources/textures/portalRing.png");
-	// ポータルはカメラの方を向かせず、ワールドの向きのまま置く (リングは床と水平、柱はまっすぐ立てる)。
-	// 水平なリングはカメラより上にあると裏側から見えるので両面を描く
-	particleManager->SetUseBillboard("goalPortalPillar", false);
-	particleManager->SetUseBillboard("goalPortalRing", false);
-	particleManager->SetCullMode("goalPortalPillar", CullMode::kNone);
-	particleManager->SetCullMode("goalPortalRing", CullMode::kNone);
+	Goal::CreatePortalParticleGroups();
 
 	Bonjin::WaitGPU();
 

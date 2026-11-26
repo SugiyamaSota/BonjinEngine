@@ -91,6 +91,7 @@ public:
 	void SetPosition(const Vector3& position) { worldTransform_.translate = position; }
 	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
 	bool IsOnGround() const { return onGround_; }
+	bool IsFacingRight() const { return lrDirection_ == LRDirection::kRight; }
 	bool IsDead() const { return isDead_; }
 	void SetDead(bool flag) { isDead_ = flag; }
 	void SetWidth(float w) { width_ = w; }
